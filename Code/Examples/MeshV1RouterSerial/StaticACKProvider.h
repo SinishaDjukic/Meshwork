@@ -23,7 +23,7 @@
 
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
-#include "Meshwork/Mesh/Network/MeshV1.h"
+#include "Mesh/Network/MeshV1.h"
 
 class StaticACKProvider: public Mesh::Network::ACKProvider {
 

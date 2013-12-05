@@ -28,9 +28,10 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
-#include "Meshwork/Mesh.h"
-#include "Meshwork/Mesh/Network/MeshV1.h"
-#include "Meshwork/LineReader.h"
+#include "Mesh.h"
+#include "Mesh/Network/MeshV1.h"
+#include "Mesh/Network/MeshV1.cpp"
+#include "LineReader.h"
 
 // Select Wireless device driver
 // #include "Cosa/Wireless/Driver/CC1101.hh"

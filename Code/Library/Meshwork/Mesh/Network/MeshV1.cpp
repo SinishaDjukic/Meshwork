@@ -25,8 +25,8 @@
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
-#include "Meshwork/Mesh.h"
-#include "Meshwork/Mesh/Network/MeshV1.h"
+#include "Mesh.h"
+#include "Mesh/Network/MeshV1.h"
 
 #define IFMESHV1LOG
 

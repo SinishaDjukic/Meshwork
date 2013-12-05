@@ -25,7 +25,7 @@
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
-#include "Meshwork/Mesh.h"
+#include "Mesh.h"
 
  /*
  Payload structure:

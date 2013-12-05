@@ -22,7 +22,7 @@
 #define __MESHWORK_MESH_CACHINGROUTEADVISOR_H__
 
 #include "Cosa/Wireless.hh"
-#include "Meshwork/Mesh.h"
+#include "Mesh.h"
 
 /**
  * TODO
