@@ -562,9 +562,9 @@ bool MeshV1::begin(const void* config) {
 	if ( m_advisor != NULL && m_driver != NULL ) {
 		m_advisor->set_address(m_driver->get_device_address());
 	}
-	return (true);
+	return m_driver == NULL ? false : m_driver->begin();
 }
 
 bool MeshV1::end() {
-	return (true);
+	return m_driver == NULL ? false : m_driver->end();
 }

@@ -111,7 +111,7 @@ bool equals(char s1[], char s2[]) {
 
 bool startsWith(int fullOffset, char* full, char* subs) {
     int subslen = strlen(subs);
-    if ( fullOffset > strlen(full) - subslen )
+    if ( fullOffset > ((int) strlen(full)) - subslen )
         return false;
     return strncmp( &full[fullOffset], subs, subslen ) == 0;
 }
@@ -168,7 +168,7 @@ void run_nop(uint8_t address, uint8_t port) {
 	trace << PSTR("Send NOP to ") << address << PSTR(":") << port << PSTR("\n");
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
-	for ( int i = 0; i < ackLen; i ++ ) ack[i] = 0;
+	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
 	int res = mesh.send(delivery, -1, address, port, NULL, 0, ack, ackLen);
 	trace << PSTR("Result code: ") << res << PSTR("\n");
 	trace << PSTR("Ack len: ") << ackLen << PSTR("\n");
@@ -183,19 +183,18 @@ void run_nop(uint8_t address, uint8_t port) {
 }
 
 void run_send(uint8_t address, uint8_t port, char * pStart, char * pEnd) {
+	size_t dataLen = pEnd - pStart;
 	trace << PSTR("Send CHARS to ") << address << PSTR(":") << port << PSTR("\n");
-	trace << PSTR("Char count: ") << pEnd - pStart << PSTR("\n");
+	trace << PSTR("Char count: ") << dataLen << PSTR("\n");
 	trace.print("Chars: ");
-	for ( int i = 0; i < pEnd-pStart; i ++ ) {
-		char pc = pStart[i];
-		trace.print(pc);
+	for ( size_t i = 0; i < dataLen; i ++ ) {
+		trace.print(pStart[i]);
 		trace.print(", ");
 	}
 	trace.println();
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
-	for ( int i = 0; i < ackLen; i ++ ) ack[i] = 0;
-	size_t dataLen = pEnd - pStart;
+	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
 	int res = mesh.send(delivery, -1, address, port, pStart, dataLen, ack, ackLen);
 	trace << PSTR("Result code: ") << res << PSTR("\n");
 	trace << PSTR("Ack len: ") << ackLen << PSTR("\n");
@@ -216,15 +215,13 @@ bool running = false;
 
 void run_begin() {
 	trace << PSTR("RF Begin") << PSTR("\n");
-	running = mesh.get_driver()->begin() && mesh.begin();
+	running = mesh.begin();
 	trace << PSTR("RF Running: ") << running << PSTR("\n");
 }
 
 void run_end() {
 	trace << PSTR("RF End")<< PSTR("\n");
-	mesh.end();
-	mesh.get_driver()->end();
-	running = false;
+	running = !mesh.end();
 }
 
 void run_info() {
@@ -307,7 +304,7 @@ void loop()
 		char* line = console.get_line();
 //		trace << PSTR("Command: ") << line << PSTR(", len=") << strlen(line) << PSTR("\n") << PSTR("\n");
 		trace << PSTR("Command: ") << line << PSTR("\n") << PSTR("\n");
-		if ( equals(line, "?") || equals(line, "help") ) {
+		if ( equals(line, (char*) "?") || equals(line, (char*) "help") ) {
 			trace << PSTR("Usage:") << PSTR("\n")
 				  << PSTR("info") << PSTR("\n")
 				  << PSTR("setup") << PSTR(" <network> <address>") << PSTR("\n")
@@ -319,33 +316,33 @@ void loop()
 				  << PSTR("deliv") << PSTR(" <delivery flags>") << PSTR("\n")
 				  << PSTR("routereset") << PSTR("\n")
 				  << PSTR("... all values in DEC") << PSTR("\n");
-		} else if ( equals(line, "info") ) {
+		} else if ( equals(line, (char*) "info") ) {
 			run_info();
-		} else if ( equals(line, "setup") ) {
+		} else if ( equals(line, (char*) "setup") ) {
 			char * pEnd = line + 6;//cmd len plus space
 			uint8_t network = strtol(pEnd, &pEnd, 10);
 			uint8_t address = strtol(pEnd, &pEnd, 10);
 			run_setup(network, address);
-		} else if ( equals(line, "begin") ) {
+		} else if ( equals(line, (char*) "begin") ) {
 			run_begin();
-		} else if ( equals(line, "end") ) {
+		} else if ( equals(line, (char*) "end") ) {
 			run_end();
-		} else if ( equals(line, "recv") ) {
+		} else if ( equals(line, (char*) "recv") ) {
 			run_recv();
-		} else if ( startsWith(0, line, "deliv") ) {
+		} else if ( startsWith(0, line, (char*) "deliv") ) {
 			char * pEnd = line + 6;//cmd len plus space
 			uint8_t temp1 = strtol(pEnd, &pEnd, 10);
 			set_delivery(temp1);
-		} else if ( startsWith(0, line, "routereset") ) {
+		} else if ( startsWith(0, line, (char*) "routereset") ) {
 			run_routereset();
-		} else if ( startsWith(0, line, "routeadd") ) {
+		} else if ( startsWith(0, line, (char*) "routeadd") ) {
 			run_routeadd(line);
-		} else if ( startsWith(0, line, "nop") ) {
+		} else if ( startsWith(0, line, (char*) "nop") ) {
 			char * pEnd = line + 4;//cmd len plus space
 			uint8_t dest = strtol(pEnd, &pEnd, 10);
 			uint8_t port = strtol(pEnd, &pEnd, 10);
 			run_nop(dest, port);
-		} else if ( startsWith(0, line, "send") ) {
+		} else if ( startsWith(0, line, (char*) "send") ) {
 			char * pEnd = line + 4;//cmd len plus space
 			uint8_t dest = strtol(pEnd, &pEnd, 10);
 			uint8_t port = strtol(pEnd, &pEnd, 10);

@@ -151,11 +151,11 @@ public:
 		}
 
 		virtual bool begin(const void* config = NULL) {
-			return (true);
+			return m_driver == NULL ? false : m_driver->begin();
 		}
 
 		virtual bool end() {
-		  return (true);
+			return m_driver == NULL ? false : m_driver->end();
 		}
 
 		//main send method

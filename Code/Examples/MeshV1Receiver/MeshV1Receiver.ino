@@ -82,7 +82,7 @@ void setup()
   trace << PSTR("Set up network:address: ") << network << ":" << address << PSTR("\n");
  
   mesh.get_driver()->set_address(network, address);
-  bool running = mesh.get_driver()->begin() && mesh.begin();
+  bool running = mesh.begin();
   
   trace << PSTR("RF Running: ") << running;
 }
