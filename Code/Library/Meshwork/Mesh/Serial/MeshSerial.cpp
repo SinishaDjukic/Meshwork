@@ -260,6 +260,7 @@ bool MeshSerial::processOneMessage(serialmsg_t* msg) {
 //				case MSGCODE_RFRECVACK: break;//handled within processRFStartRecv
 				case MSGCODE_RFSTARTRECV: result = processRFStartRecv(msg); break;
 				case MSGCODE_RFSEND: result = processRFSend(msg); break;
+				case MSGCODE_RFSEND: result = processRFSend(msg); break;
 //				case MSGCODE_RFSENDACK: break;//only controller->host
 				case MSGCODE_RFBCAST: result = processRFBroadcast(msg); break;
 				default: respondWCode(msg, MSGCODE_UNKNOWN); result = false;
