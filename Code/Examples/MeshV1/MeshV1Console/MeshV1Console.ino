@@ -85,7 +85,7 @@ void setup()
 //  Watchdog::begin();
   rf.set_sleep(mode);
   RTC::begin();
-  trace.begin(&uart, PSTR("MeshV1 Router Serial: started"));
+  trace.begin(&uart, PSTR("MeshV1 Serial Console: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT << PSTR("\n");
 }
 
