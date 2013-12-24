@@ -27,11 +27,11 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
-#include "Mesh.h"
-#include "Mesh/Network/MeshV1.h"
-#include "Mesh/Network/MeshV1.cpp"
-#include "Mesh/Serial/MeshSerial.h"
-#include "Mesh/Serial/MeshSerial.cpp"
+#include "Meshwork/L3/Network.h"
+#include "Meshwork/L3/NetworkSerial.h"
+#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/MeshV1/MeshV1.cpp"
+#include "Meshwork/L3/MeshV1/NetworkSerial.cpp"
 #include "LineReader.h"
 
 // Select Wireless device driver
@@ -69,7 +69,7 @@ NRF24L01P rf(0x0001, 0x01,
 #endif
 
 MeshV1 mesh(&rf, NULL);
-MeshSerial meshserial(&mesh, &uart);
+NetworkSerial meshserial(&mesh, &uart);
 
 void setup()
 {  
@@ -81,8 +81,8 @@ void setup()
 
 void loop()
 {
-	static uint8_t databuf[MeshSerial::MAX_SERIALMSG_LEN];
-	static MeshSerial::serialmsg_t msg;
+	static uint8_t databuf[NetworkSerial::MAX_SERIALMSG_LEN];
+	static NetworkSerial::serialmsg_t msg;
 	msg.data = databuf;
 	meshserial.processOneMessage(&msg);
 }

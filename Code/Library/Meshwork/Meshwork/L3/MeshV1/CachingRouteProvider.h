@@ -18,16 +18,16 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_MESH_CACHINGROUTEADVISOR_H__
-#define __MESHWORK_MESH_CACHINGROUTEADVISOR_H__
+#ifndef __MESHWORK_L3_MESHV1_CACHINGROUTEPROVIDER_H__
+#define __MESHWORK_L3_MESHV1_CACHINGROUTEPROVIDER_H__
 
 #include "Cosa/Wireless.hh"
-#include "Mesh.h"
+#include "Meshwork/L3/Network.h"
 
 /**
  * TODO
  */
-class CachingRouteProvider: public Mesh::Network::RouteProvider {
+class CachingRouteProvider: public Meshwork::L3::Network::RouteProvider {
 
 protected:
 

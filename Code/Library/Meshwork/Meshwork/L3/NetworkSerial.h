@@ -18,15 +18,15 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_MESH_MESHSERIAL_H__
-#define __MESHWORK_MESH_MESHSERIAL_H__
+#ifndef __MESHWORK_L3_NETWORKSERIAL_H__
+#define __MESHWORK_L3_NETWORKSERIAL_H__
 
 #include "Cosa/Pins.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
-#include "Mesh.h"
+#include "Meshwork/L3/Network.h"
 
 //SEQ | LEN | MSG
 //MSG = MSGCODE | MSGDATA
@@ -38,7 +38,7 @@
 //RFSEND = DST | PORT | DATALEN | DATA
 //RFSENDACK = DATALEN | DATA
 //RFBCAST = PORT | DATALEN | DATA
-class MeshSerial : public Mesh::Network::ACKProvider {
+class NetworkSerial : public Meshwork::L3::Network::ACKProvider {
 
 public:
   struct serialmsg_t {
@@ -117,7 +117,7 @@ public:
 	static const uint16_t TIMEOUT_RESPONSE 			= 3000;
 	
 protected:
-	Mesh::Network* m_network;
+	Meshwork::L3::Network* m_network;
 	UART* m_serial;
 	serialmsg_t* currentmsg;
 
@@ -136,7 +136,7 @@ protected:
 	virtual bool processRFBroadcast(serialmsg_t* msg);
 
 public:
-	MeshSerial(Mesh::Network* network, UART* serial):
+	NetworkSerial(Meshwork::L3::Network* network, UART* serial):
 		m_network(network),
 		m_serial(serial)
 	{ }

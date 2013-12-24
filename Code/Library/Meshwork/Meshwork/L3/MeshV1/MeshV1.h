@@ -18,14 +18,14 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_MESH_MESHV1_H__
-#define __MESHWORK_MESH_MESHV1_H__
+#ifndef __MESHWORK_L3_NETWORK_MESHV1_H__
+#define __MESHWORK_L3_NETWORK_MESHV1_H__
 
 #include "Cosa/Pins.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
-#include "Mesh.h"
+#include "Meshwork/L3/Network.h"
 
  /*
  Payload structure:
@@ -72,7 +72,7 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| FLOOD_INFO | (DataL3)
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| Node Count X | SRCID | Node 1 | … | Node X | DSTID | (DataL3)
 */
-class MeshV1: public Mesh::Network {
+class MeshV1: public Meshwork::L3::Network {
 		
 public:
 
@@ -328,10 +328,10 @@ protected:
 		);
 
 #ifdef SUPPORT_DELIVERY_ROUTED
-	int sendRoutedACK(Mesh::Network::ACKProvider* ackProvider,
+	int sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 						univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
 #endif
-	int sendDirectACK(Mesh::Network::ACKProvider* ackProvider,
+	int sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 						univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
 
 public:
@@ -377,7 +377,7 @@ public:
 			uint8_t maxHops = MAX_ROUTING_HOPS,
 #endif
 			uint8_t retry = 2):
-				Mesh::Network(driver, nwkcaps, delivery, retry)
+				Meshwork::L3::Network(driver, nwkcaps, delivery, retry)
 #ifdef SUPPORT_DELIVERY_ROUTED
 				, m_advisor(advisor),
 				m_maxHops(maxHops)
@@ -396,7 +396,7 @@ public:
 						void* bufACK, size_t& lenACK);
 	
 	virtual int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
-			uint32_t ms, Mesh::Network::ACKProvider* ackProvider);
+			uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
 
 };
 #endif

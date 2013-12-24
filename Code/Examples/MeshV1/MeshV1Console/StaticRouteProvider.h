@@ -18,12 +18,12 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_MESH_STATICROUTEPROVIDER_H__
-#define __MESHWORK_MESH_STATICROUTEPROVIDER_H__
+#ifndef __EXAMPLES_MESHV1CONSOLE_STATICROUTEPROVIDER_H__
+#define __EXAMPLES_MESHV1CONSOLE_STATICROUTEPROVIDER_H__
 
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
-#include "Mesh/Network/MeshV1.h"
+#include "Meshwork/L3/MeshV1/MeshV1.h"
 
 class StaticRouteProvider: public MeshV1::RouteProvider {
 

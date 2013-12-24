@@ -28,9 +28,9 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
-#include "Mesh.h"
-#include "Mesh/Network/MeshV1.h"
-#include "Mesh/Network/MeshV1.cpp"
+#include "Meshwork/L3/Network.h"
+#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/MeshV1/MeshV1.cpp"
 #include "LineReader.h"
 
 // Select Wireless device driver
@@ -123,16 +123,16 @@ bool endsWith(char full[], char subs[]) {
     return strcmp(&full[lendiff], subs) == 0;
 }
 
-uint8_t delivery = Mesh::Network::DELIVERY_EXHAUSTIVE;
+uint8_t delivery = Meshwork::L3::Network::DELIVERY_EXHAUSTIVE;
 
 void set_delivery(uint8_t deliv) {
 	delivery = deliv;
 	trace << PSTR("Delivery: ") << PSTR("\n");
-	if ( delivery & Mesh::Network::DELIVERY_DIRECT )
+	if ( delivery & Meshwork::L3::Network::DELIVERY_DIRECT )
 		trace << PSTR("\tDirect") << PSTR("\n");		
-	if ( delivery & Mesh::Network::DELIVERY_ROUTED )
+	if ( delivery & Meshwork::L3::Network::DELIVERY_ROUTED )
 		trace << PSTR("\tRouted") << PSTR("\n");
-	if ( delivery & Mesh::Network::DELIVERY_FLOOD )
+	if ( delivery & Meshwork::L3::Network::DELIVERY_FLOOD )
 		trace << PSTR("\tFlood") << PSTR("\n");
 }
 

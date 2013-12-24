@@ -27,9 +27,9 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
-#include "Mesh.h"
-#include "Mesh/Network/MeshV1.h"
-#include "Mesh/Network/MeshV1.cpp"
+#include "Meshwork/L3/Network.h"
+#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/MeshV1/MeshV1.cpp"
 #include "LineReader.h"
 
 uint8_t network = 1;

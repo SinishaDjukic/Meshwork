@@ -25,25 +25,25 @@
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
-#include "Mesh.h"
-#include "Mesh/Network/MeshV1.h"
-#include "Mesh/Serial/MeshSerial.h"
 #include "Cosa/IOStream/Driver/UART.hh"
+#include "Meshwork/L3/Network.h"
+#include "Meshwork/L3/NetworkSerial.h"
+#include "Meshwork/L3/MeshV1/MeshV1.h"
 
-#define IFMESHSERIALLOG
+#define IF_NETWORKSERIAL_DEBUG
 
-#ifndef IFMESHSERIALLOG
-#define IFMESHSERIALLOG if(false)
+#ifndef IF_NETWORKSERIAL_DEBUG
+#define IF_NETWORKSERIAL_DEBUG if(false)
 #endif
 
-void MeshSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
+void NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(1);
 	m_serial->putchar(code);
 	m_serial->flush(SLEEP_MODE_IDLE);
 }
 
-void MeshSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
+void NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(2);
 	m_serial->putchar(MSGCODE_NOK);
@@ -51,7 +51,7 @@ void MeshSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	m_serial->flush(SLEEP_MODE_IDLE);
 }
 
-void MeshSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
+void NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(2 + datalen);
 	m_serial->putchar(MSGCODE_RFSENDACK);
@@ -61,7 +61,7 @@ void MeshSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data
 	m_serial->flush(SLEEP_MODE_IDLE);
 }
 
-bool MeshSerial::processCfgBasic(serialmsg_t* msg) {
+bool NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgbasic_t* cfgbasic;
@@ -78,7 +78,7 @@ bool MeshSerial::processCfgBasic(serialmsg_t* msg) {
 	return result;
 }
 
-bool MeshSerial::processCfgNwk(serialmsg_t* msg) {
+bool NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgnwk_t* cfgnwk;
@@ -93,17 +93,17 @@ bool MeshSerial::processCfgNwk(serialmsg_t* msg) {
 	return result;
 }
 
-bool MeshSerial::processRFInit(serialmsg_t* msg) {
+bool NetworkSerial::processRFInit(serialmsg_t* msg) {
 	m_network->begin() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return true;
 }
 
-bool MeshSerial::processRFDeinit(serialmsg_t* msg) {
+bool NetworkSerial::processRFDeinit(serialmsg_t* msg) {
 	m_network->end() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return true;
 }
 
-int MeshSerial::returnACKPayload(uint8_t src, uint8_t port,
+int NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
@@ -146,7 +146,7 @@ int MeshSerial::returnACKPayload(uint8_t src, uint8_t port,
 	return bytes;
 }
 
-bool MeshSerial::processRFStartRecv(serialmsg_t* msg) {
+bool NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 4 ) {
 		data_rfstartrecv_t* rfstartrecv;
@@ -162,11 +162,11 @@ bool MeshSerial::processRFStartRecv(serialmsg_t* msg) {
 		currentmsg = msg;
 		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
 		currentmsg = NULL;
-		if ( res == Mesh::Network::OK ) {
+		if ( res == Meshwork::L3::Network::OK ) {
 			//already covered via returnACKPayload 
-		} else if ( res == Mesh::Network::OK_MESSAGE_INTERNAL ) {
+		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_INTERNAL ) {
 			respondWCode(msg, MSGCODE_INTERNAL);
-		} else if ( res == Mesh::Network::OK_MESSAGE_IGNORED ) {
+		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_IGNORED ) {
 			respondWCode(msg, MSGCODE_INTERNAL);
 		} else {
 			respondNOK(msg, ERROR_RECV);
@@ -178,7 +178,7 @@ bool MeshSerial::processRFStartRecv(serialmsg_t* msg) {
 	return result;
 }
 
-bool MeshSerial::processRFSend(serialmsg_t* msg) {
+bool NetworkSerial::processRFSend(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		data_rfsend_t* rfsend;
@@ -192,7 +192,7 @@ bool MeshSerial::processRFSend(serialmsg_t* msg) {
 			size_t maxACKLen = MeshV1::ACK_PAYLOAD_MAX;
 			uint8_t bufACK[maxACKLen];
 			int res = m_network->send(dst, port, rfsend->data, datalen, bufACK, maxACKLen);
-			if ( res == Mesh::Network::OK ) {
+			if ( res == Meshwork::L3::Network::OK ) {
 				m_serial->putchar(msg->seq);
 				m_serial->putchar(2 + datalen);
 				m_serial->putchar(MSGCODE_RFSENDACK);
@@ -213,7 +213,7 @@ bool MeshSerial::processRFSend(serialmsg_t* msg) {
 	return result;
 }
 
-bool MeshSerial::processRFBroadcast(serialmsg_t* msg) {
+bool NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 2 ) {//minimal msg len
 		data_rfbcast_t* rfbcast;
@@ -224,7 +224,7 @@ bool MeshSerial::processRFBroadcast(serialmsg_t* msg) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfbcast->data[i] = m_serial->getchar();
 			int res = m_network->broadcast(port, rfbcast->data, datalen);
-			if ( res == Mesh::Network::OK ) {
+			if ( res == Meshwork::L3::Network::OK ) {
 				respondWCode(msg, MSGCODE_OK);
 				result = true;
 			} else {
@@ -239,7 +239,7 @@ bool MeshSerial::processRFBroadcast(serialmsg_t* msg) {
 	return result;
 }
 
-bool MeshSerial::processOneMessage(serialmsg_t* msg) {
+bool NetworkSerial::processOneMessage(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		msg->seq = m_serial->getchar();//seq
@@ -259,7 +259,6 @@ bool MeshSerial::processOneMessage(serialmsg_t* msg) {
 //				case MSGCODE_RCRECV: break;//only controller->host
 //				case MSGCODE_RFRECVACK: break;//handled within processRFStartRecv
 				case MSGCODE_RFSTARTRECV: result = processRFStartRecv(msg); break;
-				case MSGCODE_RFSEND: result = processRFSend(msg); break;
 				case MSGCODE_RFSEND: result = processRFSend(msg); break;
 //				case MSGCODE_RFSENDACK: break;//only controller->host
 				case MSGCODE_RFBCAST: result = processRFBroadcast(msg); break;
