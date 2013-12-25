@@ -19,8 +19,8 @@
  * Boston, MA  02111-1307  USA
  */
 
-#ifndef __MESHWORK_LINEREADER_H__
-#define __MESHWORK_LINEREADER_H__
+#ifndef __MESHWORK_UTILS_LINEREADER_H__
+#define __MESHWORK_UTILS_LINEREADER_H__
 
 #include "Cosa/Types.h"
 #include "Cosa/IOStream.hh"

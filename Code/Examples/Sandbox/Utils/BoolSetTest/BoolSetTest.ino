@@ -18,45 +18,35 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L3_MESHV1_ROUTECACHE_H__
-#define __MESHWORK_L3_MESHV1_ROUTECACHE_H__
-
+#include <stdio.h>
+#include <stdlib.h>
+#include "Cosa/Trace.hh"
+#include "Cosa/Types.h"
+#include "Cosa/IOStream.hh"
+#include "Cosa/IOStream/Driver/UART.hh"
+#include "Cosa/Watchdog.hh"
+#include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
-#include "Meshwork/L3/Network.h"
+#include <Meshwork.h>
+#include "Utils/BoolSet.h"
 
-/**
- * Holds up routes for up to m_maxNodes destinations. One route per destination only
- */
-class RouteCache {
+void setup()
+{  
+  uart.begin(9600);
+  trace.begin(&uart, PSTR("BoolSetTest: started"));
+  Watchdog::begin();
+  RTC::begin();  
+}
 
-protected:
-	unit8_t m_maxNodes;
-	unit8_t m_maxHops;
-	//TODO structure, route_t*
-
-public:
-	RouteCache(unit8_t maxNodes, unit8_t maxHops)
-	{
-		m_maxNodes(maxNodes);
-		m_maxHops(maxHops);
-	};
-
-	unit8_t get_maxNodes() {
-		return m_maxNodes;
-	}
-
-	unit8_t addOrUpdate(uint8_t dst, void* route, uint8_t hops) {
-		if ( hops > m_maxHops )
-			return -1;
-		//TODO
-	}
-
-	void remove(uint8_t dst) {
-		//TODO
-	}
-
-	//TODO extend the class with the one writing to EEPROM?
-
-};
-#endif
-
+void loop()
+{
+	static int const MAX = 10;
+	BoolSet<MAX> bs(false);
+	bs.set(0, true);
+	bs.set(1, true);
+	bs.set(7, true);
+	bs.set(8, true);
+	bs.set(9, true);
+	for ( int i = 0; i < MAX; i ++ )
+		trace << bs.get(i) << PSTR("\n");
+}

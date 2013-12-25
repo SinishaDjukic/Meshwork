@@ -18,12 +18,12 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __EXAMPLES_MESHV1CONSOLE_STATICACKPROVIDER_H__
-#define __EXAMPLES_MESHV1CONSOLE_STATICACKPROVIDER_H__
+#ifndef __EXAMPLES_NETWORKV1CONSOLE_STATICACKPROVIDER_H__
+#define __EXAMPLES_NETWORKV1CONSOLE_STATICACKPROVIDER_H__
 
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
-#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
 class StaticACKProvider: public Meshwork::L3::Network::ACKProvider {
 

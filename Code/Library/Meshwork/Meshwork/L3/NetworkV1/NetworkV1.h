@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L3_NETWORK_MESHV1_H__
-#define __MESHWORK_L3_NETWORK_MESHV1_H__
+#ifndef __MESHWORK_L3_NETWORK_NETWORKV1_H__
+#define __MESHWORK_L3_NETWORK_NETWORKV1_H__
 
 #include "Cosa/Pins.hh"
 #include "Cosa/Wireless.hh"
@@ -72,7 +72,7 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| FLOOD_INFO | (DataL3)
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| Node Count X | SRCID | Node 1 | … | Node X | DSTID | (DataL3)
 */
-class MeshV1: public Meshwork::L3::Network {
+class NetworkV1: public Meshwork::L3::Network {
 		
 public:
 
@@ -367,7 +367,7 @@ public:
 #endif
 #endif
 
-	MeshV1(Wireless::Driver* driver,
+	NetworkV1(Wireless::Driver* driver,
 #ifdef SUPPORT_DELIVERY_ROUTED
 			RouteProvider* advisor = NULL,
 #endif

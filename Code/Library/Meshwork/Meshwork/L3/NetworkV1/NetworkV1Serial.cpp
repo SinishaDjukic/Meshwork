@@ -28,7 +28,7 @@
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkSerial.h"
-#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
 #define IF_NETWORKSERIAL_DEBUG
 
@@ -157,7 +157,7 @@ bool NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 								(uint32_t) m_serial->getchar() << 8 |
 								(uint32_t) m_serial->getchar();
 		uint8_t src, port;
-		size_t dataLenMax = MeshV1::PAYLOAD_MAX;
+		size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 		uint8_t* data[dataLenMax];
 		currentmsg = msg;
 		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
@@ -189,7 +189,7 @@ bool NetworkSerial::processRFSend(serialmsg_t* msg) {
 		if ( m_serial->available() >= datalen ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
-			size_t maxACKLen = MeshV1::ACK_PAYLOAD_MAX;
+			size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
 			uint8_t bufACK[maxACKLen];
 			int res = m_network->send(dst, port, rfsend->data, datalen, bufACK, maxACKLen);
 			if ( res == Meshwork::L3::Network::OK ) {

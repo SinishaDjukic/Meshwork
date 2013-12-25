@@ -18,16 +18,16 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L3_MESHV1_CACHINGROUTEPROVIDER_H__
-#define __MESHWORK_L3_MESHV1_CACHINGROUTEPROVIDER_H__
+#ifndef __MESHWORK_L3_NETWORKV1_PERSISTENTROUTEADVISOR_H__
+#define __MESHWORK_L3_NETWORKV1_PERSISTENTROUTEADVISOR_H__
 
 #include "Cosa/Wireless.hh"
-#include "Meshwork/L3/Network.h"
+#include "Network.h"
 
 /**
  * TODO
  */
-class CachingRouteProvider: public Meshwork::L3::Network::RouteProvider {
+class PersistentRouteProvider: public Meshwork::L3::Network::RouteProvider {
 
 protected:
 
@@ -44,7 +44,7 @@ public:
 	//always update with latest route to node
 	const uint8_t UPDATE_ALWAYS = 2;
 
-	CachingRouteProvider(unit8_t src, unit8_t maxNodes,
+	PersistentRouteProvider(unit8_t src, unit8_t maxNodes,
 			unit8_t maxHops, unit8_t updatePolicy)
 	{
 		m_src(src);
@@ -54,11 +54,11 @@ public:
 		cache(maxNodes, maxHops);
 	};
 
-	  virtual void set_address(uint8_t src) = 0;
-	  virtual uint8_t get_routeCount(uint8_t dst) = 0;
-	  virtual route_t* get_route(uint8_t dst, uint8_t index) = 0;
-	  virtual void route_found(route_t* route) = 0;
-	  virtual void route_failed(route_t* route) = 0;
+		  virtual void set_address(uint8_t src) = 0;
+		  virtual uint8_t get_routeCount(uint8_t dst) = 0;
+		  virtual route_t* get_route(uint8_t dst, uint8_t index) = 0;
+		  virtual void route_found(route_t* route) = 0;
+		  virtual void route_failed(route_t* route) = 0;
 
 
 };

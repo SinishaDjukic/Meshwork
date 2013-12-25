@@ -18,22 +18,22 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __EXAMPLES_MESHV1CONSOLE_STATICROUTEPROVIDER_H__
-#define __EXAMPLES_MESHV1CONSOLE_STATICROUTEPROVIDER_H__
+#ifndef __EXAMPLES_NETWORKV1CONSOLE_STATICROUTEPROVIDER_H__
+#define __EXAMPLES_NETWORKV1CONSOLE_STATICROUTEPROVIDER_H__
 
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
-#include "Meshwork/L3/MeshV1/MeshV1.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-class StaticRouteProvider: public MeshV1::RouteProvider {
+class StaticRouteProvider: public NetworkV1::RouteProvider {
 
 protected:
 	static const uint8_t MAX_STATIC_ROUTES = 5;
 	static const uint8_t MAX_STATIC_ROUTES_HOPS = 8;
-	MeshV1::route_t routes[MAX_STATIC_ROUTES];
+	NetworkV1::route_t routes[MAX_STATIC_ROUTES];
 	uint8_t hops[MAX_STATIC_ROUTES][MAX_STATIC_ROUTES_HOPS];
 	
-	void print_route(MeshV1::route_t* route) {
+	void print_route(NetworkV1::route_t* route) {
 		trace << PSTR("Route: src=") << route->src << PSTR(", dst=") << route->dst << PSTR(", hopCount=") << route->hopCount;
 		trace << PSTR("\tHops: ");
 		if ( route->hopCount > 0 )
@@ -92,8 +92,8 @@ public:
 		trace << PSTR("Get route count: dst=") << dst << PSTR(", result=") << result << PSTR("\n");
 		return result;
 	}
-	MeshV1::route_t* get_route(uint8_t dst, uint8_t index) {
-		MeshV1::route_t* result = NULL;
+	NetworkV1::route_t* get_route(uint8_t dst, uint8_t index) {
+		NetworkV1::route_t* result = NULL;
 		int current = 0;
 		for ( int i = 0; i < MAX_STATIC_ROUTES; i ++ ) {
 			if ( routes[i].dst == dst ) {
@@ -108,11 +108,11 @@ public:
 		trace << PSTR("Get route: dst=") << dst << PSTR(", index=") << index << PSTR(", result=") << result << PSTR("\n");
 		return result;
 	}
-	void route_found(MeshV1::route_t* route) {
+	void route_found(NetworkV1::route_t* route) {
 		trace << PSTR("Route found:\n\t");
 		print_route(route);
 	}
-	void route_failed(MeshV1::route_t* route) {
+	void route_failed(NetworkV1::route_t* route) {
 		trace << PSTR("Route failed:\n\t");
 		print_route(route);
 	}

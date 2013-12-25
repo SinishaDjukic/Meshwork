@@ -27,10 +27,11 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
+#include <Meshwork.h>
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/MeshV1/MeshV1.h"
-#include "Meshwork/L3/MeshV1/MeshV1.cpp"
-#include "LineReader.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
+#include "Utils/LineReader.h"
 
 uint8_t network = 1;
 uint8_t address = 1;
@@ -69,7 +70,7 @@ NRF24L01P rf(0x0001, 0x01,
 
 #endif
 
-MeshV1 mesh(&rf, NULL);
+NetworkV1 mesh(&rf, NULL);
 
 void setup()
 {  
@@ -77,7 +78,7 @@ void setup()
   Watchdog::begin();
   RTC::begin();
   
-  trace.begin(&uart, PSTR("MeshV1 Receiver: started"));
+  trace.begin(&uart, PSTR("NetworkV1 Receiver: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT << PSTR("\n");
   trace << PSTR("Set up network:address: ") << network << ":" << address << PSTR("\n");
  
@@ -91,7 +92,7 @@ void loop()
 {
 	uint8_t src, port;
 	uint32_t duration = 60 * 1000L;
-	size_t dataLenMax = MeshV1::PAYLOAD_MAX;
+	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
 	int result = mesh.recv(src, port, &data, dataLenMax, duration, NULL);
 	trace << RTC::millis();

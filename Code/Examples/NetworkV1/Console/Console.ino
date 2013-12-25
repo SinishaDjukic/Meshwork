@@ -28,10 +28,11 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
+#include <Meshwork.h>
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/MeshV1/MeshV1.h"
-#include "Meshwork/L3/MeshV1/MeshV1.cpp"
-#include "LineReader.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
+#include "Utils/LineReader.h"
 
 // Select Wireless device driver
 // #include "Cosa/Wireless/Driver/CC1101.hh"
@@ -71,7 +72,7 @@ NRF24L01P rf(0x0001, 0x01,
 #endif
 
 StaticRouteProvider advisor;
-MeshV1 mesh(&rf, &advisor);
+NetworkV1 mesh(&rf, &advisor);
 LineReader<64> console(&uart);
 StaticACKProvider ackProvider;
 
@@ -85,7 +86,7 @@ void setup()
 //  Watchdog::begin();
   rf.set_sleep(mode);
   RTC::begin();
-  trace.begin(&uart, PSTR("MeshV1 Serial Console: started"));
+  trace.begin(&uart, PSTR("NetworkV1 Serial Console: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT << PSTR("\n");
 }
 
@@ -173,7 +174,7 @@ void run_nop(uint8_t address, uint8_t port) {
 	trace << PSTR("Result code: ") << res << PSTR("\n");
 	trace << PSTR("Ack len: ") << ackLen << PSTR("\n");
 	trace << PSTR("Ack: \t");
-//	trace.print(ack, ackLen, IOStream::hex, MeshV1::PAYLOAD_MAX);
+//	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 	if ( ack != NULL && ackLen > 0 ) {
 		char * ackP = (char *) ack;
 		print_message(ackP, ackLen);
@@ -201,7 +202,7 @@ void run_send(uint8_t address, uint8_t port, char * pStart, char * pEnd) {
 	trace << PSTR("Ack: \t");
 	print_message((char *)ack, ackLen);
 	//TRACE_ARRAY(PSTR("Ack: "), ack, ackLen);
-//	trace.print(ack, ackLen, IOStream::hex, MeshV1::PAYLOAD_MAX);
+//	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 	trace << PSTR("\n");
 	
 }
@@ -238,7 +239,7 @@ void run_routereset() {
 void run_recv() {
 	uint32_t duration = (uint32_t) 60 * 1000L;
 	uint8_t src, port;
-	size_t dataLenMax = MeshV1::PAYLOAD_MAX;
+	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
 	trace << PSTR("Receive: duration=") << duration << PSTR("\n");
 	trace << PSTR("Receive: dataLenMax=") << dataLenMax << PSTR("\n");
@@ -249,7 +250,7 @@ void run_recv() {
 		if ( result != -1 ) {
 			trace << PSTR("[RECEIVED] result=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=") << PSTR("\n");
-//			trace.print(data, dataLenMax, IOStream::hex, MeshV1::PAYLOAD_MAX);
+//			trace.print(data, dataLenMax, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 			TRACE_ARRAY(PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			trace << PSTR("\n");
 		}
