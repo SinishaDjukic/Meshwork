@@ -43,18 +43,23 @@ extern Soft::UART uart;
 class UART : public IOStream::Device {
   friend void USART_UDRE_vect(void);
   friend void USART_RX_vect(void);
+  friend void USART_TX_vect(void);
 #if defined(__ARDUINO_MIGHTY__)
   friend void USART1_UDRE_vect(void);
   friend void USART1_RX_vect(void);
+  friend void USART1_TX_vect(void);
 #elif defined(__ARDUINO_MEGA__)
   friend void USART1_UDRE_vect(void);
   friend void USART1_RX_vect(void);
+  friend void USART1_TX_vect(void);
   friend void USART2_UDRE_vect(void);
   friend void USART2_RX_vect(void);
+  friend void USART2_TX_vect(void);
   friend void USART3_UDRE_vect(void);
   friend void USART3_RX_vect(void);
+  friend void USART3_TX_vect(void);
 #endif
-private:
+protected:
   volatile uint8_t* const m_sfr;
   IOStream::Device* m_ibuf;
   IOStream::Device* m_obuf;
@@ -105,7 +110,7 @@ private:
   }
 
   /**
-   * Common UART transmit interrupt handler.
+   * Common UART data register empty (transmit) interrupt handler.
    */
   void on_udre_interrupt();
 
@@ -113,6 +118,11 @@ private:
    * Common UART receive interrupt handler.
    */
   void on_rx_interrupt();
+
+  /**
+   * Common UART transmit completed interrupt handler.
+   */
+  void on_tx_interrupt();
 
 public:
   // Default buffer size for standard UART0 (at 9600 baud)
@@ -144,6 +154,7 @@ public:
     m_ibuf(ibuf),
     m_obuf(obuf)
   {
+    uart[port] = this;
   }
 
   /**
@@ -236,32 +247,23 @@ public:
   bool end();
 
   /**
+   * @override UART
+   * Transmit completed callback. This virtual member function is
+   * called when the last byte in the output buffer is transmitted.
+   */
+  virtual void on_transmit_completed() {}
+
+  /**
    * Serial port references. Only uart0 is predefined (reference to global
    * uart). Others are assuped to be allocated by applications and setup
    * with UART_SETUP().
    */
-  static UART* uart0;
-#if defined(__ARDUINO_MIGHTY__)
-  static UART* uart1;
-#elif defined(__ARDUINO_MEGA__)
-  static UART* uart1;
-  static UART* uart2;
-  static UART* uart3;
-#endif
-
+  static UART* uart[Board::UART_MAX];
 };
 
 /**
- * Default serial port(0).
+ * Default serial port(0). Weakly defined (See UART.cpp).
  */
 extern UART uart;
-
-/**
- * Setup handling of serial port with given port number and UART instance.
- * @param[in] nr serial port number.
- * @param[in] obj address of UART instance.
- */
-#define UART_SETUP(nr,obj) UART::uart ## nr = &obj
-
 #endif
 #endif

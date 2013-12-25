@@ -105,17 +105,17 @@ public:
    * Analog pin symbols
    */
   enum AnalogPin {
-    A0 = D0,
-    A1 = D1,
-    A2 = D2,
-    A3 = D4,
-    A4 = D5,
-    A5 = D6, 
-    A6 = D7,
-    A7 = D12,
-    A8 = D13,
-    A9 = D14,
-    A10 = D15
+    A0 = 0,
+    A1,
+    A2,
+    A3,
+    A4,
+    A5, 
+    A6,
+    A7,
+    A8,
+    A9,
+    A10
   } __attribute__((packed));
 
   /**
@@ -163,8 +163,8 @@ public:
    * Pins used for TWI interface.
    */
   enum TWIPin {
-    SDA = D0,
-    SCL = D2
+    SDA = D8,
+    SCL = D10
   } __attribute__((packed));
   
   /**

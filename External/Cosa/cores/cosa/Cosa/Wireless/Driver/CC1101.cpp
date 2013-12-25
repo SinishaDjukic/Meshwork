@@ -30,6 +30,12 @@
 #include "Cosa/Power.hh"
 #include "Cosa/RTC.hh"
 
+#if defined(__ARDUINO_TINY__)
+#define PIN PINA
+#else
+#define PIN PINB
+#endif
+
 /**
  * Default configuration (generated with TI SmartRF Studio tool):
  * Radio: 433 MHz, 38 kbps, GFSK. Whitening, 0 dBm. 
@@ -94,6 +100,15 @@ CC1101::IRQPin::on_interrupt(uint16_t arg)
   m_rf->m_avail = true;
 }
 
+void
+CC1101::strobe(Command cmd)
+{
+  spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
+  m_status = spi.transfer(header_t(cmd, 0, 0));
+  spi.end();
+}
+
 void 
 CC1101::await(Mode mode)
 {
@@ -111,6 +126,7 @@ CC1101::begin(const void* config)
 
   // Upload the configuration. Check for default configuration
   spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
   write_P(IOCFG2, 
 	  config ? (const uint8_t*) config : CC1101::config, 
 	  CONFIG_MAX);
@@ -119,6 +135,7 @@ CC1101::begin(const void* config)
   // Adjust configuration with instance specific state
   uint16_t sync = hton(m_addr.network);
   spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
   write(PATABLE, 0x60);
   write(CHANNR, m_channel);
   write(ADDR, m_addr.device);
@@ -154,6 +171,7 @@ CC1101::send(uint8_t dest, uint8_t port, const iovec_t* vec)
 
   // Write frame header(length, dest, src, port)
   spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
   write(TXFIFO, len + 3);
   write(TXFIFO, dest);
   write(TXFIFO, m_addr.device);
@@ -163,6 +181,7 @@ CC1101::send(uint8_t dest, uint8_t port, const iovec_t* vec)
   // Write frame payload
   for (const iovec_t* vp = vec; vp->buf != NULL; vp++) {
     spi.begin(this);
+    loop_until_bit_is_clear(PIN, Board::MISO);
     write(TXFIFO, vp->buf, vp->size);
     spi.end();
   }
@@ -186,6 +205,7 @@ int
 CC1101::recv(uint8_t& src, uint8_t& port, void* buf, size_t len, uint32_t ms)
 {
   // Check if we need to wait for a message
+  uint8_t size;
   if (!m_avail) {
     // Fix: Use wakeup on radio to reduce power during wait
     uint32_t start = RTC::millis();
@@ -193,15 +213,22 @@ CC1101::recv(uint8_t& src, uint8_t& port, void* buf, size_t len, uint32_t ms)
       strobe(SFRX);
       strobe(SRX);
     }
-    while (!m_avail && ((ms == 0) || (RTC::since(start) < ms)))
-      Power::sleep(m_mode);
-    if (!m_avail) return (-2);
+    do {
+      while (!m_avail && ((ms == 0) || (RTC::since(start) < ms)))
+	Power::sleep(m_mode);
+      if (!m_avail) return (-2);
+      spi.begin(this);
+      loop_until_bit_is_clear(PIN, Board::MISO);
+      size = read(RXBYTES);
+      spi.end();
+    } while ((size & RXBYTES) == 0);
   }
   m_avail = false;
 
   // Read the payload size and check against buffer length
   spi.begin(this);
-  uint8_t size = read(RXFIFO) - 3;
+  loop_until_bit_is_clear(PIN, Board::MISO);
+  size = read(RXFIFO) - 3;
   if (size > len) {
     spi.end();
     strobe(SIDLE);
@@ -218,6 +245,7 @@ CC1101::recv(uint8_t& src, uint8_t& port, void* buf, size_t len, uint32_t ms)
 
   // Read the link quality status
   spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
   read(RXFIFO, &m_recv_status, sizeof(m_recv_status));
   spi.end();
 
@@ -251,6 +279,7 @@ CC1101::set_output_power_level(int8_t dBm)
   else if (dBm < 7)   pa = 0x84; 
   else if (dBm < 10)  pa = 0xC4; 
   spi.begin(this);
+  loop_until_bit_is_clear(PIN, Board::MISO);
   write(PATABLE, pa);
   spi.end();
 }
