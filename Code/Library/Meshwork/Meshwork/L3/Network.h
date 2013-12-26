@@ -127,8 +127,12 @@ namespace Meshwork {
 		/** Rerouting a message has failed. */
 		static const int8_t ERROR_REROUTE_FAILED = -41;
 
+		/** First possible node ID. */
+		static const uint8_t MIN_NODE_ID 	= 1;
+		/** Last possible node ID. */
+		static const uint8_t MAX_NODE_ID 	= 254;
 		/** Maximum node count in the network. */
-		static const uint8_t MAX_NODE_COUNT = 253;//255 without nodes 0 and 255
+		static const uint8_t MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID;
 		
 		//protected fields
 		protected:
