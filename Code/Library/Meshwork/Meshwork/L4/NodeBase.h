@@ -32,16 +32,10 @@ namespace Meshwork {
 
 	namespace L4 {
 
-		struct NetworkInfo {
-			uint16_t networkID;
-			char* key;
-		};
-	
 		class NodeBase {
 		protected:
-			NetworkInfo networkInfo;
-			uint8_t nodeID;
-			uint8_t mode;
+			Meshwork::L3::Network* m_network;
+			uint8_t m_mode;
 			
 		public:
 			static const uint8_t MODE_NORMAL	= 0;
@@ -50,16 +44,18 @@ namespace Meshwork {
 			
 			static const int ERROR_UNKNOWN	= -1;
 			
-			virtual void getNetworkInfo(NetworkInfo* &nwkInfo) = 0;
-			virtual int setNetworkInfo(NetworkInfo* nwkInfo) = 0;
+			NodeBase(Meshwork::L3::Network* network):
+				m_network(network),
+				m_mode(MODE_NORMAL)
+			{}
 			
-			virtual void resetNode() = 0; //factory reset
+			virtual void resetNode(); //factory reset
 			
-			virtual uint8_t getNodeID() = 0;
-			virtual void setNodeID(uint8_t nodeID) = 0;
+			virtual uint8_t getNodeID();
+			virtual void setNodeID(uint8_t nodeID);
 			
-			virtual uint8_t getModeRequest() = 0;
-			virtual int setModeRequest(uint8_t mode, uint32_t timeout) = 0;
+			virtual uint8_t getModeRequest();
+			virtual int setModeRequest(uint8_t mode, uint32_t timeout);
 			
 		};//end of Meshwork::L4::NodeBase
 
@@ -78,13 +74,15 @@ namespace Meshwork {
 			static const int ERROR_NODE_INVALID				= -65;//(remove) given node does not exist
 			static const int ERROR_NODE_INVALID_CONTROLLER	= -66;//(remove) cannot remove self
 
-			virtual int addNode(uint8_t nodeID) = 0;//return new node ID given a desired ID (255 for any) or <0 for errors
-			virtual int removeNode(uint8_t nodeID) = 0;//return removes node ID <0 for errors
+			virtual int addNode(uint8_t nodeID);//return new node ID given a desired ID (255 for any) or <0 for errors
+			virtual int removeNode(uint8_t nodeID);//return removes node ID <0 for errors
 			
-			virtual void getNodeList(BitSet<Meshwork::L3::Network::MAX_NODE_COUNT> &destList) = 0;//fill in the bitmask for up to maxNodes and return node count
-			virtual uint8_t getNodeCount() = 0;
-			virtual void getNextNode(uint8_t &start) = 0; //start inclusive
+			virtual void getNodeList(BitSet<Meshwork::L3::Network::MAX_NODE_COUNT>* destList);//fill in the bitmask for up to maxNodes and return node count
+			virtual uint8_t getNodeCount();
+			virtual void getNextNode(uint8_t &start); //start inclusive
 
+			virtual void resetNode();//override
+			
 		};//end of Meshwork::L4::ControllerBase
 		
 	}//end of Meshwork:L4

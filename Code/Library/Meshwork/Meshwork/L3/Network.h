@@ -134,12 +134,16 @@ namespace Meshwork {
 		/** Maximum node count in the network. */
 		static const uint8_t MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID;
 		
+		/** Maximum length of a network key. */
+		static const uint8_t MAX_NETWORK_KEY_LEN 	= 8;
+		
 		//protected fields
 		protected:
 			Wireless::Driver* m_driver;
 			uint8_t m_nwkcaps;
 			uint8_t m_delivery;
 			uint8_t m_retry;
+			char* m_networkKey;
 
 		//public constructor and functions
 		public:
@@ -157,6 +161,30 @@ namespace Meshwork {
 			  return m_driver;
 			}
 
+			virtual int16_t getNetworkID() {
+				return m_driver->get_network_address();
+			}
+			
+			virtual void setNetworkID(int16_t networkID) {
+				m_driver->set_address(networkID, m_driver->get_device_address());
+			}
+			
+			virtual uint8_t getNodeID() {
+				return m_driver->get_device_address();
+			}
+			
+			virtual void setNodeID(uint8_t networkID) {
+				m_driver->set_address(m_driver->get_network_address(), networkID);
+			}
+						
+			virtual char* getNetworkKey() {
+				return m_networkKey;
+			}
+			
+			virtual void setNetworkKey(char* networkKey) {
+				m_networkKey = networkKey;
+			}
+			
 			virtual bool begin(const void* config = NULL) {
 				return m_driver == NULL ? false : m_driver->begin();
 			}

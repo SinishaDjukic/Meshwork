@@ -38,111 +38,121 @@
 //RFSEND = DST | PORT | DATALEN | DATA
 //RFSENDACK = DATALEN | DATA
 //RFBCAST = PORT | DATALEN | DATA
-class NetworkSerial : public Meshwork::L3::Network::ACKProvider {
+namespace Meshwork {
 
-public:
-  struct serialmsg_t {
-	uint8_t seq;
-	uint8_t len;
-	uint8_t code;
-	uint8_t* data;
-  };
-  
-  struct data_cfgbasic_t {
-	uint8_t nwkcaps;
-	uint8_t delivery;
-	uint8_t retry;
-  };
-  
-  struct data_cfgnwk_t {
-	uint16_t nwkid;
-	uint8_t nodeid;
-  };
-  
-  struct data_rfrecv_t {
-	uint8_t src;
-	uint8_t port;
-	uint8_t datalen;
-	uint8_t* data;
-  };
-  
-  struct data_rfrecvack_t {
-	uint8_t datalen;
-	uint8_t* data;
-  };
-  
-  struct data_rfstartrecv_t {
-	uint32_t timeout;
-  };
-  
-  struct data_rfsend_t {
-	uint8_t dst;
-	uint8_t port;
-	uint8_t datalen;
-	uint8_t* data;
-  };
-  
-  struct data_rfbcast_t {
-	uint8_t port;
-	uint8_t datalen;
-	uint8_t* data;
-  };  
-  
-public:
-	static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+	namespace L3 {
 	
-	static const uint8_t MSGCODE_OK 				= 0;
-	static const uint8_t MSGCODE_NOK 				= 1;
-	static const uint8_t MSGCODE_UNKNOWN 			= 2;
-	static const uint8_t MSGCODE_INTERNAL 			= 3;
-	static const uint8_t MSGCODE_CFGBASIC 			= 10;
-	static const uint8_t MSGCODE_CFGNWK 			= 11;
-	static const uint8_t MSGCODE_RFINIT 			= 20;
-	static const uint8_t MSGCODE_RFDEINIT 			= 21;
-	static const uint8_t MSGCODE_RFRECV 			= 22;
-	static const uint8_t MSGCODE_RFRECVACK 			= 23;
-	static const uint8_t MSGCODE_RFSTARTRECV 		= 24;
-	static const uint8_t MSGCODE_RFSEND 			= 25;
-	static const uint8_t MSGCODE_RFSENDACK 			= 26;
-	static const uint8_t MSGCODE_RFBCAST 			= 27;
-	
-	static const uint8_t ERROR_GENERAL 				= 0;
-	static const uint8_t ERROR_INSUFFICIENT_DATA 	= 1;
-	static const uint8_t ERROR_TOO_LONG_DATA 		= 2;
-	static const uint8_t ERROR_ILLEGAL_STATE 		= 3;
-	static const uint8_t ERROR_RECV 				= 4;
-	static const uint8_t ERROR_SEND 				= 5;
-	static const uint8_t ERROR_BCAST 				= 6;
-	
-	static const uint16_t TIMEOUT_RESPONSE 			= 3000;
-	
-protected:
-	Meshwork::L3::Network* m_network;
-	UART* m_serial;
-	serialmsg_t* currentmsg;
+		class NetworkSerial : public Meshwork::L3::Network::ACKProvider {
 
-	
-	virtual void respondWCode(serialmsg_t* msg, uint8_t code);
-	virtual void respondNOK(serialmsg_t* msg, uint8_t error);
-	virtual void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data);
-	
-	virtual bool processCfgBasic(serialmsg_t* msg);
-	virtual bool processCfgNwk(serialmsg_t* msg);
-	virtual bool processRFInit(serialmsg_t* msg);
-	virtual bool processRFDeinit(serialmsg_t* msg);
+		public:
+		  struct serialmsg_t {
+			uint8_t seq;
+			uint8_t len;
+			uint8_t code;
+			uint8_t* data;
+		  };
+		  
+		  struct data_cfgbasic_t {
+			uint8_t nwkcaps;
+			uint8_t delivery;
+			uint8_t retry;
+		  };
+		  
+		  struct data_cfgnwk_t {
+			uint16_t nwkid;
+			uint8_t nodeid;
+		  };
+		  
+		  struct data_rfrecv_t {
+			uint8_t src;
+			uint8_t port;
+			uint8_t datalen;
+			uint8_t* data;
+		  };
+		  
+		  struct data_rfrecvack_t {
+			uint8_t datalen;
+			uint8_t* data;
+		  };
+		  
+		  struct data_rfstartrecv_t {
+			uint32_t timeout;
+		  };
+		  
+		  struct data_rfsend_t {
+			uint8_t dst;
+			uint8_t port;
+			uint8_t datalen;
+			uint8_t* data;
+		  };
+		  
+		  struct data_rfbcast_t {
+			uint8_t port;
+			uint8_t datalen;
+			uint8_t* data;
+		  };  
+		  
+		public:
+			static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+			
+			static const uint8_t MSGCODE_OK 				= 0;
+			static const uint8_t MSGCODE_NOK 				= 1;
+			static const uint8_t MSGCODE_UNKNOWN 			= 2;
+			static const uint8_t MSGCODE_INTERNAL 			= 3;
+			static const uint8_t MSGCODE_CFGBASIC 			= 10;
+			static const uint8_t MSGCODE_CFGNWK 			= 11;
+			static const uint8_t MSGCODE_RFINIT 			= 20;
+			static const uint8_t MSGCODE_RFDEINIT 			= 21;
+			static const uint8_t MSGCODE_RFRECV 			= 22;
+			static const uint8_t MSGCODE_RFRECVACK 			= 23;
+			static const uint8_t MSGCODE_RFSTARTRECV 		= 24;
+			static const uint8_t MSGCODE_RFSEND 			= 25;
+			static const uint8_t MSGCODE_RFSENDACK 			= 26;
+			static const uint8_t MSGCODE_RFBCAST 			= 27;
+			
+			static const uint8_t ERROR_GENERAL 				= 0;
+			static const uint8_t ERROR_INSUFFICIENT_DATA 	= 1;
+			static const uint8_t ERROR_TOO_LONG_DATA 		= 2;
+			static const uint8_t ERROR_ILLEGAL_STATE 		= 3;
+			static const uint8_t ERROR_RECV 				= 4;
+			static const uint8_t ERROR_SEND 				= 5;
+			static const uint8_t ERROR_BCAST 				= 6;
+			static const uint8_t ERROR_KEY_TOO_LONG 		= 7;
+			
+			static const uint16_t TIMEOUT_RESPONSE 			= 3000;
+			
+		protected:
+			Meshwork::L3::Network* m_network;
+			UART* m_serial;
+			serialmsg_t* m_currentMsg;
+			char m_networkKey[Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1];//+1 for NULL
 
-	virtual bool processRFStartRecv(serialmsg_t* msg);
-	virtual bool processRFSend(serialmsg_t* msg);
-	virtual bool processRFBroadcast(serialmsg_t* msg);
+			
+			virtual void respondWCode(serialmsg_t* msg, uint8_t code);
+			virtual void respondNOK(serialmsg_t* msg, uint8_t error);
+			virtual void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data);
+			
+			virtual bool processCfgBasic(serialmsg_t* msg);
+			virtual bool processCfgNwk(serialmsg_t* msg);
+			virtual bool processRFInit(serialmsg_t* msg);
+			virtual bool processRFDeinit(serialmsg_t* msg);
 
-public:
-	NetworkSerial(Meshwork::L3::Network* network, UART* serial):
-		m_network(network),
-		m_serial(serial)
-	{ }
-	
-	virtual bool processOneMessage(serialmsg_t* msg);
-	
-	virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
+			virtual bool processRFStartRecv(serialmsg_t* msg);
+			virtual bool processRFSend(serialmsg_t* msg);
+			virtual bool processRFBroadcast(serialmsg_t* msg);
+
+		public:
+			NetworkSerial(Meshwork::L3::Network* network, UART* serial):
+				m_network(network),
+				m_serial(serial)
+			{
+				m_networkKey[0] = 0;
+			}
+			
+			virtual bool processOneMessage(serialmsg_t* msg);
+			
+			virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
+		};
+	};
 };
 #endif

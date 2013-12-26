@@ -36,14 +36,14 @@
 #define IF_NETWORKSERIAL_DEBUG if(false)
 #endif
 
-void NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
+void Meshwork::L3::NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(1);
 	m_serial->putchar(code);
 	m_serial->flush();
 }
 
-void NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
+void Meshwork::L3::NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(2);
 	m_serial->putchar(MSGCODE_NOK);
@@ -51,7 +51,7 @@ void NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	m_serial->flush();
 }
 
-void NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
+void Meshwork::L3::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(2 + datalen);
 	m_serial->putchar(MSGCODE_RFSENDACK);
@@ -61,7 +61,7 @@ void NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* d
 	m_serial->flush();
 }
 
-bool NetworkSerial::processCfgBasic(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgbasic_t* cfgbasic;
@@ -69,16 +69,27 @@ bool NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 		cfgbasic->nwkcaps = m_serial->getchar();
 		cfgbasic->delivery = m_serial->getchar();
 		cfgbasic->retry = m_serial->getchar();
-		result = true;
-		respondWCode(msg, MSGCODE_OK);
-		result = true;
+		size_t keyLen = m_serial->getchar();
+		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
+			m_networkKey[0] = 0;
+			for (int i = 0; i < keyLen; i ++ )
+				m_networkKey[i] = m_serial->getchar();
+			if ( keyLen > 0 )
+				m_networkKey[keyLen + 1] = 0;
+			m_network->setNetworkKey((char*) m_networkKey);
+			respondWCode(msg, MSGCODE_OK);
+			result = true;
+		} else {
+			respondWCode(msg, ERROR_KEY_TOO_LONG);
+			result = false;
+		}
 	} else {
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
 }
 
-bool NetworkSerial::processCfgNwk(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgnwk_t* cfgnwk;
@@ -93,23 +104,23 @@ bool NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 	return result;
 }
 
-bool NetworkSerial::processRFInit(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFInit(serialmsg_t* msg) {
 	m_network->begin() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return true;
 }
 
-bool NetworkSerial::processRFDeinit(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
 	m_network->end() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return true;
 }
 
-int NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
+int Meshwork::L3::NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
-	if ( currentmsg != NULL ) {//must be the case, but need a sanity check
+	if ( m_currentMsg != NULL ) {//must be the case, but need a sanity check
 		//first, send RFRECV
-		m_serial->putchar(currentmsg->seq);
+		m_serial->putchar(m_currentMsg->seq);
 		m_serial->putchar(4 + len);
 		m_serial->putchar(MSGCODE_RFRECV);
 		m_serial->putchar(src);
@@ -132,21 +143,21 @@ int NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 			if ( reslen > 0 && reslen <= lenACK && m_serial->available() >= reslen ) {
 				for ( int i = 0; i < reslen; i ++ )
 					((char*) bufACK)[i] = m_serial->getchar();
-				respondWCode(currentmsg, MSGCODE_OK);
+				respondWCode(m_currentMsg, MSGCODE_OK);
 				bytes = reslen;
 			} else {
-				respondNOK(currentmsg, ERROR_TOO_LONG_DATA);
+				respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
 			}
 		} else {
-			respondNOK(currentmsg, ERROR_INSUFFICIENT_DATA);
+			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
 		}
 	} else {
-		respondNOK(currentmsg, ERROR_ILLEGAL_STATE);
+		respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
 	}
 	return bytes;
 }
 
-bool NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 4 ) {
 		data_rfstartrecv_t* rfstartrecv;
@@ -159,9 +170,9 @@ bool NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 		uint8_t src, port;
 		size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 		uint8_t* data[dataLenMax];
-		currentmsg = msg;
+		m_currentMsg = msg;
 		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
-		currentmsg = NULL;
+		m_currentMsg = NULL;
 		if ( res == Meshwork::L3::Network::OK ) {
 			//already covered via returnACKPayload 
 		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_INTERNAL ) {
@@ -178,7 +189,7 @@ bool NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 	return result;
 }
 
-bool NetworkSerial::processRFSend(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFSend(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		data_rfsend_t* rfsend;
@@ -213,7 +224,7 @@ bool NetworkSerial::processRFSend(serialmsg_t* msg) {
 	return result;
 }
 
-bool NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 2 ) {//minimal msg len
 		data_rfbcast_t* rfbcast;
@@ -239,7 +250,7 @@ bool NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
 	return result;
 }
 
-bool NetworkSerial::processOneMessage(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processOneMessage(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		msg->seq = m_serial->getchar();//seq
