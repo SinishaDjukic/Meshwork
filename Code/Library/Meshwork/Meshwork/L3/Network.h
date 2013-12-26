@@ -41,12 +41,9 @@
 #define SUPPORT_REROUTING
 #endif
 
-//Meshwork::L3::Network
-class Meshwork {
-public:
+namespace Meshwork {
 
-  class L3 {
-  public:
+	namespace L3 {
   
 	  class Network {
 	  public:
@@ -130,6 +127,9 @@ public:
 		/** Rerouting a message has failed. */
 		static const int8_t ERROR_REROUTE_FAILED = -41;
 
+		/** Maximum node count in the network. */
+		static const uint8_t MAX_NODE_COUNT = 253;//255 without nodes 0 and 255
+		
 		//protected fields
 		protected:
 			Wireless::Driver* m_driver;
@@ -183,7 +183,10 @@ public:
 			//main recv method
 			virtual int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
 					uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
+		
 		};//end of Meshwork::L3::Network
+		
 	};//end of Meshwork::L3
+	
 };//end of Meshwork
 #endif
