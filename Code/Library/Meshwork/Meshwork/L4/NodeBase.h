@@ -81,9 +81,9 @@ namespace Meshwork {
 			virtual int addNode(uint8_t nodeID) = 0;//return new node ID given a desired ID (255 for any) or <0 for errors
 			virtual int removeNode(uint8_t nodeID) = 0;//return removes node ID <0 for errors
 			
-			virtual void getNodeList(BitSet<Meshwork::L3::Network::MAX_NODE_COUNT> &nodeList) = 0;//fill in the bitmask for up to maxNodes and return node count
+			virtual void getNodeList(BitSet<Meshwork::L3::Network::MAX_NODE_COUNT> &destList) = 0;//fill in the bitmask for up to maxNodes and return node count
 			virtual uint8_t getNodeCount() = 0;
-			virtual int getNextNode(uint8_t &start) = 0; //start inclusive
+			virtual void getNextNode(uint8_t &start) = 0; //start inclusive
 
 		};//end of Meshwork::L4::ControllerBase
 		
