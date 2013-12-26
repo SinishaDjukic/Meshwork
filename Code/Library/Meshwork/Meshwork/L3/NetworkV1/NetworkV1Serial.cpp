@@ -40,7 +40,7 @@ void NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
 	m_serial->putchar(msg->seq);
 	m_serial->putchar(1);
 	m_serial->putchar(code);
-	m_serial->flush(SLEEP_MODE_IDLE);
+	m_serial->flush();
 }
 
 void NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
@@ -48,7 +48,7 @@ void NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	m_serial->putchar(2);
 	m_serial->putchar(MSGCODE_NOK);
 	m_serial->putchar(error);
-	m_serial->flush(SLEEP_MODE_IDLE);
+	m_serial->flush();
 }
 
 void NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
@@ -58,7 +58,7 @@ void NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* d
 	m_serial->putchar(datalen);
 	for ( int i = 0; i < datalen; i ++ )
 		m_serial->putchar(data[i]);
-	m_serial->flush(SLEEP_MODE_IDLE);
+	m_serial->flush();
 }
 
 bool NetworkSerial::processCfgBasic(serialmsg_t* msg) {
@@ -117,7 +117,7 @@ int NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 		m_serial->putchar(len);
 		for ( int i = 0; i < len; i ++ )//ok, this can be optimized
 			m_serial->putchar(((uint8_t*) buf)[i]);
-		m_serial->flush(SLEEP_MODE_IDLE);
+		m_serial->flush();
 		
 		//now, wait for RFRECVACK
 		uint32_t start = RTC::millis();
@@ -199,7 +199,7 @@ bool NetworkSerial::processRFSend(serialmsg_t* msg) {
 				m_serial->putchar(datalen);
 				for ( int i = 0; i < datalen; i ++ )
 					m_serial->putchar(bufACK[i]);
-				m_serial->flush(SLEEP_MODE_IDLE);
+				m_serial->flush();
 				result = true;
 			} else {
 				respondNOK(msg, ERROR_SEND);

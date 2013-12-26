@@ -153,7 +153,7 @@ extern uint8_t trace_log_mask;
 	  for (const iovec_t* vp = msgvp; vp->buf != 0; vp++) \
 		TRACE_ARRAY_BYTES((const void*)vp->buf, (uint8_t) vp->size); \
 	  trace << PSTR("\n"); \
-	} while(0)
+	}
 	
 /**
  * Support macro for trace of a log message with line number and

@@ -24,4 +24,26 @@
 //dummy file required to force Arduino IDE include
 //Meshwork library dir in the project compilation path
 
+# define TRACE_ARRAY_BYTES(array, len)							\
+  do {									\
+	trace.print((const void*) array, len, IOStream::hex, len+1); \
+	trace << PSTR(" "); \
+  } while (0)
+  
+  
+# define TRACE_ARRAY(msg, array, len)							\
+  do {									\
+    trace.print_P(msg);					\
+    TRACE_ARRAY_BYTES(array, len); \
+	trace << PSTR("\n"); \
+  } while (0)
+
+#define	TRACE_VP_BYTES(msg, msgvp) \
+	{ \
+      trace.print_P(msg);					\
+	  for (const iovec_t* vp = msgvp; vp->buf != 0; vp++) \
+		TRACE_ARRAY_BYTES((const void*)vp->buf, (uint8_t) vp->size); \
+	  trace << PSTR("\n"); \
+	}
+	
 #endif
