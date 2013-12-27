@@ -37,16 +37,25 @@ namespace Meshwork {
 
 		public:
 			static const uint8_t MSGCODE_SET_MODE_ANN			= 96;
-			static const uint8_t MSGCODE_GET_NODE_LIST			= 97;
-			static const uint8_t MSGCODE_ADD_NODE				= 98;
-			static const uint8_t MSGCODE_REMOVE_NODE			= 99;
+			static const uint8_t MSGCODE_SET_MODE_ANN_RES		= 97;
+			static const uint8_t MSGCODE_GET_NODE_LIST			= 98;
+			static const uint8_t MSGCODE_GET_NODE_LIST_RES		= 99;
+			static const uint8_t MSGCODE_ADD_NODE				= 100;
+			static const uint8_t MSGCODE_ADD_NODE_RES			= 101;
+			static const uint8_t MSGCODE_REMOVE_NODE			= 100;
 				
+			//64-95
+			static const uint8_t ERROR_MAX_NODES_REACHED 		= 64;
+			static const uint8_t ERROR_NODE_INVALID 			= 65;
+			static const uint8_t ERROR_NODE_INVALID_CONTROLLER 	= 66;
+			
 			struct data_setmodeann_t {
 				uint8_t mode;
-				uint32_t* timeout;
+				uint32_t timeout;
 			};
 			
 		protected:
+			ControllerBase* m_controllerBase;
 			
 			virtual bool processSetModeAnnounce(serialmsg_t* msg);
 			virtual bool processGetNodeList(serialmsg_t* msg);
@@ -54,11 +63,12 @@ namespace Meshwork {
 			virtual bool processRemoveNode(serialmsg_t* msg);
 
 		public:
-			ControllerBaseSerial(Meshwork::L3::Network* network, UART* serial):
-				NetworkSerial(network, serial)
+			ControllerBaseSerial(Meshwork::L3::Network* network, UART* serial, ControllerBase* controllerBase):
+				NetworkSerial(network, serial),
+				m_controllerBase(controllerBase)
 			{ }
 			
-			virtual bool processOneMessage(serialmsg_t* msg);
+			virtual bool processOneMessageEx(serialmsg_t* msg);
 			
 		};
 	};

@@ -27,6 +27,7 @@
 #include "Cosa/Trace.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L4/NodeBase.h"
+#include "Meshwork/L4/ControllerBase.h"
 
 int Meshwork::L4::ControllerBase::addNode(uint8_t nodeID) {
 	if ( nodeList.members() == Meshwork::L3::Network::MAX_NODE_COUNT )
@@ -84,4 +85,15 @@ void Meshwork::L4::ControllerBase::getNextNode(uint8_t &start) {
 void Meshwork::L4::ControllerBase::resetNode() {
 	Meshwork::L4::NodeBase::resetNode();
 	nodeList.empty();
+}
+
+int Meshwork::L4::ControllerBase::setModeRequestImpl(uint8_t mode, uint32_t timeout) {
+	//TODO implement
+	//TODO once added to a network make sure we set a bit in the nodeList for our own nodeID
+	return 0;
+}
+
+int Meshwork::L4::ControllerBase::setModeAnnounce(uint8_t mode, uint32_t timeout) {
+	//TODO implement
+	return -1;
 }

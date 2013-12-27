@@ -32,9 +32,20 @@ uint8_t Meshwork::L4::NodeBase::getNodeID() {
 	return m_network->getNodeID();
 }
 
-void Meshwork::L4::NodeBase::setNode(uint8_t nodeID) {
+void Meshwork::L4::NodeBase::setNodeID(uint8_t nodeID) {
 	m_network->end();
 	m_network->setNodeID(nodeID);
+	m_network->begin();
+}
+
+void Meshwork::L4::NodeBase::resetNode() {
+	//TODO do we need to flush driver's RX/TX buffers explicitly?
+	m_network->end();
+	m_mode = MODE_NORMAL;
+	m_network->setNodeID(0);
+	m_network->setNetworkID(0x0000);
+	m_network->setNetworkKey(NULL);
+	//TODO set channel to 0?
 	m_network->begin();
 }
 
@@ -44,7 +55,10 @@ uint8_t Meshwork::L4::NodeBase::getModeRequest() {
 
 int Meshwork::L4::NodeBase::setModeRequest(uint8_t mode, uint32_t timeout) {
 	if ( mode != MODE_NORMAL && mode != MODE_ADDING && mode != MODE_REMOVING )
-		return ERROR_UNKNOWN;
-	//TODO implement mode request with timeout!
-	//and return a result
+		return ERROR_UNKNOWN_MODE;
+	uint8_t nodeID = m_network->getNodeID();
+	if ( mode == MODE_ADDING && nodeID != 0 ||
+			mode == MODE_REMOVING && nodeID == 0 )
+		return ERROR_ILLEGAL_MODE;
+	return setModeRequestImpl(mode, timeout);
 }

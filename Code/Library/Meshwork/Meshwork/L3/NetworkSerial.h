@@ -110,6 +110,7 @@ namespace Meshwork {
 			static const uint8_t MSGCODE_RFSENDACK 			= 26;
 			static const uint8_t MSGCODE_RFBCAST 			= 27;
 			
+			//0-63
 			static const uint8_t ERROR_GENERAL 				= 0;
 			static const uint8_t ERROR_INSUFFICIENT_DATA 	= 1;
 			static const uint8_t ERROR_TOO_LONG_DATA 		= 2;
@@ -150,6 +151,7 @@ namespace Meshwork {
 			}
 			
 			virtual bool processOneMessage(serialmsg_t* msg);
+			virtual bool processOneMessageEx(serialmsg_t* msg);
 			
 			virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
 		};

@@ -250,32 +250,42 @@ bool Meshwork::L3::NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
 	return result;
 }
 
+bool Meshwork::L3::NetworkSerial::processOneMessageEx(serialmsg_t* msg) {
+	return false;
+}
+
 bool Meshwork::L3::NetworkSerial::processOneMessage(serialmsg_t* msg) {
-	bool result = false;
+	bool result = true;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		msg->seq = m_serial->getchar();//seq
 		int len = msg->len = m_serial->getchar();//len
 		if ( len >= 0 ) {
 			int msgcode = msg->code = m_serial->getchar();//msgcode
-			result = true;
 			switch ( msgcode ) {
 //				case MSGCODE_OK: break;//handled in respective processXYZ
 //				case MSGCODE_NOK: msg->data[0] = m_serial->getchar(); break;//handled in respective processXYZ
 //				case MSGCODE_UNKNOWN: break;//handled in respective processXYZ
 //				case MSGCODE_INTERNAL: break;//only controller->host
-				case MSGCODE_CFGBASIC: result = processCfgBasic(msg); break;
-				case MSGCODE_CFGNWK: break;
-				case MSGCODE_RFINIT: result = processRFInit(msg); break;
-				case MSGCODE_RFDEINIT: result = processRFDeinit(msg); break;
+				case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
+				case MSGCODE_CFGNWK: processCfgNwk(msg); break;
+				case MSGCODE_RFINIT: processRFInit(msg); break;
+				case MSGCODE_RFDEINIT: processRFDeinit(msg); break;
 //				case MSGCODE_RCRECV: break;//only controller->host
 //				case MSGCODE_RFRECVACK: break;//handled within processRFStartRecv
-				case MSGCODE_RFSTARTRECV: result = processRFStartRecv(msg); break;
-				case MSGCODE_RFSEND: result = processRFSend(msg); break;
+				case MSGCODE_RFSTARTRECV: processRFStartRecv(msg); break;
+				case MSGCODE_RFSEND: processRFSend(msg); break;
 //				case MSGCODE_RFSENDACK: break;//only controller->host
-				case MSGCODE_RFBCAST: result = processRFBroadcast(msg); break;
-				default: respondWCode(msg, MSGCODE_UNKNOWN); result = false;
+				case MSGCODE_RFBCAST: processRFBroadcast(msg); break;
+				default:
+					result = processOneMessageEx(msg);
+					if (!result)
+						respondWCode(msg, MSGCODE_UNKNOWN);
 			}
+		} else {
+			result = false;
 		}
+	} else {
+		result = false;
 	}
 	return result;
 }

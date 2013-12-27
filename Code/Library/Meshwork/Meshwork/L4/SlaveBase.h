@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L4_NODEBASE_H__
-#define __MESHWORK_L4_NODEBASE_H__
+#ifndef __MESHWORK_L4_SLAVEBASE_H__
+#define __MESHWORK_L4_SLAVEBASE_H__
 
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
@@ -30,38 +30,16 @@
 namespace Meshwork {
 
 	namespace L4 {
-
-		class NodeBase {
+	
+		class SlaveBase: NodeBase {
 		protected:
-			Meshwork::L3::Network* m_network;
-			uint8_t m_mode;
-			
-			virtual int setModeRequestImpl(uint8_t mode, uint32_t timeout) = 0;
-			
+			virtual int setModeRequestImpl(uint8_t mode, uint32_t timeout);
+		
 		public:
-			static const uint8_t MODE_NORMAL	= 0;
-			static const uint8_t MODE_ADDING	= 1;
-			static const uint8_t MODE_REMOVING	= 2;
-			
-			static const int ERROR_UNKNOWN		= -1;
-			static const int ERROR_UNKNOWN_MODE	= -2;
-			static const int ERROR_ILLEGAL_MODE	= -3;
-			
-			NodeBase(Meshwork::L3::Network* network):
-				m_network(network),
-				m_mode(MODE_NORMAL)
-			{}
-			
-			virtual void resetNode(); //factory reset
-			
-			virtual uint8_t getNodeID();
-			virtual void setNodeID(uint8_t nodeID);
-			
-			virtual uint8_t getModeRequest();
-			virtual int setModeRequest(uint8_t mode, uint32_t timeout);
-			
-		};//end of Meshwork::L4::NodeBase
 
+
+		};//end of Meshwork::L4::SlaveBase
+		
 	}//end of Meshwork:L4
 	
 };//end of Meshwork
