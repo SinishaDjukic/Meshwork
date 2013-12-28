@@ -39,13 +39,9 @@ void Meshwork::L4::NodeBase::setNodeID(uint8_t nodeID) {
 }
 
 void Meshwork::L4::NodeBase::resetNode() {
-	//TODO do we need to flush driver's RX/TX buffers explicitly?
 	m_network->end();
 	m_mode = MODE_NORMAL;
-	m_network->setNodeID(0);
-	m_network->setNetworkID(0x0000);
-	m_network->setNetworkKey(NULL);
-	//TODO set channel to 0?
+	m_network->reset();
 	m_network->begin();
 }
 

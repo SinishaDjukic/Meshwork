@@ -161,6 +161,14 @@ namespace Meshwork {
 			  return m_driver;
 			}
 
+//			virtual uint8_t getChannel() {
+//				return m_driver->get_channel();
+//			}
+			
+			virtual void setChannel(uint8_t channel) {
+				m_driver->set_channel(channel);
+			}
+			
 			virtual int16_t getNetworkID() {
 				return m_driver->get_network_address();
 			}
@@ -183,6 +191,13 @@ namespace Meshwork {
 			
 			virtual void setNetworkKey(char* networkKey) {
 				m_networkKey = networkKey;
+			}
+			
+			virtual void reset() {
+				setNodeID(0);
+				setNetworkID(0x0000);
+				setNetworkKey(NULL);
+				setChannel(0);
 			}
 			
 			virtual bool begin(const void* config = NULL) {

@@ -114,10 +114,11 @@ bool Meshwork::L4::ControllerBaseSerial::processRemoveNode(serialmsg_t* msg) {
 
 bool Meshwork::L4::ControllerBaseSerial::processOneMessageEx(serialmsg_t* msg) {
 	bool result = true;
-	//TODO
 	switch ( msg->code ) {
-		case TODO1: break;
-		case TODO2: break;
+		case MSGCODE_SET_MODE_ANN: processSetModeAnnounce(msg); break;
+		case MSGCODE_GET_NODE_LIST: processGetNodeList(msg); break;
+		case MSGCODE_ADD_NODE: processAddNode(msg); break;
+		case MSGCODE_REMOVE_NODE: processRemoveNode(msg); break;
 		default: result = false;
 	}
 	return result;

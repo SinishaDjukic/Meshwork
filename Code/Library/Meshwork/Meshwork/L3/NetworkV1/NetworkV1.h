@@ -155,7 +155,6 @@ protected:
 	/** Message sequence number. */
 	uint8_t seq;
 	
-	//TODO define reasonable size?
 	static const uint8_t MAX_IOVEC_MSG_SIZE	= 6;
 		
 	///////////// DIRECT /////////////

@@ -42,7 +42,7 @@ namespace Meshwork {
 			static const uint8_t MSGCODE_GET_NODE_LIST_RES		= 99;
 			static const uint8_t MSGCODE_ADD_NODE				= 100;
 			static const uint8_t MSGCODE_ADD_NODE_RES			= 101;
-			static const uint8_t MSGCODE_REMOVE_NODE			= 100;
+			static const uint8_t MSGCODE_REMOVE_NODE			= 102;
 				
 			//64-95
 			static const uint8_t ERROR_MAX_NODES_REACHED 		= 64;
