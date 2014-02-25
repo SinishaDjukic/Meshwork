@@ -27,6 +27,7 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/RTC.hh"
 #include "Cosa/Wireless.hh"
+#include "Cosa/Memory.h"
 #include <Meshwork.h>
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
@@ -56,8 +57,11 @@ NRF24L01P rf(0x0001, 0x01,
 
 //Mega
 #if defined (__ARDUINO_MEGA__)
-#define BOARD_VARIANT	PSTR("Mega")
-NRF24L01P rf(0x0001, 0x01);
+#define BOARD_VARIANT	2
+NRF24L01P rf(0x0001, 0x01,
+	    Board::DigitalPin(Board::D53), 
+	    Board::DigitalPin(Board::D48), 
+	    Board::ExternalInterruptPin(Board::EXT2));
 
 //Mini Pro or Nano
 #else
@@ -86,7 +90,8 @@ void setup()
   rf.set_sleep(mode);
   RTC::begin();
   trace.begin(&uart, PSTR("NetworkV1 Serial Console: started"));
-  trace << PSTR("Board: ") << BOARD_VARIANT << PSTR("\n");
+  trace << PSTR("Board: ") << BOARD_VARIANT;
+  trace.println();
 }
 
 //bool equalsConst(const char s1[], const char s2[]) {
@@ -127,13 +132,13 @@ uint8_t delivery = Meshwork::L3::Network::DELIVERY_EXHAUSTIVE;
 
 void set_delivery(uint8_t deliv) {
 	delivery = deliv;
-	trace << PSTR("Delivery: ") << PSTR("\n");
+	trace << PSTR("Deliv:\n");
 	if ( delivery & Meshwork::L3::Network::DELIVERY_DIRECT )
-		trace << PSTR("\tDirect") << PSTR("\n");		
+		trace << PSTR("\tDirect\n");
 	if ( delivery & Meshwork::L3::Network::DELIVERY_ROUTED )
-		trace << PSTR("\tRouted") << PSTR("\n");
+		trace << PSTR("\tRouted\n");
 	if ( delivery & Meshwork::L3::Network::DELIVERY_FLOOD )
-		trace << PSTR("\tFlood") << PSTR("\n");
+		trace << PSTR("\tFlood\n");
 }
 
 // Check if the message is printable
@@ -165,107 +170,110 @@ void print_message(char * msg, uint8_t len) {
 }
 
 void run_nop(uint8_t address, uint8_t port) {
-	trace << PSTR("Send NOP to ") << address << PSTR(":") << port << PSTR("\n");
+	trace << PSTR("NOP to ") << address << PSTR(":") << port << PSTR("\n");
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
 	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
-	int res = mesh.send(delivery, -1, address, port, NULL, 0, ack, ackLen);
-	trace << PSTR("Result code: ") << res << PSTR("\n");
-	trace << PSTR("Ack len: ") << ackLen << PSTR("\n");
-	trace << PSTR("Ack: \t");
+	int res = mesh.send(delivery, 255, address, port, NULL, 0, ack, ackLen);
+	trace << PSTR("Result code: ") << res;
+	trace << PSTR("\nAck len: ") << ackLen;
+	trace << PSTR("\nAck: \t");
 //	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 	if ( ack != NULL && ackLen > 0 ) {
 		char * ackP = (char *) ack;
 		print_message(ackP, ackLen);
 	}
-	trace << PSTR("\n");
+	trace.println();
 	
 }
 
 void run_send(uint8_t address, uint8_t port, char * pStart, char * pEnd) {
 	size_t dataLen = pEnd - pStart;
-	trace << PSTR("Send CHARS to ") << address << PSTR(":") << port << PSTR("\n");
-	trace << PSTR("Char count: ") << dataLen << PSTR("\n");
-	trace.print("Chars: ");
-	for ( size_t i = 0; i < dataLen; i ++ ) {
-		trace.print(pStart[i]);
-		trace.print(", ");
-	}
+	trace << dataLen << PSTR(" CHARS to ") << address << PSTR(":") << port;
+	trace << PSTR("\nChars: ");
+	print_message((char *)pStart, dataLen);
 	trace.println();
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
 	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
 	int res = mesh.send(delivery, -1, address, port, pStart, dataLen, ack, ackLen);
-	trace << PSTR("Result code: ") << res << PSTR("\n");
-	trace << PSTR("Ack len: ") << ackLen << PSTR("\n");
-	trace << PSTR("Ack: \t");
+	trace << PSTR("Res code: ") << res;
+	trace << PSTR("\nAck len: ") << ackLen;
+	trace << PSTR("\nAck: \t");
 	print_message((char *)ack, ackLen);
-	//TRACE_ARRAY(PSTR("Ack: "), ack, ackLen);
+	//MW_LOG_DEBUG_ARRAY(PSTR("Ack: "), ack, ackLen);
 //	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
-	trace << PSTR("\n");
+	trace.println();
 	
 }
 
-void run_setup(uint16_t network, uint8_t address) {
-	trace << PSTR("Set up network/address: ") << network << PSTR(":") << address << PSTR("\n");
-	mesh.get_driver()->set_address(network, address);
+void run_setup(uint16_t network, uint8_t address, uint8_t channel) {
+	mesh.setNetworkID(network);
+	mesh.setNodeID(address);
+	mesh.setChannel(channel);
 }
 
 bool running = false;
 
+void printRFRunning() {
+	trace << PSTR("\nRF Running: ") << running;
+}
+
 void run_begin() {
-	trace << PSTR("RF Begin") << PSTR("\n");
 	running = mesh.begin();
-	trace << PSTR("RF Running: ") << running << PSTR("\n");
+	printRFRunning();
 }
 
 void run_end() {
-	trace << PSTR("RF End")<< PSTR("\n");
 	running = !mesh.end();
+	printRFRunning();
 }
 
 void run_info() {
-	trace << PSTR("Network: ") << mesh.get_driver()->get_network_address() << PSTR("\n") << PSTR("Address: ") << mesh.get_driver()->get_device_address() << PSTR("\n");
+	trace << PSTR("Network: ") << mesh.getNetworkID() << PSTR("\nAddress: ") << mesh.getNodeID() << PSTR("\nChannel: ") << mesh.getChannel() << PSTR("\n");
 	set_delivery(delivery);//will print out the status
-	trace << PSTR("RF Running: ") << running << PSTR("\n");
+	printRFRunning();
 }
 
 void run_routereset() {
-	trace << PSTR("Route reset") << PSTR("\n");
+	trace << PSTR("Route reset\n");
 	advisor.route_reset();
 }
 
 void run_recv() {
+	if ( !running ) {
+		printRFRunning();
+		return;
+	}
 	uint32_t duration = (uint32_t) 60 * 1000L;
 	uint8_t src, port;
 	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
-	trace << PSTR("Receive: duration=") << duration << PSTR("\n");
-	trace << PSTR("Receive: dataLenMax=") << dataLenMax << PSTR("\n");
+	trace << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
 	while (true) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, &ackProvider);
 		if ( result != -1 ) {
-			trace << PSTR("[RECEIVED] result=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
-			trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=") << PSTR("\n");
-//			trace.print(data, dataLenMax, IOStream::hex, NetworkV1::PAYLOAD_MAX);
-			TRACE_ARRAY(PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
-			trace << PSTR("\n");
+			trace << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
+			trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
+			MW_LOG_DEBUG_ARRAY(PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			trace.println();
 		}
 		if ( RTC::since(start) >= duration )
 			break;
 	} 
 	
-	trace << PSTR("Receive: finished") << PSTR("\n");
+	trace << PSTR("RECV: done\n");
 }
 
 void run_routeadd(char* line) {
-	//format: routeIndex src dst [hop, ...]
+	bool ok = false;
+	//format: routeIndex index src dst [hop, ...]
 	char * pEnd = line + 9;//cmd len plus space
 	uint8_t index = strtol(pEnd, &pEnd, 10);
 	uint8_t maxRoutes = advisor.get_max_routes();
-	if ( index >= 0 && index <= maxRoutes ) {
+	if ( index >= 0 && index < maxRoutes ) {
 		uint8_t src = strtol(pEnd, &pEnd, 10);
 		if ( src != 0 ) {
 			uint8_t dst = strtol(pEnd, &pEnd, 10);
@@ -283,15 +291,29 @@ void run_routeadd(char* line) {
 					}
 				}
 				advisor.set_route(index, src, dst, hops, total);
-			} else {
-				trace << PSTR("Invalid or no dst\n");
+				trace << PSTR("Added\n");
+				ok = true;
 			}
-		} else {
-				trace << PSTR("Invalid or no dst\n");
 		}
-	} else {
-		trace << PSTR("Invalid or no index\n");
 	}
+	if ( !ok )
+		trace << PSTR("Invalid params\n");
+}
+
+void run_clearrx() {
+	uint32_t duration = (uint32_t) 1 * 1000L;
+	uint32_t singleTimeout = (uint32_t) 100L;
+	uint8_t src, port;
+	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
+	uint8_t data[dataLenMax];
+	
+	uint32_t start = RTC::millis();
+	while (true) {
+		int result = mesh.recv(src, port, data, dataLenMax, singleTimeout, &ackProvider);
+		if ( RTC::since(start) >= duration )
+			break;
+	} 
+	trace << PSTR("Clear RX!\n");
 }
 
 void loop()
@@ -302,27 +324,19 @@ void loop()
 	uint8_t len = console.readline();
 	if ( len > 0 ) {
 		char* line = console.get_line();
-//		trace << PSTR("Command: ") << line << PSTR(", len=") << strlen(line) << PSTR("\n") << PSTR("\n");
-		trace << PSTR("Command: ") << line << PSTR("\n") << PSTR("\n");
+		trace << PSTR("Command: ") << line;
+		trace.println();
+		Meshwork::Debug::printFreeMemory();
 		if ( equals(line, (char*) "?") || equals(line, (char*) "help") ) {
-			trace << PSTR("Usage:") << PSTR("\n")
-				  << PSTR("info") << PSTR("\n")
-				  << PSTR("setup") << PSTR(" <network> <address>") << PSTR("\n")
-				  << PSTR("begin") << PSTR("\n")
-				  << PSTR("end") << PSTR("\n")
-				  << PSTR("recv") << PSTR("\n")
-				  << PSTR("nop") << PSTR(" <dest> <port>") << PSTR("\n")
-				  << PSTR("send") << PSTR(" <dest> <port> <chars>") << PSTR("\n")
-				  << PSTR("deliv") << PSTR(" <delivery flags>") << PSTR("\n")
-				  << PSTR("routereset") << PSTR("\n")
-				  << PSTR("... all values in DEC") << PSTR("\n");
+			trace << PSTR("Usage:\ninfo\nsetup <network> <address> <channel>\nbegin\nend\nclearrx\nrecv\nnop <dest> <port>\nsend <dest> <port> <chars>\ndeliv <delivery flags>\nroutereset\nrouteadd\nclearrx\nValues in DEC\n");
 		} else if ( equals(line, (char*) "info") ) {
 			run_info();
 		} else if ( equals(line, (char*) "setup") ) {
 			char * pEnd = line + 6;//cmd len plus space
-			uint8_t network = strtol(pEnd, &pEnd, 10);
+			int16_t network = strtol(pEnd, &pEnd, 10);
 			uint8_t address = strtol(pEnd, &pEnd, 10);
-			run_setup(network, address);
+			uint8_t channel = strtol(pEnd, &pEnd, 10);
+			run_setup(network, address, channel);
 		} else if ( equals(line, (char*) "begin") ) {
 			run_begin();
 		} else if ( equals(line, (char*) "end") ) {
@@ -337,12 +351,16 @@ void loop()
 			run_routereset();
 		} else if ( startsWith(0, line, (char*) "routeadd") ) {
 			run_routeadd(line);
+		} else if ( startsWith(0, line, (char*) "clearrx") ) {
+			run_clearrx();
 		} else if ( startsWith(0, line, (char*) "nop") ) {
+			run_clearrx();
 			char * pEnd = line + 4;//cmd len plus space
 			uint8_t dest = strtol(pEnd, &pEnd, 10);
 			uint8_t port = strtol(pEnd, &pEnd, 10);
 			run_nop(dest, port);
 		} else if ( startsWith(0, line, (char*) "send") ) {
+			run_clearrx();
 			char * pEnd = line + 4;//cmd len plus space
 			uint8_t dest = strtol(pEnd, &pEnd, 10);
 			uint8_t port = strtol(pEnd, &pEnd, 10);
@@ -352,17 +370,17 @@ void loop()
 			if ( pLast > pEnd )
 				run_send(dest, port, pEnd, pLast);
 			else
-				trace << PSTR("No data specified!");
+				trace << PSTR("No data!");
 		} else {
-			trace << PSTR("Unknown command: ") << line << PSTR("\n");
+			trace << PSTR("Unknown: ") << line;
 		}
-		trace << PSTR("\n");
+		trace.println();
+		trace.println();
 		//
 		console.clear();
 	} else if ( len == -1 ) {
 		console.clear();
 	}
 	
-//    uint16_t vcc = AnalogPin::bandgap();
 }
 

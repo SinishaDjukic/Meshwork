@@ -27,11 +27,12 @@
 #include "Cosa/Power.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
+#include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
 //SEQ | LEN | MSG
 //MSG = MSGCODE | MSGDATA
 //CFGBASIC = NKWCAPS | DELIVERY | RETRY
-//CFGNWK = NWK ID | NODE ID
+//CFGNWK = NWK ID | NODE ID | CHANNEL
 //RFRECV = SRC | PORT | DATALEN | DATA
 //RFRECVACK = DATALEN | DATA
 //RFSTARTRECV = TIMEOUT
@@ -42,7 +43,8 @@ namespace Meshwork {
 
 	namespace L3 {
 	
-		class NetworkSerial : public Meshwork::L3::Network::ACKProvider {
+		class NetworkSerial : public Meshwork::L3::Network::ACKProvider,
+							  NetworkV1::RouteProvider {
 
 		public:
 		  struct serialmsg_t {
@@ -61,6 +63,7 @@ namespace Meshwork {
 		  struct data_cfgnwk_t {
 			uint16_t nwkid;
 			uint8_t nodeid;
+			uint8_t channel;
 		  };
 		  
 		  struct data_rfrecv_t {
@@ -92,6 +95,8 @@ namespace Meshwork {
 			uint8_t* data;
 		  };  
 		  
+		  //TODO sync structures with below constants and remove unused ones
+		  
 		public:
 			static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
 			
@@ -109,6 +114,13 @@ namespace Meshwork {
 			static const uint8_t MSGCODE_RFSEND 			= 25;
 			static const uint8_t MSGCODE_RFSENDACK 			= 26;
 			static const uint8_t MSGCODE_RFBCAST 			= 27;
+			static const uint8_t MSGCODE_CFGREQUEST			= 28;
+			static const uint8_t MSGCODE_RFROUTEFOUND		= 29;//called from MSGCODE_RFRECV
+			static const uint8_t MSGCODE_RFROUTEFAILED		= 30;//called from MSGCODE_RFSEND
+			static const uint8_t MSGCODE_RFGETROUTECOUNT	= 31;//called from MSGCODE_RFSEND
+			static const uint8_t MSGCODE_RFGETROUTECOUNTRES	= 32;//response to MSGCODE_RFGETROUTECOUNT
+			static const uint8_t MSGCODE_RFGETROUTE			= 33;//called from MSGCODE_RFSEND
+			static const uint8_t MSGCODE_RFGETROUTERES		= 34;//response to MSGCODE_RFGETROUTE
 			
 			//0-63
 			static const uint8_t ERROR_GENERAL 				= 0;
@@ -119,19 +131,24 @@ namespace Meshwork {
 			static const uint8_t ERROR_SEND 				= 5;
 			static const uint8_t ERROR_BCAST 				= 6;
 			static const uint8_t ERROR_KEY_TOO_LONG 		= 7;
+			static const uint8_t ERROR_SEQUENCE_MISMATCH	= 8;
 			
-			static const uint16_t TIMEOUT_RESPONSE 			= 3000;
+			static const uint16_t TIMEOUT_RESPONSE 			= 300;
 			
 		protected:
 			Meshwork::L3::Network* m_network;
 			UART* m_serial;
 			serialmsg_t* m_currentMsg;
+			NetworkV1::route_t m_currentRoute;
+			uint8_t m_currentRouteHops[NetworkV1::MAX_ROUTING_HOPS];
 			char m_networkKey[Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1];//+1 for NULL
-
+			
+			//this saves us ~500 bytes against repetitive putchar calls
+			virtual void writeMessage(uint8_t len, uint8_t* data, bool flush);
 			
 			virtual void respondWCode(serialmsg_t* msg, uint8_t code);
 			virtual void respondNOK(serialmsg_t* msg, uint8_t error);
-			virtual void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data);
+			virtual void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData);
 			
 			virtual bool processCfgBasic(serialmsg_t* msg);
 			virtual bool processCfgNwk(serialmsg_t* msg);
@@ -148,13 +165,24 @@ namespace Meshwork {
 				m_serial(serial)
 			{
 				m_networkKey[0] = 0;
+				//TODO fix to set the advisor
+				//network->set_route_advisor(this);
 			}
+			
+			virtual bool initSerial();
+			virtual bool waitForBytes(uint8_t count, uint16_t millis);
 			
 			virtual bool processOneMessage(serialmsg_t* msg);
 			virtual bool processOneMessageEx(serialmsg_t* msg);
 			
 			virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
-		};
+			
+			virtual void set_address(uint8_t src);
+			virtual uint8_t get_routeCount(uint8_t dst);
+			virtual NetworkV1::route_t* get_route(uint8_t dst, uint8_t index);
+			virtual void route_found(NetworkV1::route_t* route);
+			virtual void route_failed(NetworkV1::route_t* route);
+		  };
 	};
 };
 #endif

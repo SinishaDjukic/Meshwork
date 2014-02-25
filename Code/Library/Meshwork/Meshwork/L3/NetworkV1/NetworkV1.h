@@ -72,6 +72,8 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| FLOOD_INFO | (DataL3)
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| Node Count X | SRCID | Node 1 | … | Node X | DSTID | (DataL3)
 */
+
+//TODO fix namespaces of all extending classes
 class NetworkV1: public Meshwork::L3::Network {
 		
 public:
@@ -155,7 +157,7 @@ protected:
 	/** Message sequence number. */
 	uint8_t seq;
 	
-	static const uint8_t MAX_IOVEC_MSG_SIZE	= 6;
+	static const uint8_t MAX_IOVEC_MSG_SIZE	= 8;
 		
 	///////////// DIRECT /////////////
 	static iovec_t* get_iovec_msg_direct(iovec_t* vec, univmsg_t* msg) {
@@ -316,6 +318,9 @@ protected:
 	uint8_t m_maxHops;
 #endif
 
+	bool sendWithoutACK(uint8_t dest, uint8_t hopPort, iovec_t* vp, uint8_t attempts);
+	bool sendWithoutACK(uint8_t dest, uint8_t hopPort, const void* buf, size_t len, uint8_t attempts);
+
 	int sendWithACK(uint8_t attempts, uint16_t attemptsDelay,
 		uint8_t ack, uint32_t ackTimeout,
 		uint8_t dest, uint8_t port,
@@ -337,14 +342,14 @@ public:
 	/** The maximum payload length. */
 	static const uint8_t PAYLOAD_MAX = 16;
 	/** The maximum ACK payload length. */
-	static const uint8_t ACK_PAYLOAD_MAX = 16;
+	static const uint8_t ACK_PAYLOAD_MAX = 8;
 
 	/** Network Control byte's ACK flag. */
 	static const uint8_t ACK = 128;
 	/** Timeout for single ACK receive. */
-	static const uint32_t TIMEOUT_ACK_RECEIVE = (uint16_t) 100;
+	static const uint32_t TIMEOUT_ACK_RECEIVE = (uint16_t) 500;
 	/** Timeout for ACK from DIRECT delivery send. */
-	static const uint32_t TIMEOUT_ACK_DIRECT = (uint16_t) 500;
+	static const uint32_t TIMEOUT_ACK_DIRECT = (uint16_t) 1000;
 	/** Wait period before DIRECT delivery retry. */
 	static const uint32_t RETRY_WAIT_DIRECT = (uint16_t) TIMEOUT_ACK_DIRECT * 2;
 	
@@ -387,6 +392,10 @@ public:
 	virtual RouteProvider* get_route_advisor() {
 		return m_advisor;
 	}
+	virtual void set_route_advisor(RouteProvider* provider) {
+		m_advisor = provider;
+	}
+	
 	virtual bool begin(const void* config = NULL);
 	virtual bool end();
 	virtual int send(uint8_t delivery, uint8_t retry,

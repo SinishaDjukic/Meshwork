@@ -55,12 +55,14 @@ namespace Meshwork {
 		};//end of Meshwork::L3::Network::ACKProvider
 		
 		// Define node roles.
-		static const uint8_t ROLE_ROUTER_NODE = 0x00;
-		static const uint8_t ROLE_EDGE_NODE = 0x01;
-		static const uint8_t ROLE_CONTROLLER_NODE = 0x03;
-		static const uint8_t ROLE_GATEWAY_NODE = 0x03;
+		//TODO detailed semantics and refinement
+		static const uint8_t ROLE_ROUTER_NODE 		= 0x00;
+		static const uint8_t ROLE_EDGE_NODE 		= 0x01;
+		static const uint8_t ROLE_CONTROLLER_NODE 	= 0x03;
+		static const uint8_t ROLE_GATEWAY_NODE 		= 0x04;
 
 		// Defines network capabilities.
+		//TODO detailed semantics and refinement
 		static const uint8_t NWKCAPS_ALWAYS_LISTENING 	= 0x01;//always reachable
 		static const uint8_t NWKCAPS_PERIODIC_WAKEUP 	= 0x02;//sleeps but wakes up periodically
 		static const uint8_t NWKCAPS_ALWAYS_SLEEPING 	= 0x03;//never wakes up, only sends msgs
@@ -127,6 +129,10 @@ namespace Meshwork {
 		/** Rerouting a message has failed. */
 		static const int8_t ERROR_REROUTE_FAILED = -41;
 
+		//Send errors code group
+		/** Driver send has failed. */
+		static const int8_t ERROR_DRIVER_SEND_FAILED = -51;
+		
 		/** First possible node ID. */
 		static const uint8_t MIN_NODE_ID 	= 1;
 		/** Last possible node ID. */
@@ -143,6 +149,7 @@ namespace Meshwork {
 			uint8_t m_nwkcaps;
 			uint8_t m_delivery;
 			uint8_t m_retry;
+			uint8_t m_channel;
 			char* m_networkKey;
 
 		//public constructor and functions
@@ -155,18 +162,45 @@ namespace Meshwork {
 			  m_driver(driver),
 			  m_nwkcaps(nwkcaps),
 			  m_delivery(delivery),
-			  m_retry(retry) {}
+			  m_retry(retry),
+			  m_channel(0)
+			  {}
 
 			Wireless::Driver* get_driver() {
 			  return m_driver;
 			}
 
-//			virtual uint8_t getChannel() {
-//				return m_driver->get_channel();
-//			}
+			virtual uint8_t getChannel() {
+				return m_channel;//TODO update Cosa and change to m_driver->get_channel();
+			}
 			
 			virtual void setChannel(uint8_t channel) {
-				m_driver->set_channel(channel);
+				m_channel = channel;//TODO update Cosa and remove the field entirely
+//				m_driver->set_channel(channel);
+			}
+			
+			virtual uint8_t getNetworkCaps() {
+				return m_nwkcaps;
+			}
+			
+			virtual void setNetworkCaps(uint8_t nwkcaps) {
+				m_nwkcaps = nwkcaps;
+			}
+			
+			virtual uint8_t getDelivery() {
+				return m_delivery;
+			}
+			
+			virtual void setDelivery(uint8_t delivery) {
+				m_delivery = delivery;
+			}
+			
+			virtual uint8_t getRetry() {
+				return m_retry;
+			}
+			
+			virtual void setRetry(uint8_t retry) {
+				m_retry = retry;
 			}
 			
 			virtual int16_t getNetworkID() {

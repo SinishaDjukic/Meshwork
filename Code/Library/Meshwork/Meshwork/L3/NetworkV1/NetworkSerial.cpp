@@ -30,49 +30,145 @@
 #include "Meshwork/L3/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-#define IF_NETWORKSERIAL_DEBUG
+void Meshwork::L3::NetworkSerial::writeMessage(uint8_t len, uint8_t* data, bool flush) {
+	for ( int i = 0; i < len; i ++ )
+		m_serial->putchar(((uint8_t*)data)[i]);
+	if ( flush )
+		m_serial->flush();
+}
 
-#ifndef IF_NETWORKSERIAL_DEBUG
-#define IF_NETWORKSERIAL_DEBUG if(false)
-#endif
+bool Meshwork::L3::NetworkSerial::initSerial() {
+	uint8_t data[] = {0, 1, MSGCODE_CFGREQUEST};
+	writeMessage(sizeof(data), data, true);
+	return true;
+}
+
+bool Meshwork::L3::NetworkSerial::waitForBytes(uint8_t count, uint16_t millis) {
+	bool result = false;
+	uint32_t start = RTC::millis();
+	while (true) {
+		if ( m_serial->available() < count )//minimum response size
+			MSLEEP(millis/10);
+		else
+			result = true;
+		if ( result || RTC::since(start) >= millis )
+			break;
+	}
+	return result;
+}
 
 void Meshwork::L3::NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
-	m_serial->putchar(msg->seq);
-	m_serial->putchar(1);
-	m_serial->putchar(code);
-	m_serial->flush();
+	uint8_t data[] = {msg->seq, 1, code};
+	writeMessage(sizeof(data), data, true);
 }
 
 void Meshwork::L3::NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
-	m_serial->putchar(msg->seq);
-	m_serial->putchar(2);
-	m_serial->putchar(MSGCODE_NOK);
-	m_serial->putchar(error);
-	m_serial->flush();
+	uint8_t data[] = {msg->seq, 2, MSGCODE_NOK, error};
+	writeMessage(sizeof(data), data, true);
 }
 
-void Meshwork::L3::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* data) {
-	m_serial->putchar(msg->seq);
-	m_serial->putchar(2 + datalen);
-	m_serial->putchar(MSGCODE_RFSENDACK);
-	m_serial->putchar(datalen);
-	for ( int i = 0; i < datalen; i ++ )
-		m_serial->putchar(data[i]);
-	m_serial->flush();
+void Meshwork::L3::NetworkSerial::set_address(uint8_t src) {
+	//no action needed
+}
+
+void Meshwork::L3::NetworkSerial::route_found(NetworkV1::route_t* route) {
+	uint8_t hopCount = route->hopCount;	
+	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFOUND, hopCount, route->src};
+	writeMessage(sizeof(data), data, false);
+	writeMessage(hopCount, route->hops, false);
+	data[0] = route->dst;
+	writeMessage(1, data, true);
+}
+
+void Meshwork::L3::NetworkSerial::route_failed(NetworkV1::route_t* route) {
+	uint8_t hopCount = route->hopCount;
+	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFAILED, hopCount, route->src};
+	writeMessage(sizeof(data), data, false);
+	writeMessage(hopCount, route->hops, false);
+	data[0] = route->dst;
+	writeMessage(1, data, true);
+}
+
+uint8_t Meshwork::L3::NetworkSerial::get_routeCount(uint8_t dst) {
+	uint8_t result = 0;
+	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_RFGETROUTECOUNT, dst};
+	writeMessage(sizeof(data), data, true);
+	
+	if ( waitForBytes(1, TIMEOUT_RESPONSE) ) {
+		result = m_serial->getchar();
+	} else {
+		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+	}
+	return result;
+}
+
+NetworkV1::route_t* Meshwork::L3::NetworkSerial::get_route(uint8_t dst, uint8_t index) {
+	NetworkV1::route_t* result = NULL;
+	
+	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_RFGETROUTE, dst, index};
+	writeMessage(sizeof(data), data, true);
+	
+	if ( waitForBytes(3, TIMEOUT_RESPONSE) ) {
+			uint8_t seq = m_serial->getchar();
+			if ( m_currentMsg->seq == seq ) {
+				uint8_t len = m_serial->getchar();
+				uint8_t code = m_serial->getchar();
+				if ( code == MSGCODE_NOK ) {
+					//read the error code and return NULL;
+					m_serial->getchar();
+				} else if ( code == MSGCODE_RFGETROUTERES ) {
+					uint8_t hopCount = 0;
+					//some magic goes here...
+					//first wait ensure we have at least 3 bytes (HOPCOUNT = 0 | SRC | DST), so that we can read the hopCount value
+					//second wait ensures we have at least 3 + hopCount bytes (HOPCOUNT | SRC | <list> | DST)
+					if ( waitForBytes(3, TIMEOUT_RESPONSE) && 
+						 waitForBytes(3 + (hopCount = m_serial->getchar()) > 0 ? hopCount : 0, TIMEOUT_RESPONSE)) {
+						m_currentRoute.hopCount = hopCount;
+						m_currentRoute.src = m_serial->getchar();
+						for ( int i = 0; i < hopCount; i ++ )
+							m_currentRouteHops[i] = m_serial->getchar();
+						m_currentRoute.hops = m_currentRouteHops;
+						m_currentRoute.dst = m_serial->getchar();
+						result = &m_currentRoute;
+					} else {
+						respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+					}	
+				} else {
+					//TODO we should always read out the entire message len
+					respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
+				}
+			} else {
+				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
+			}
+	} else {
+		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+	}	
+	return result;
+}
+
+void Meshwork::L3::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData) {
+	uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
+	writeMessage(sizeof(data), data, false);
+	writeMessage(datalen, data, true);
 }
 
 bool Meshwork::L3::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
-	bool result = false;
+	bool result = false;//TODO check if we need the result at all
 	if ( m_serial->available() >= 3 ) {
 		data_cfgbasic_t* cfgbasic;
 		cfgbasic = (data_cfgbasic_t*) msg->data;
 		cfgbasic->nwkcaps = m_serial->getchar();
 		cfgbasic->delivery = m_serial->getchar();
 		cfgbasic->retry = m_serial->getchar();
+		
+		m_network->setNetworkCaps(cfgbasic->nwkcaps);
+		m_network->setDelivery(cfgbasic->delivery);
+		m_network->setRetry(cfgbasic->retry);
+		
 		size_t keyLen = m_serial->getchar();
 		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
 			m_networkKey[0] = 0;
-			for (int i = 0; i < keyLen; i ++ )
+			for (size_t i = 0; i < keyLen; i ++ )
 				m_networkKey[i] = m_serial->getchar();
 			if ( keyLen > 0 )
 				m_networkKey[keyLen + 1] = 0;
@@ -96,6 +192,10 @@ bool Meshwork::L3::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 		cfgnwk = (data_cfgnwk_t*) msg->data;
 		cfgnwk->nwkid = (uint16_t) m_serial->getchar() << 8 | m_serial->getchar();
 		cfgnwk->nodeid = m_serial->getchar();
+		cfgnwk->channel = m_serial->getchar();
+		m_network->setNetworkID(cfgnwk->nwkid);
+		m_network->setNodeID(cfgnwk->nodeid);
+		m_network->setChannel(cfgnwk->channel);
 		respondWCode(msg, MSGCODE_OK);
 		result = true;
 	} else {
@@ -105,13 +205,15 @@ bool Meshwork::L3::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 }
 
 bool Meshwork::L3::NetworkSerial::processRFInit(serialmsg_t* msg) {
-	m_network->begin() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
-	return true;
+	bool result = m_network->begin();
+	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
+	return result;
 }
 
 bool Meshwork::L3::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
-	m_network->end() ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
-	return true;
+	bool result = m_network->end();
+	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
+	return result;
 }
 
 int Meshwork::L3::NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
@@ -120,33 +222,28 @@ int Meshwork::L3::NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 	int bytes = 0;
 	if ( m_currentMsg != NULL ) {//must be the case, but need a sanity check
 		//first, send RFRECV
-		m_serial->putchar(m_currentMsg->seq);
-		m_serial->putchar(4 + len);
-		m_serial->putchar(MSGCODE_RFRECV);
-		m_serial->putchar(src);
-		m_serial->putchar(port);
-		m_serial->putchar(len);
-		for ( int i = 0; i < len; i ++ )//ok, this can be optimized
-			m_serial->putchar(((uint8_t*) buf)[i]);
-		m_serial->flush();
+		uint8_t data[] = {m_currentMsg->seq, 4 + len, MSGCODE_RFRECV, src, port, len};
+		writeMessage(sizeof(data), data, false);
+		writeMessage(len, (uint8_t*)buf, true);
 		
-		//now, wait for RFRECVACK
-		uint32_t start = RTC::millis();
-		while (true) {
-			if ( m_serial->available() < 1 )//minimum response size
-				MSLEEP(TIMEOUT_RESPONSE/10);
-			if ( RTC::since(start) >= TIMEOUT_RESPONSE )
-				break;
-		}
-		if ( m_serial->available() >= 1 )  {
-			uint8_t reslen = m_serial->getchar();
-			if ( reslen > 0 && reslen <= lenACK && m_serial->available() >= reslen ) {
-				for ( int i = 0; i < reslen; i ++ )
-					((char*) bufACK)[i] = m_serial->getchar();
-				respondWCode(m_currentMsg, MSGCODE_OK);
-				bytes = reslen;
+		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
+			uint8_t seq = m_serial->getchar();
+			if ( m_currentMsg->seq == seq ) {
+				uint8_t len = m_serial->getchar();
+				uint8_t code = m_serial->getchar();
+				//TODO check if code == MSGCODE_RFRECVACK
+
+				uint8_t reslen = m_serial->getchar();
+				if ( reslen >=0 && reslen <= lenACK && waitForBytes(reslen, TIMEOUT_RESPONSE) ) {
+					for ( int i = 0; i < reslen; i ++ )
+						((char*) bufACK)[i] = m_serial->getchar();
+//					respondWCode(m_currentMsg, MSGCODE_OK);
+					bytes = reslen;
+				} else {
+//					respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
+				}
 			} else {
-				respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
+//				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
 		} else {
 			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
@@ -174,13 +271,13 @@ bool Meshwork::L3::NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
 		m_currentMsg = NULL;
 		if ( res == Meshwork::L3::Network::OK ) {
-			//already covered via returnACKPayload 
+			respondWCode(msg, MSGCODE_OK);
 		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_INTERNAL ) {
 			respondWCode(msg, MSGCODE_INTERNAL);
 		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_IGNORED ) {
 			respondWCode(msg, MSGCODE_INTERNAL);
 		} else {
-			respondNOK(msg, ERROR_RECV);
+			respondNOK(msg, res);
 		}
 		result = true;
 	} else {
@@ -197,20 +294,16 @@ bool Meshwork::L3::NetworkSerial::processRFSend(serialmsg_t* msg) {
 		uint8_t dst = rfsend->dst = m_serial->getchar();
 		uint8_t port = rfsend->port = m_serial->getchar();
 		uint8_t datalen = rfsend->datalen = m_serial->getchar();
-		if ( m_serial->available() >= datalen ) {
+		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
 			size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
 			uint8_t bufACK[maxACKLen];
 			int res = m_network->send(dst, port, rfsend->data, datalen, bufACK, maxACKLen);
 			if ( res == Meshwork::L3::Network::OK ) {
-				m_serial->putchar(msg->seq);
-				m_serial->putchar(2 + datalen);
-				m_serial->putchar(MSGCODE_RFSENDACK);
-				m_serial->putchar(datalen);
-				for ( int i = 0; i < datalen; i ++ )
-					m_serial->putchar(bufACK[i]);
-				m_serial->flush();
+				uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
+				writeMessage(sizeof(data), data, false);
+				writeMessage(datalen, bufACK, true);
 				result = true;
 			} else {
 				respondNOK(msg, ERROR_SEND);
@@ -254,34 +347,37 @@ bool Meshwork::L3::NetworkSerial::processOneMessageEx(serialmsg_t* msg) {
 	return false;
 }
 
+
 bool Meshwork::L3::NetworkSerial::processOneMessage(serialmsg_t* msg) {
 	bool result = true;
+	
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		msg->seq = m_serial->getchar();//seq
 		int len = msg->len = m_serial->getchar();//len
 		if ( len >= 0 ) {
+			//needed to make sure we have enough data arrived in the buffer for the entire command
 			int msgcode = msg->code = m_serial->getchar();//msgcode
-			switch ( msgcode ) {
-//				case MSGCODE_OK: break;//handled in respective processXYZ
-//				case MSGCODE_NOK: msg->data[0] = m_serial->getchar(); break;//handled in respective processXYZ
-//				case MSGCODE_UNKNOWN: break;//handled in respective processXYZ
-//				case MSGCODE_INTERNAL: break;//only controller->host
-				case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
-				case MSGCODE_CFGNWK: processCfgNwk(msg); break;
-				case MSGCODE_RFINIT: processRFInit(msg); break;
-				case MSGCODE_RFDEINIT: processRFDeinit(msg); break;
-//				case MSGCODE_RCRECV: break;//only controller->host
-//				case MSGCODE_RFRECVACK: break;//handled within processRFStartRecv
-				case MSGCODE_RFSTARTRECV: processRFStartRecv(msg); break;
-				case MSGCODE_RFSEND: processRFSend(msg); break;
-//				case MSGCODE_RFSENDACK: break;//only controller->host
-				case MSGCODE_RFBCAST: processRFBroadcast(msg); break;
-				default:
-					result = processOneMessageEx(msg);
-					if (!result)
-						respondWCode(msg, MSGCODE_UNKNOWN);
+			//TODO now that we have a len check here we should remove "if (available)" calls from (most) processXYZ messages
+			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
+				switch ( msgcode ) {
+					case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
+					case MSGCODE_CFGNWK: processCfgNwk(msg); break;
+					case MSGCODE_RFINIT: processRFInit(msg); break;
+					case MSGCODE_RFDEINIT: processRFDeinit(msg); break;
+					case MSGCODE_RFSTARTRECV: processRFStartRecv(msg); break;
+					case MSGCODE_RFSEND: processRFSend(msg); break;
+					case MSGCODE_RFBCAST: processRFBroadcast(msg); break;
+					default:
+						result = processOneMessageEx(msg);
+						if (!result)
+							respondWCode(msg, MSGCODE_UNKNOWN);
+				}
+			} else {
+			respondWCode(msg, ERROR_INSUFFICIENT_DATA);
+			result = false;
 			}
 		} else {
+			respondWCode(msg, MSGCODE_UNKNOWN);
 			result = false;
 		}
 	} else {

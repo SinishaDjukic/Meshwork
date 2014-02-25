@@ -31,7 +31,7 @@
 #include "Meshwork/L3/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
-#include "Meshwork/L3/NetworkV1/NetworkV1Serial.cpp"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
 #include "Utils/LineReader.h"
 
 // Select Wireless device driver
@@ -69,20 +69,22 @@ NRF24L01P rf(0x0001, 0x01,
 #endif
 
 NetworkV1 mesh(&rf, NULL);
-NetworkSerial networkSerial(&mesh, &uart);
+Meshwork::L3::NetworkSerial networkSerial(&mesh, &uart);
 
 void setup()
 {  
   uart.begin(9600);
-  Watchdog::begin();
+  uint8_t mode = SLEEP_MODE_IDLE;
+  Watchdog::begin(16, mode);  
+  rf.set_sleep(mode);
   RTC::begin();
-  
+  networkSerial.initSerial();
 }
 
 void loop()
 {
-	static uint8_t databuf[NetworkSerial::MAX_SERIALMSG_LEN];
-	static NetworkSerial::serialmsg_t msg;
+	static uint8_t databuf[Meshwork::L3::NetworkSerial::MAX_SERIALMSG_LEN];
+	static Meshwork::L3::NetworkSerial::serialmsg_t msg;
 	msg.data = databuf;
 	networkSerial.processOneMessage(&msg);
 }

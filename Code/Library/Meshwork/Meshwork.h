@@ -21,28 +21,68 @@
 #ifndef __MESHWORK_MESHWORK_H__
 #define __MESHWORK_MESHWORK_H__
 
+#include "Cosa/Trace.hh"
+#include "Cosa/Memory.h"
+
+namespace Meshwork {
+	class Debug {
+		public: 
+			static void printTimestamp() {
+				trace.print("[");
+				trace.print(RTC::millis());
+				trace.print("] ");
+			}
+			static void printFreeMemory() {
+				trace.print("Free mem: ");
+				trace.print(free_memory());
+				trace.println();
+			}
+	};
+};
+
 //dummy file required to force Arduino IDE include
 //Meshwork library dir in the project compilation path
 
-# define TRACE_ARRAY_BYTES(array, len)							\
-  do {									\
+//set to false to disable all logging, except for DEBUG (handled separately)
+#ifndef MW_LOG_ALL_ENABLE
+#define MW_LOG_ALL_ENABLE true
+#endif
+
+//set to false to disable debug level logging
+#ifndef MW_LOG_DEBUG_ENABLE
+#define MW_LOG_DEBUG_ENABLE true
+#endif
+
+#define MW_LOG_ASSERT(expr) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); ASSERT(expr); } while (0)
+#define MW_LOG_EMERG(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); EMERG(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_ALERT(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); ALERT(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_CRIT(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); CRIT(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_ERROR(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); ERR(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_WARNING(msg, ...) 	if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); WARNING(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_NOTICE(msg, ...) 	if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); NOTICE(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_INFO(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); INFO(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_DEBUG(msg, ...) 		if (MW_LOG_DEBUG_ENABLE) do { Meshwork::Debug::printTimestamp(); DEBUG(msg, __VA_ARGS__); } while (0)
+
+
+# define MW_LOG_ARRAY_BYTES(array, len)							\
+  if (MW_LOG_DEBUG_ENABLE) do {									\
 	trace.print((const void*) array, len, IOStream::hex, len+1); \
 	trace << PSTR(" "); \
   } while (0)
   
   
-# define TRACE_ARRAY(msg, array, len)							\
-  do {									\
+# define MW_LOG_DEBUG_ARRAY(msg, array, len)							\
+  if (MW_LOG_DEBUG_ENABLE) do {									\
     trace.print_P(msg);					\
-    TRACE_ARRAY_BYTES(array, len); \
+    MW_LOG_ARRAY_BYTES(array, len); \
 	trace << PSTR("\n"); \
   } while (0)
 
-#define	TRACE_VP_BYTES(msg, msgvp) \
-	{ \
+#define	MW_LOG_DEBUG_VP_BYTES(msg, msgvp) \
+	if (MW_LOG_DEBUG_ENABLE) { \
       trace.print_P(msg);					\
 	  for (const iovec_t* vp = msgvp; vp->buf != 0; vp++) \
-		TRACE_ARRAY_BYTES((const void*)vp->buf, (uint8_t) vp->size); \
+		MW_LOG_ARRAY_BYTES((const void*)vp->buf, (uint8_t) vp->size); \
 	  trace << PSTR("\n"); \
 	}
 	
