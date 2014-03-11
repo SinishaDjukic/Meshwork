@@ -33,13 +33,14 @@ public class RouteList {
         return list.indexOf(route);
     }
 
-    public Route getRoute(Route route, boolean autoCreate) {
+    public Route getRoute(Route route, boolean autoCreate, byte autoCreateSrcID) {
         Route result = null;
         int index = list.indexOf(route);
         if ( index != -1 ) {
             result = list.elementAt(index);
         } else if ( autoCreate ) {
             result = new Route();
+            result.src = autoCreateSrcID;
             list.add(result);
         }
         return result;

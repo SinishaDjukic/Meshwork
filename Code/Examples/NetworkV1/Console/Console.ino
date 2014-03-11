@@ -75,7 +75,7 @@ NRF24L01P rf(0x0001, 0x01,
 #endif
 
 StaticRouteProvider advisor;
-NetworkV1 mesh(&rf, &advisor);
+Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, &advisor);
 LineReader<64> console(&uart);
 StaticACKProvider ackProvider;
 
@@ -247,7 +247,7 @@ void run_recv() {
 	}
 	uint32_t duration = (uint32_t) 60 * 1000L;
 	uint8_t src, port;
-	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
+	size_t dataLenMax = Meshwork::L3::NetworkV1::NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
 	trace << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
@@ -304,7 +304,7 @@ void run_clearrx() {
 	uint32_t duration = (uint32_t) 1 * 1000L;
 	uint32_t singleTimeout = (uint32_t) 100L;
 	uint8_t src, port;
-	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
+	size_t dataLenMax = Meshwork::L3::NetworkV1::NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
 	
 	uint32_t start = RTC::millis();

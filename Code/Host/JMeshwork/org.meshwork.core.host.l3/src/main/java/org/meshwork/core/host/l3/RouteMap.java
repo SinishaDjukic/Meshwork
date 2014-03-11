@@ -26,4 +26,8 @@ public class RouteMap {
         RouteList result = map.remove(dst);
         map.put(dst, list);
     }
+
+    public void clearRouteList() {
+        map.clear();
+    }
 }

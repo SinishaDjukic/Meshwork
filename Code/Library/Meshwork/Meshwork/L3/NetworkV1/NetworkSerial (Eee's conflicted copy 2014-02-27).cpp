@@ -27,23 +27,23 @@
 #include "Cosa/Trace.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
+#include "Meshwork/L3/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-void Meshwork::L3::NetworkV1::NetworkSerial::writeMessage(uint8_t len, uint8_t* data, bool flush) {
+void Meshwork::L3::NetworkSerial::writeMessage(uint8_t len, uint8_t* data, bool flush) {
 	for ( int i = 0; i < len; i ++ )
 		m_serial->putchar(((uint8_t*)data)[i]);
 	if ( flush )
 		m_serial->flush();
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::initSerial() {
+bool Meshwork::L3::NetworkSerial::initSerial() {
 	uint8_t data[] = {0, 1, MSGCODE_CFGREQUEST};
 	writeMessage(sizeof(data), data, true);
 	return true;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::waitForBytes(uint8_t count, uint16_t millis) {
+bool Meshwork::L3::NetworkSerial::waitForBytes(uint8_t count, uint16_t millis) {
 	bool result = false;
 	uint32_t start = RTC::millis();
 	while (true) {
@@ -57,21 +57,21 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::waitForBytes(uint8_t count, uint16_
 	return result;
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
+void Meshwork::L3::NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
 	uint8_t data[] = {msg->seq, 1, code};
 	writeMessage(sizeof(data), data, true);
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
+void Meshwork::L3::NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
 	uint8_t data[] = {msg->seq, 2, MSGCODE_NOK, error};
 	writeMessage(sizeof(data), data, true);
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::set_address(uint8_t src) {
+void Meshwork::L3::NetworkSerial::set_address(uint8_t src) {
 	//no action needed
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
+void Meshwork::L3::NetworkSerial::route_found(NetworkV1::route_t* route) {
 	uint8_t hopCount = route->hopCount;	
 	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFOUND, hopCount, route->src};
 	writeMessage(sizeof(data), data, false);
@@ -80,7 +80,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1
 	writeMessage(1, data, true);
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
+void Meshwork::L3::NetworkSerial::route_failed(NetworkV1::route_t* route) {
 	uint8_t hopCount = route->hopCount;
 	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFAILED, hopCount, route->src};
 	writeMessage(sizeof(data), data, false);
@@ -89,7 +89,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV
 	writeMessage(1, data, true);
 }
 
-uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
+uint8_t Meshwork::L3::NetworkSerial::get_routeCount(uint8_t dst) {
 	uint8_t result = 0;
 	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_RFGETROUTECOUNT, dst};
 	writeMessage(sizeof(data), data, true);
@@ -102,8 +102,8 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 	return result;
 }
 
-Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSerial::get_route(uint8_t dst, uint8_t index) {
-	Meshwork::L3::NetworkV1::NetworkV1::route_t* result = NULL;
+NetworkV1::route_t* Meshwork::L3::NetworkSerial::get_route(uint8_t dst, uint8_t index) {
+	NetworkV1::route_t* result = NULL;
 	
 	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_RFGETROUTE, dst, index};
 	writeMessage(sizeof(data), data, true);
@@ -146,13 +146,13 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 	return result;
 }
 
-void Meshwork::L3::NetworkV1::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData) {
+void Meshwork::L3::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData) {
 	uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
 	writeMessage(sizeof(data), data, false);
 	writeMessage(datalen, data, true);
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 	bool result = false;//TODO check if we need the result at all
 	if ( m_serial->available() >= 3 ) {
 		data_cfgbasic_t* cfgbasic;
@@ -185,7 +185,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgnwk_t* cfgnwk;
@@ -204,19 +204,19 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFInit(serialmsg_t* msg) {
 	bool result = m_network->begin();
 	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
 	bool result = m_network->end();
 	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return result;
 }
 
-int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
+int Meshwork::L3::NetworkSerial::returnACKPayload(uint8_t src, uint8_t port,
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
@@ -254,7 +254,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 	return bytes;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFStartRecv(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 4 ) {
 		data_rfstartrecv_t* rfstartrecv;
@@ -286,7 +286,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFSend(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		data_rfsend_t* rfsend;
@@ -294,11 +294,9 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 		uint8_t dst = rfsend->dst = m_serial->getchar();
 		uint8_t port = rfsend->port = m_serial->getchar();
 		uint8_t datalen = rfsend->datalen = m_serial->getchar();
-		MW_LOG_DEBUG("Dst=%d, Port=%d, DataLen=%d", dst, port, datalen);
 		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
-			//TODO debug print the array
 			size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
 			uint8_t bufACK[maxACKLen];
 			int res = m_network->send(dst, port, rfsend->data, datalen, bufACK, maxACKLen);
@@ -319,7 +317,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processRFBroadcast(serialmsg_t* msg) {
 	bool result = false;
 	if ( m_serial->available() >= 2 ) {//minimal msg len
 		data_rfbcast_t* rfbcast;
@@ -345,12 +343,12 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(serialmsg_t* msg
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessageEx(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processOneMessageEx(serialmsg_t* msg) {
 	return false;
 }
 
 
-bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkSerial::processOneMessage(serialmsg_t* msg) {
 	bool result = true;
 	
 	if ( m_serial->available() >= 3 ) {//minimal msg len

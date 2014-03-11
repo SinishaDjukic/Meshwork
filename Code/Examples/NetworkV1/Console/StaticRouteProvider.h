@@ -25,15 +25,15 @@
 #include "Cosa/Wireless.hh"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-class StaticRouteProvider: public NetworkV1::RouteProvider {
+class StaticRouteProvider: public Meshwork::L3::NetworkV1::NetworkV1::RouteProvider {
 
 protected:
 	static const uint8_t MAX_STATIC_ROUTES = 5;
 	static const uint8_t MAX_STATIC_ROUTES_HOPS = 8;
-	NetworkV1::route_t routes[MAX_STATIC_ROUTES];
+	Meshwork::L3::NetworkV1::NetworkV1::route_t routes[MAX_STATIC_ROUTES];
 	uint8_t hops[MAX_STATIC_ROUTES][MAX_STATIC_ROUTES_HOPS];
 	
-	void print_route(NetworkV1::route_t* route) {
+	void print_route(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
 		trace << PSTR("Route: src=") << route->src << PSTR(", dst=") << route->dst << PSTR(", hopCount=") << route->hopCount;
 		trace << PSTR("\tHops: ");
 		if ( route->hopCount > 0 )
@@ -92,8 +92,8 @@ public:
 		trace << PSTR("Get route count: dst=") << dst << PSTR(", result=") << result << PSTR("\n");
 		return result;
 	}
-	NetworkV1::route_t* get_route(uint8_t dst, uint8_t index) {
-		NetworkV1::route_t* result = NULL;
+	Meshwork::L3::NetworkV1::NetworkV1::route_t* get_route(uint8_t dst, uint8_t index) {
+		Meshwork::L3::NetworkV1::NetworkV1::route_t* result = NULL;
 		int current = 0;
 		for ( int i = 0; i < MAX_STATIC_ROUTES; i ++ ) {
 			if ( routes[i].dst == dst ) {
@@ -108,11 +108,11 @@ public:
 		trace << PSTR("Get route: dst=") << dst << PSTR(", index=") << index << PSTR(", result=") << result << PSTR("\n");
 		return result;
 	}
-	void route_found(NetworkV1::route_t* route) {
+	void route_found(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
 		trace << PSTR("Route found:\n\t");
 		print_route(route);
 	}
-	void route_failed(NetworkV1::route_t* route) {
+	void route_failed(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
 		trace << PSTR("Route failed:\n\t");
 		print_route(route);
 	}

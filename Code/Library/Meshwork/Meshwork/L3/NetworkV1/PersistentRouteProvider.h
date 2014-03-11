@@ -27,40 +27,49 @@
 /**
  * TODO
  */
-class PersistentRouteProvider: public Meshwork::L3::Network::RouteProvider {
+namespace Meshwork {
 
-protected:
+	namespace L3 {
+	
+		namespace NetworkV1 {
+		
+			class PersistentRouteProvider: public Meshwork::L3::Network::RouteProvider {
 
-	uint8_t src;
-	unit8_t updatePolicy;
-	RouteCache cache;
+			protected:
 
-public:
+				uint8_t src;
+				unit8_t updatePolicy;
+				RouteCache cache;
 
-	//invalidates a route when the first message to Dst fails
-	const uint8_t UPDATE_ON_FAIL = 0;
-	//never invalidate once we have acquired a route
-	const uint8_t UPDATE_NEVER = 1;
-	//always update with latest route to node
-	const uint8_t UPDATE_ALWAYS = 2;
+			public:
 
-	PersistentRouteProvider(unit8_t src, unit8_t maxNodes,
-			unit8_t maxHops, unit8_t updatePolicy)
-	{
-		m_src(src);
-		m_updatePolicy(updatePolicy);
-		//TODO will this invoke the constructor correctly?
-		//TODO should we add an option to pass a cache instance impl explicitly?
-		cache(maxNodes, maxHops);
+				//invalidates a route when the first message to Dst fails
+				const uint8_t UPDATE_ON_FAIL = 0;
+				//never invalidate once we have acquired a route
+				const uint8_t UPDATE_NEVER = 1;
+				//always update with latest route to node
+				const uint8_t UPDATE_ALWAYS = 2;
+
+				PersistentRouteProvider(unit8_t src, unit8_t maxNodes,
+						unit8_t maxHops, unit8_t updatePolicy)
+				{
+					m_src(src);
+					m_updatePolicy(updatePolicy);
+					//TODO will this invoke the constructor correctly?
+					//TODO should we add an option to pass a cache instance impl explicitly?
+					cache(maxNodes, maxHops);
+				};
+
+					  virtual void set_address(uint8_t src) = 0;
+					  virtual uint8_t get_routeCount(uint8_t dst) = 0;
+					  virtual route_t* get_route(uint8_t dst, uint8_t index) = 0;
+					  virtual void route_found(route_t* route) = 0;
+					  virtual void route_failed(route_t* route) = 0;
+
+
+			};
+		};
 	};
-
-		  virtual void set_address(uint8_t src) = 0;
-		  virtual uint8_t get_routeCount(uint8_t dst) = 0;
-		  virtual route_t* get_route(uint8_t dst, uint8_t index) = 0;
-		  virtual void route_found(route_t* route) = 0;
-		  virtual void route_failed(route_t* route) = 0;
-
-
 };
 #endif
 

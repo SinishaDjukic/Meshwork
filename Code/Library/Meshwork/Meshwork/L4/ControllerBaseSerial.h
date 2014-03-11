@@ -27,13 +27,13 @@
 #include "Cosa/Power.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
 
 namespace Meshwork {
 
 	namespace L4 {
 
-		class ControllerBaseSerial : public Meshwork::L3::NetworkSerial {
+		class ControllerBaseSerial : public Meshwork::L3::NetworkV1::NetworkSerial {
 
 		public:
 			static const uint8_t MSGCODE_SET_MODE_ANN			= 96;

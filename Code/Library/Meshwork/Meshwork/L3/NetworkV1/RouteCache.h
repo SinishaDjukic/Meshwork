@@ -27,36 +27,45 @@
 /**
  * Holds up routes for up to m_maxNodes destinations. One route per destination only
  */
-class RouteCache {
+namespace Meshwork {
 
-protected:
-	unit8_t m_maxNodes;
-	unit8_t m_maxHops;
-	//TODO structure, route_t*
+	namespace L3 {
+	
+		namespace NetworkV1 {
+		
+			class RouteCache {
 
-public:
-	RouteCache(unit8_t maxNodes, unit8_t maxHops)
-	{
-		m_maxNodes(maxNodes);
-		m_maxHops(maxHops);
+			protected:
+				unit8_t m_maxNodes;
+				unit8_t m_maxHops;
+				//TODO structure, route_t*
+
+			public:
+				RouteCache(unit8_t maxNodes, unit8_t maxHops)
+				{
+					m_maxNodes(maxNodes);
+					m_maxHops(maxHops);
+				};
+
+				unit8_t get_maxNodes() {
+					return m_maxNodes;
+				}
+
+				unit8_t addOrUpdate(uint8_t dst, void* route, uint8_t hops) {
+					if ( hops > m_maxHops )
+						return -1;
+					//TODO
+				}
+
+				void remove(uint8_t dst) {
+					//TODO
+				}
+
+				//TODO extend the class with the one writing to EEPROM?
+
+			};
+		};
 	};
-
-	unit8_t get_maxNodes() {
-		return m_maxNodes;
-	}
-
-	unit8_t addOrUpdate(uint8_t dst, void* route, uint8_t hops) {
-		if ( hops > m_maxHops )
-			return -1;
-		//TODO
-	}
-
-	void remove(uint8_t dst) {
-		//TODO
-	}
-
-	//TODO extend the class with the one writing to EEPROM?
-
 };
 #endif
 

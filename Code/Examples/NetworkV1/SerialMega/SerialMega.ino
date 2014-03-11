@@ -28,9 +28,9 @@
 #include "Cosa/Wireless.hh"
 #include <Meshwork.h>
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
 #include "Utils/LineReader.h"
 
@@ -80,8 +80,8 @@ static IOBuffer<UART::BUFFER_MAX> obuf;
 // HC UART will be used for Host-Controller communication
 UART uartHC(3, &ibuf, &obuf);
 
-NetworkV1 mesh(&rf, NULL);
-Meshwork::L3::NetworkSerial networkSerial(&mesh, &uartHC);
+Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, NULL);
+Meshwork::L3::NetworkV1::NetworkSerial networkSerial(&mesh, &uartHC);
 
 void setup()
 {
@@ -102,9 +102,9 @@ void setup()
 
 void loop()
 {
-	static uint8_t databuf[Meshwork::L3::NetworkSerial::MAX_SERIALMSG_LEN];
-	static Meshwork::L3::NetworkSerial::serialmsg_t msg;
-	msg.data = databuf;
+	static uint8_t databuf[Meshwork::L3::NetworkV1::NetworkSerial::MAX_SERIALMSG_LEN];
+	static Meshwork::L3::NetworkV1::NetworkSerial::serialmsg_t msg;
+	*msg.data = *databuf;
 	trace.begin(&uart, PSTR("Processing message..."));
 	networkSerial.processOneMessage(&msg);
 }

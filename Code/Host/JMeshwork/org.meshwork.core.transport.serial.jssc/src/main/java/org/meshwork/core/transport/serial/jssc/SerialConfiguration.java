@@ -1,5 +1,7 @@
 package org.meshwork.core.transport.serial.jssc;
 
+import org.meshwork.core.util.Converter;
+
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -63,24 +65,12 @@ public class SerialConfiguration {
     public void loadConfiguration(InputStream is) throws Exception {
         Properties p = new Properties();
         p.load(is);
-        baudRate = toInt(CONFIG_KEY_BAUDRATE, p.getProperty(CONFIG_KEY_BAUDRATE));
-        dataBits = toInt(CONFIG_KEY_DATABITS, p.getProperty(CONFIG_KEY_DATABITS));
-        stopBits = toInt(CONFIG_KEY_STOPBITS, p.getProperty(CONFIG_KEY_STOPBITS));
-        parity = toInt(CONFIG_KEY_PARITY, p.getProperty(CONFIG_KEY_PARITY));
-        setRTS = toBoolean(CONFIG_KEY_SETRTS, p.getProperty(CONFIG_KEY_SETRTS));
-        setDTR = toBoolean(CONFIG_KEY_SETDTR, p.getProperty(CONFIG_KEY_SETDTR));
-    }
-
-    protected boolean toBoolean(String propKey, String propValue) {
-        if ( propValue == null )
-            throw new IllegalArgumentException("Property '"+propKey+"' is cannot be null!");
-        return Boolean.parseBoolean(propValue);
-    }
-
-    protected int toInt(String propKey, String propValue) {
-        if ( propValue == null )
-            throw new IllegalArgumentException("Property '"+propKey+"' is cannot be null!");
-        return Integer.parseInt(propValue);
+        baudRate = Converter.toInt(CONFIG_KEY_BAUDRATE, p.getProperty(CONFIG_KEY_BAUDRATE));
+        dataBits = Converter.toInt(CONFIG_KEY_DATABITS, p.getProperty(CONFIG_KEY_DATABITS));
+        stopBits = Converter.toInt(CONFIG_KEY_STOPBITS, p.getProperty(CONFIG_KEY_STOPBITS));
+        parity = Converter.toInt(CONFIG_KEY_PARITY, p.getProperty(CONFIG_KEY_PARITY));
+        setRTS = Converter.toBoolean(CONFIG_KEY_SETRTS, p.getProperty(CONFIG_KEY_SETRTS));
+        setDTR = Converter.toBoolean(CONFIG_KEY_SETDTR, p.getProperty(CONFIG_KEY_SETDTR));
     }
 
 }

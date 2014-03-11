@@ -1,5 +1,7 @@
 package org.meshwork.app.host.l3.router;
 
+import org.meshwork.core.util.Converter;
+
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -51,32 +53,14 @@ public class RouterConfiguration {
     public void loadConfiguration(InputStream is) throws Exception {
         Properties p = new Properties();
         p.load(is);
-        nwkcaps = toByte(CONFIG_KEY_NWKCAPS, p.getProperty(CONFIG_KEY_NWKCAPS));
-        delivery = toByte(CONFIG_KEY_DELIVERY, p.getProperty(CONFIG_KEY_DELIVERY));
-        retry = toByte(CONFIG_KEY_RETRY, p.getProperty(CONFIG_KEY_RETRY));
-        nwkid = toByte(CONFIG_KEY_NWKID, p.getProperty(CONFIG_KEY_NWKID));
-        nodeid = toByte(CONFIG_KEY_NODEID, p.getProperty(CONFIG_KEY_NODEID));
-        channel = toByte(CONFIG_KEY_CHANNEL, p.getProperty(CONFIG_KEY_CHANNEL));
-        consoleReadTimeout = toInteger(CONFIG_KEY_CONSOLE_READ_TIMEOUT, p.getProperty(CONFIG_KEY_CONSOLE_READ_TIMEOUT));
-        rfReadTimeout = toInteger(CONFIG_KEY_RF_READ_TIMEOUT, p.getProperty(CONFIG_KEY_RF_READ_TIMEOUT));
-    }
-
-    protected byte toByte(String propKey, String propValue) {
-        if ( propValue == null )
-            throw new IllegalArgumentException("Property '"+propKey+"' is cannot be null!");
-        return Byte.parseByte(propValue);
-    }
-
-    protected short toShort(String propKey, String propValue) {
-        if ( propValue == null )
-            throw new IllegalArgumentException("Property '"+propKey+"' is cannot be null!");
-        return Short.parseShort(propValue);
-    }
-
-    protected int toInteger(String propKey, String propValue) {
-        if ( propValue == null )
-            throw new IllegalArgumentException("Property '"+propKey+"' is cannot be null!");
-        return Integer.parseInt(propValue);
+        nwkcaps = Converter.toByte(CONFIG_KEY_NWKCAPS, p.getProperty(CONFIG_KEY_NWKCAPS));
+        delivery = Converter.toByte(CONFIG_KEY_DELIVERY, p.getProperty(CONFIG_KEY_DELIVERY));
+        retry = Converter.toByte(CONFIG_KEY_RETRY, p.getProperty(CONFIG_KEY_RETRY));
+        nwkid = Converter.toByte(CONFIG_KEY_NWKID, p.getProperty(CONFIG_KEY_NWKID));
+        nodeid = Converter.toByte(CONFIG_KEY_NODEID, p.getProperty(CONFIG_KEY_NODEID));
+        channel = Converter.toByte(CONFIG_KEY_CHANNEL, p.getProperty(CONFIG_KEY_CHANNEL));
+        consoleReadTimeout = Converter.toInt(CONFIG_KEY_CONSOLE_READ_TIMEOUT, p.getProperty(CONFIG_KEY_CONSOLE_READ_TIMEOUT));
+        rfReadTimeout = Converter.toInt(CONFIG_KEY_RF_READ_TIMEOUT, p.getProperty(CONFIG_KEY_RF_READ_TIMEOUT));
     }
 
     public byte getNodeid() {

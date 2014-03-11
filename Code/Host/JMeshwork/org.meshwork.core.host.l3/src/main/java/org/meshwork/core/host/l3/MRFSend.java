@@ -43,7 +43,8 @@ public class MRFSend extends AbstractMessage implements Constants {
         result.port = msg.data[1];
         result.datalen = msg.data[2];
         result.data = new byte[result.datalen];
-        System.arraycopy(msg.data, 3, result.data, 0, result.datalen);
+        if ( result.datalen > 0 )
+            System.arraycopy(msg.data, 3, result.data, 0, result.datalen);
         return result;
     }
 
