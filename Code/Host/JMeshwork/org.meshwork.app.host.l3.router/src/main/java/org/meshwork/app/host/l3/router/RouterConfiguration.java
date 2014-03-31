@@ -91,4 +91,36 @@ public class RouterConfiguration {
 
     public int getRFReadTimeout() { return rfReadTimeout; }
 
+    public void setNwkcaps(byte nwkcaps) {
+        this.nwkcaps = nwkcaps;
+    }
+
+    public void setDelivery(byte delivery) {
+        this.delivery = delivery;
+    }
+
+    public void setRetry(byte retry) {
+        this.retry = retry;
+    }
+
+    public void setNwkid(short nwkid) {
+        this.nwkid = nwkid;
+    }
+
+    public void setNodeid(byte nodeid) {
+        this.nodeid = nodeid;
+    }
+
+    public void setChannel(byte channel) {
+        this.channel = channel;
+    }
+
+    public void setRfReadTimeout(int rfReadTimeout) {
+        this.rfReadTimeout = rfReadTimeout;
+    }
+
+    public void setConsoleReadTimeout(int consoleReadTimeout) {
+        this.consoleReadTimeout = consoleReadTimeout;
+    }
+
 }

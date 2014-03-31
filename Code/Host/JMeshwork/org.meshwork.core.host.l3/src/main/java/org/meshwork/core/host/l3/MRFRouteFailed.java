@@ -37,13 +37,13 @@ public class MRFRouteFailed extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = (byte) (4 + route.hopCount);
         msg.code = getCode();
-        msg.data = new byte[msg.len-1];
+        msg.data = new byte[2 + route.hopCount + 1];
         msg.data[0] = route.hopCount;
         msg.data[1] = route.src;
         if ( route.hopCount > 0 )
             System.arraycopy(route.hops, 0, msg.data, 2, route.hopCount);
         msg.data[2+route.hopCount] = route.dst;
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

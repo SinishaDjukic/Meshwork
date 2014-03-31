@@ -165,6 +165,25 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 		m_network->setDelivery(cfgbasic->delivery);
 		m_network->setRetry(cfgbasic->retry);
 		
+		respondWCode(msg, MSGCODE_OK);
+		result = true;
+	} else {
+		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
+	}
+	return result;
+}
+
+bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
+	bool result = false;
+	if ( m_serial->available() >= 3 ) {
+		data_cfgnwk_t* cfgnwk;
+		cfgnwk = (data_cfgnwk_t*) msg->data;
+		cfgnwk->channel = m_serial->getchar();
+		cfgnwk->nwkid = (uint16_t) m_serial->getchar() << 8 | m_serial->getchar();
+		cfgnwk->nodeid = m_serial->getchar();
+		m_network->setChannel(cfgnwk->channel);
+		m_network->setNetworkID(cfgnwk->nwkid);
+		m_network->setNodeID(cfgnwk->nodeid);
 		size_t keyLen = m_serial->getchar();
 		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
 			m_networkKey[0] = 0;
@@ -179,25 +198,6 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 			respondWCode(msg, ERROR_KEY_TOO_LONG);
 			result = false;
 		}
-	} else {
-		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
-	}
-	return result;
-}
-
-bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
-	bool result = false;
-	if ( m_serial->available() >= 3 ) {
-		data_cfgnwk_t* cfgnwk;
-		cfgnwk = (data_cfgnwk_t*) msg->data;
-		cfgnwk->nwkid = (uint16_t) m_serial->getchar() << 8 | m_serial->getchar();
-		cfgnwk->nodeid = m_serial->getchar();
-		cfgnwk->channel = m_serial->getchar();
-		m_network->setNetworkID(cfgnwk->nwkid);
-		m_network->setNodeID(cfgnwk->nodeid);
-		m_network->setChannel(cfgnwk->channel);
-		respondWCode(msg, MSGCODE_OK);
-		result = true;
 	} else {
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}

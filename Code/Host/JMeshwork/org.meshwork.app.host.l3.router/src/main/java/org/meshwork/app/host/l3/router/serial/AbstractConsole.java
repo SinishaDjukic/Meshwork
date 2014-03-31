@@ -69,15 +69,19 @@ public abstract class AbstractConsole {
             RouterConfiguration routerConfig = initRouterConfiguration(args[0].trim());
             SerialConfiguration serialConfig = initSerialConfiguration(args[1].trim());
             AbstractMessageTransport transport = initTransport(serialConfig, args[args.length-1]);
-            MessageAdapter adapter = initMessageAdapter();
-            PrintWriter writer = initPrintWriter(System.out, true);
-            MessageDispatcherImpl dispatcher = initMessageDispatcher(adapter, transport, routerConfig, writer);
-            Router router = initRouter();
-            router.init(transport, dispatcher, routerConfig, writer);
+            initApp(routerConfig, serialConfig, transport, System.out);
         } catch (Throwable t) {
             t.printStackTrace();
             exit(EXIT_INITIALIZATION_ERROR, "Error during router initialization due to: "+t.getMessage());
         }
+    }
+
+    protected void initApp(RouterConfiguration routerConfig, SerialConfiguration serialConfig, AbstractMessageTransport transport, PrintStream ps) throws Exception {
+        MessageAdapter adapter = initMessageAdapter();
+        PrintWriter writer = initPrintWriter(ps, true);
+        MessageDispatcherImpl dispatcher = initMessageDispatcher(adapter, transport, routerConfig, writer);
+        Router router = initRouter();
+        router.init(transport, dispatcher, routerConfig, writer);
     }
 
     protected PrintWriter initPrintWriter(PrintStream out, boolean b) {

@@ -39,6 +39,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         consoleReadTimeout = config.getConsoleReadTimeout();
         dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         routeMap = new RouteMap();
+        autoCfgRequestAllowed = true;
     }
 
     public RouteMap getRouteMap() {
@@ -212,7 +213,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         msg.retry = config.retry;
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doConfigBasic] Response: ");
-        result.toString(writer, "\t\t", null, null);
+        if ( result != null )
+            result.toString(writer, "\t\t", null, null);
         if ( result == null || !(result instanceof MOK) )
             throw new Exception("Error sending MConfigBasic");
     }
@@ -224,7 +226,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         msg.channel = config.getChannel();
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doConfigNetwork] Response: ");
-        result.toString(writer, "\t\t", null, null);
+        if ( result != null )
+            result.toString(writer, "\t\t", null, null);
         if ( result == null || !(result instanceof MOK) )
             throw new Exception("Error sending MConfigNetwork");
     }

@@ -151,6 +151,7 @@ namespace Meshwork {
 			uint8_t m_retry;
 			uint8_t m_channel;
 			char* m_networkKey;
+			uint8_t m_networkKeyLen;
 
 		//public constructor and functions
 		public:
@@ -225,6 +226,14 @@ namespace Meshwork {
 			
 			virtual void setNetworkKey(char* networkKey) {
 				m_networkKey = networkKey;
+			}
+			
+			virtual uint8_t getNetworkKeyLen() {
+				return m_networkKeyLen;
+			}
+			
+			virtual void setNetworkKeyLen(uint8_t networkKeyLen) {
+				m_networkKeyLen = networkKeyLen;
 			}
 			
 			virtual void reset() {

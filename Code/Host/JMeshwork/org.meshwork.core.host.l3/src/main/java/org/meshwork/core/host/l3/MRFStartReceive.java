@@ -35,12 +35,12 @@ public class MRFStartReceive extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 1+4;
         msg.code = getCode();
-        msg.data = new byte[msg.len-1];
+        msg.data = new byte[4];
         msg.data[0] = (byte) (( timeout >> 24 ) & 0xFF);
         msg.data[1] = (byte) (( timeout >> 16 ) & 0xFF);
         msg.data[2] = (byte) (( timeout >> 8  ) & 0xFF);
         msg.data[3] = (byte) (( timeout >> 0  ) & 0xFF);
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

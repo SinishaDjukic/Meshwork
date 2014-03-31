@@ -11,9 +11,11 @@ import java.io.PrintWriter;
  */
 public class MConfigNetwork extends AbstractMessage implements Constants {
 
+    public byte channel;
     public short nwkid;
     public byte nodeid;
-    public byte channel;
+    public byte keylen;
+    public byte[] key;
 
     public MConfigNetwork(byte seq) {
         super(MSGCODE_CFGNWK, seq);
@@ -21,30 +23,37 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MConfigNetwork: NwkID=");writer.print(nwkid);
+        writer.print("MConfigNetwork: Channel=");writer.print(channel);
         writer.print(", NodeID=");writer.print(nodeid);
-        writer.print(", Channel=");writer.print(channel);
+        writer.print(", NwkID=");writer.print(nwkid);
+        writer.print(", KeyLen=");writer.print(keylen);
     }
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
         MConfigNetwork result = new MConfigNetwork(msg.seq);
-        result.nwkid = (short) (( msg.data[0] << 8 ) & 0xFF |
-                                ( msg.data[1] << 0 ) & 0xFF);
-        result.nodeid = msg.data[2];
-        result.channel = msg.data[3];
+        result.channel = msg.data[0];
+        result.nwkid = (short) (( msg.data[1] << 8 ) & 0xFF |
+                                ( msg.data[2] << 0 ) & 0xFF);
+        result.nodeid = msg.data[3];
+        result.keylen = msg.data[4];
+        result.key = keylen < 1 ? null : new byte[keylen];
+        System.arraycopy(msg.data, 5, result.key, 0, keylen);
         return result;
     }
 
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 1+4;
         msg.code = getCode();
-        msg.data = new byte[msg.len-1];
-        msg.data[0] = (byte) (( nwkid >> 8 ) & 0xFF);
-        msg.data[1] = (byte) (( nwkid >> 0 ) & 0xFF);
-        msg.data[2] = nodeid;
-        msg.data[3] = channel;
+        msg.data = new byte[5 + keylen];
+        msg.data[0] = channel;
+        msg.data[1] = (byte) (( nwkid >> 8 ) & 0xFF);
+        msg.data[2] = (byte) (( nwkid >> 0 ) & 0xFF);
+        msg.data[3] = nodeid;
+        msg.data[4] = keylen;
+        if ( keylen >= 1 )
+            System.arraycopy(key, 0, msg.data, 5, keylen);
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

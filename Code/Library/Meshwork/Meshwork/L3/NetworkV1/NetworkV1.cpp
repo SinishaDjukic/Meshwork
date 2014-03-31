@@ -226,8 +226,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACK
 	if (ackProvider != NULL) {
 		bufACKsize = ackProvider->returnACKPayload(origin, hopPort, data, dataLen, bufACK, ACK_PAYLOAD_MAX);
 	}
-	reply_msg.msg_direct.dataLen = bufACKsize;
 	reply_msg.msg_direct.data = bufACKsize == 0 ? NULL : bufACK;
+	reply_msg.msg_direct.dataLen = bufACKsize;
 	
 	MW_LOG_INFO("Send Direct ACK to node: %d via node: %d, payload size: %d", origin, dest, bufACKsize);
 	
@@ -239,6 +239,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACK
 	
 	bool sent = sendWithoutACK(dest, hopPort, vp, m_retry+1);
 	result = sent ? Meshwork::L3::NetworkV1::NetworkV1::OK : Meshwork::L3::NetworkV1::NetworkV1::ERROR_ACK_SEND_FAILED;
+	
 	MW_LOG_DEBUG("Result: %d", result);
 	return result;
 }

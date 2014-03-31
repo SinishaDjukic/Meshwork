@@ -30,8 +30,8 @@ public class MUnknown extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 1;
         msg.code = getCode();
         msg.data = null;
+        msg.len = 1;
     }
 }

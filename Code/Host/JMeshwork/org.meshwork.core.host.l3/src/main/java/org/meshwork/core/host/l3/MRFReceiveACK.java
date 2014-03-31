@@ -44,11 +44,11 @@ public class MRFReceiveACK extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = (byte) (2+datalen);
         msg.code = getCode();
-        msg.data = new byte[msg.len-1];
+        msg.data = new byte[1 + datalen];
         msg.data[0] = datalen;
         if ( data != null )
             System.arraycopy(data, 0, msg.data, 1, datalen);
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

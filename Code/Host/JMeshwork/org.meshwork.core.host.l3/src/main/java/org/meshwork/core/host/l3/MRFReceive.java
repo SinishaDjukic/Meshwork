@@ -50,12 +50,12 @@ public class MRFReceive extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = (byte) (1+3+datalen);
         msg.code = getCode();
         msg.data = new byte[3+datalen];
         msg.data[0] = src;
         msg.data[1] = port;
         msg.data[2] = datalen;
         System.arraycopy(data, 0, msg.data, 3, datalen);
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

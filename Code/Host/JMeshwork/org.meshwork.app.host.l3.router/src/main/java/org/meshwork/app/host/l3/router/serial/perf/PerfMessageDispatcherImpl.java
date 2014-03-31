@@ -12,11 +12,11 @@ import java.util.ArrayList;
 /**
  * Created by Sinisha Djukic on 14-2-25.
  */
-public class PefrMessageDispatcherImpl extends MessageDispatcherImpl {
+public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
 
     protected TestSummaryStats summaryStats;
 
-    public PefrMessageDispatcherImpl(MessageAdapter adapter, AbstractMessageTransport transport, RouterConfiguration config, PrintWriter writer, TestSummaryStats summaryStats) {
+    public PerfMessageDispatcherImpl(MessageAdapter adapter, AbstractMessageTransport transport, RouterConfiguration config, PrintWriter writer, TestSummaryStats summaryStats) {
         super(adapter, transport, config, writer);
         this.summaryStats = summaryStats;
         autoCfgRequestAllowed = false;

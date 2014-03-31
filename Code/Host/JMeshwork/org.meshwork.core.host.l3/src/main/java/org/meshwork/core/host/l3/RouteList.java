@@ -10,7 +10,7 @@ public class RouteList {
     protected Vector<Route> list;
 
     public RouteList() {
-        list = new Vector(8);
+        list = new Vector<Route>(8);
     }
 
     public int getRouteCount() {
