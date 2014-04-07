@@ -32,9 +32,9 @@ public class MRFGetRouteCountRes extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 2;
         msg.code = getCode();
         msg.data = new byte[1];
         msg.data[0] = count;
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

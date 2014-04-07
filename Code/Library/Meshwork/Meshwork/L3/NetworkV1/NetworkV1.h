@@ -394,12 +394,14 @@ namespace Meshwork {
 
 									{ seq = 0; };
 				
+			#ifdef SUPPORT_DELIVERY_ROUTED
 				virtual RouteProvider* get_route_advisor() {
 					return m_advisor;
 				}
 				virtual void set_route_advisor(RouteProvider* provider) {
 					m_advisor = provider;
 				}
+			#endif
 				
 				virtual bool begin(const void* config = NULL);
 				virtual bool end();

@@ -85,7 +85,7 @@ public abstract class AbstractConsole {
     }
 
     protected PrintWriter initPrintWriter(PrintStream out, boolean b) {
-        return new PrintWriter(System.out, true);
+        return new PrintWriter(out, true);
     }
 
     protected Router initRouter() {

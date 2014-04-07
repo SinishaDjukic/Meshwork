@@ -10,7 +10,7 @@ public class Printer {
     public static final synchronized void printHex(PrintWriter writer, byte[] data,
                                       int maxCount, int maxPerRow,
                                       String rowPrefix, String rowSuffix, String separator) {
-        int len = data.length;
+        int len = data == null ? 0 : data.length;
         int column = 0;
         for ( int i = 0; i < len; i ++ ) {
             if ( i == maxCount ) {

@@ -24,11 +24,15 @@ public class TestSummaryStats {
         writer.println("-------------------");
         for ( int i = 0; i < tests; i ++ ) {
             TestStats stats = testStats.get(i);
+            int runCount = stats.getRunCount();
+            int runTime = stats.getRunTime();
             writer.println("Test Name: "+stats.getTestName());
             writer.println("\tSuccess count: "+stats.getSuccessCount());
             writer.println("\t   Fail count: "+stats.getFailCount());
-            writer.println("\t    Run count: "+stats.getRunCount());
+            writer.println("\t    Run count: "+runCount);
+            writer.println("\t Success rate: "+(runCount == 0 ? 0f : (stats.getSuccessCount() / runTime)));
             writer.println("\t Run time (s): "+stats.getRunTime());
+            writer.println("\tSend rate (s): "+(runTime == 0 ? 0f : (stats.getRunCount() / runTime)));
             writer.println("\t  Description: "+stats.getTestDescription());
             writer.println("\t      Details: "+stats.getTestDetails());
             writer.println();

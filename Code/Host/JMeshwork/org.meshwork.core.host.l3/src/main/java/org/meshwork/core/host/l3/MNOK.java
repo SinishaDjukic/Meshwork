@@ -32,8 +32,8 @@ public class MNOK extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 1+1;
         msg.code = getCode();
         msg.data = new byte[] { error };
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

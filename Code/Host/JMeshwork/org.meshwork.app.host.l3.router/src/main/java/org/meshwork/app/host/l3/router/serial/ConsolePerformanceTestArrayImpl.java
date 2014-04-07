@@ -78,10 +78,14 @@ public class ConsolePerformanceTestArrayImpl extends AbstractConsole {
 
         byte nodes = 0;
         int testNodeCount = args.length - 4;//last param is the test router node, so exclude it
+        //TODO check if testNodeCount < 252, since we need 1 node for the base, and 0 and 255 are reserved
         String dev = null;
         File outBaseDir = new File("./logs/");
         outBaseDir.mkdirs();
 
+        byte baseNodeId = routerConfig.getNodeid();
+
+        writer.println("Initializing base and '"+testNodeCount+"' devices...");
         for ( int i = 0; i < testNodeCount; i ++ ) {
             try {
                 dev = args[3 + i];
@@ -91,7 +95,7 @@ public class ConsolePerformanceTestArrayImpl extends AbstractConsole {
                 SerialConfiguration sc = c.initSerialConfiguration(args[1].trim());
                 AbstractMessageTransport tr = c.initTransport(sc, dev);
 
-                byte nodeId = (byte) (rc.getNodeid() + (++nodes));
+                byte nodeId = (byte) (baseNodeId + (++nodes));
                 rc.setNodeid(nodeId);
                 File fileOut = new File(outBaseDir, "node_"+nodeId+".txt");
                 fileOut.delete();
@@ -106,7 +110,30 @@ public class ConsolePerformanceTestArrayImpl extends AbstractConsole {
                 writer.flush();
             }
         }
-       return result;
+        //now, update the routes in the test route configuration
+        if ( testNodeCount > 0 ) {
+            directConfiguration.dstlist.clear();
+            routedConfiguration.routelist.clear();
+            floodConfiguration.dstlist.clear();
+            //for each node create one longest route
+            for ( byte i = 0; i < testNodeCount; i ++ ) {
+                ArrayList<Byte> route = new ArrayList<Byte>();
+                for ( byte j = 0; j < testNodeCount; j ++ )
+                    if ( i != j ) {
+                        route.add((byte)(baseNodeId + 1+ j));
+                    }
+                byte dstNode = (byte)(baseNodeId + 1 + i);
+                route.add(dstNode);
+                routedConfiguration.routelist.add(route);
+                writer.println("[Routed] Route added: "+route);
+                directConfiguration.dstlist.add(dstNode);
+                writer.println("[Direct] Destination added: "+dstNode);
+                floodConfiguration.dstlist.add(dstNode);
+                writer.println("[Flood] Destination added: "+dstNode);
+                writer.println();
+            }
+        }
+        return result;
     }
 
 }

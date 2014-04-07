@@ -28,7 +28,7 @@ public class TestSendFloodStats extends TestStats {
     @Override
     public String getTestDetails() {
         StringBuffer sb = new StringBuffer("Node list: ");
-        int size = ((TestSendFloodConfiguration)config).dstlist.size() - 1;
+        int size = ((TestSendFloodConfiguration)config).dstlist.size();
         for ( int i = 0; i < size; i ++ ) {
             sb.append(((TestSendFloodConfiguration)config).dstlist.get(i));
             if ( i < size - 1 )

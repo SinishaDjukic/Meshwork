@@ -28,7 +28,7 @@ public class TestSendDirectStats extends TestStats {
     @Override
     public String getTestDetails() {
         StringBuffer sb = new StringBuffer("Node list: ");
-        int size = ((TestSendDirectConfiguration)config).dstlist.size() - 1;
+        int size = ((TestSendDirectConfiguration)config).dstlist.size();
         for ( int i = 0; i < size; i ++ ) {
             sb.append(((TestSendDirectConfiguration)config).dstlist.get(i));
             if ( i < size - 1 )

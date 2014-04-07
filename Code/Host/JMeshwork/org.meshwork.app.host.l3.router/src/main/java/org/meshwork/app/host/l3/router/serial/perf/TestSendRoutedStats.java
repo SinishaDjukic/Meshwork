@@ -34,11 +34,12 @@ public class TestSendRoutedStats extends TestStats {
         if ( routecount > 0 ) {
             for ( int i = 0; i < routecount; i ++ ) {
                 sb.append("\r\n\tRoute ").append(i).append(": ");
-                    ArrayList<Byte> route = (ArrayList<Byte>) ((TestSendRoutedConfiguration)config).routelist.get(i);
-                    int size = route.size() - 1;
-                    sb.append(route.get(i));
-                    if ( i < size - 1 )
-                        sb.append(", ");
+                ArrayList<Byte> route = (ArrayList<Byte>) ((TestSendRoutedConfiguration)config).routelist.get(i);
+                sb.append(route);
+//                    int size = route.size() - 1;
+//                    sb.append(route.get(i));
+//                    if ( i < size - 1 )
+//                        sb.append(", ");
             }
         }
         return sb.toString();

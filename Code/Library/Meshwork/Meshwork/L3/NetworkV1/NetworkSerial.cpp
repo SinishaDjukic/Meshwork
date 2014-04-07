@@ -90,12 +90,30 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV
 }
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
+	MW_LOG_DEBUG("Asking for route count... seq=%d, dst=%d", m_currentMsg->seq, dst);
+
 	uint8_t result = 0;
 	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_RFGETROUTECOUNT, dst};
 	writeMessage(sizeof(data), data, true);
 	
-	if ( waitForBytes(1, TIMEOUT_RESPONSE) ) {
-		result = m_serial->getchar();
+	if ( waitForBytes(4, TIMEOUT_RESPONSE) ) {
+		uint8_t seq = m_serial->getchar();
+		if ( m_currentMsg->seq == seq ) {
+			uint8_t len = m_serial->getchar();
+			uint8_t code = m_serial->getchar();
+			if ( code == MSGCODE_NOK ) {
+				//read the error code and return NULL;
+				m_serial->getchar();
+			} else if ( code == MSGCODE_RFGETROUTECOUNTRES ) {
+				result = m_serial->getchar();
+				MW_LOG_DEBUG("Route cound: %d", result);
+			} else {
+				//TODO we should always read out the entire message len
+				respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+			}
+		} else {
+			respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
+		}
 	} else {
 		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
 	}
@@ -267,9 +285,9 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg
 		uint8_t src, port;
 		size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 		uint8_t* data[dataLenMax];
-		m_currentMsg = msg;
+//		m_currentMsg = msg;
 		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
-		m_currentMsg = NULL;
+//		m_currentMsg = NULL;
 		if ( res == Meshwork::L3::Network::OK ) {
 			respondWCode(msg, MSGCODE_OK);
 		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_INTERNAL ) {
@@ -294,7 +312,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 		uint8_t dst = rfsend->dst = m_serial->getchar();
 		uint8_t port = rfsend->port = m_serial->getchar();
 		uint8_t datalen = rfsend->datalen = m_serial->getchar();
-		MW_LOG_DEBUG("Dst=%d, Port=%d, DataLen=%d", dst, port, datalen);
+		MW_LOG_DEBUG("Seq=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
 		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
@@ -360,6 +378,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 			//needed to make sure we have enough data arrived in the buffer for the entire command
 			int msgcode = msg->code = m_serial->getchar();//msgcode
 			//TODO now that we have a len check here we should remove "if (available)" calls from (most) processXYZ messages
+			m_currentMsg = msg;
 			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
 				switch ( msgcode ) {
 					case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
@@ -373,6 +392,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 						result = processOneMessageEx(msg);
 						if (!result)
 							respondWCode(msg, MSGCODE_UNKNOWN);
+						m_currentMsg = NULL;
 				}
 			} else {
 			respondWCode(msg, ERROR_INSUFFICIENT_DATA);

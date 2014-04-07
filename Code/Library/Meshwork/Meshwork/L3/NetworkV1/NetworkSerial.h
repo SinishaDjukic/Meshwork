@@ -167,8 +167,8 @@ namespace Meshwork {
 					m_serial(serial)
 				{
 					m_networkKey[0] = 0;
-					//TODO fix to set the advisor
-					//network->set_route_advisor(this);
+					//TODO should pull into Network class API
+					((Meshwork::L3::NetworkV1::NetworkV1*)network)->set_route_advisor(this);
 				}
 				
 				virtual bool initSerial();

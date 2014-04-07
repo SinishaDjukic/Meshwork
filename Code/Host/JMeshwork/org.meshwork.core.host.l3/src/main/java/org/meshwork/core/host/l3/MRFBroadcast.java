@@ -47,12 +47,12 @@ public class MRFBroadcast extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = (byte) (1+2+datalen);
         msg.code = getCode();
-        msg.data = new byte[msg.len-1];
+        msg.data = new byte[2 + datalen];
         msg.data[0] = port;
         msg.data[1] = datalen;
         if ( datalen > 0)
             System.arraycopy(data, 0, msg.data, 2, datalen);
+        msg.len = (byte) (msg.data.length + 1);
     }
 }

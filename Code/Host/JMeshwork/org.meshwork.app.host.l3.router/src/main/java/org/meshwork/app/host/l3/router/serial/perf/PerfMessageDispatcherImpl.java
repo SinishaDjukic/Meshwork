@@ -4,6 +4,7 @@ import org.meshwork.app.host.l3.router.MessageDispatcherImpl;
 import org.meshwork.app.host.l3.router.RouterConfiguration;
 import org.meshwork.core.AbstractMessage;
 import org.meshwork.core.AbstractMessageTransport;
+import org.meshwork.core.MessageData;
 import org.meshwork.core.host.l3.*;
 
 import java.io.PrintWriter;
@@ -67,7 +68,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
 
     protected void testSendImpl(TestStats stats, ArrayList<Byte> dst, int iterationDelaySeconds) {
         AbstractTestConfiguration testConfig = stats.getTestConfiguration();
-        int time = testConfig.getMaxTime();
+        long time = testConfig.getMaxTime() * 1000;
         int iterations = testConfig.getMaxIterations();
         if ( time < 1 && iterations < 1 ) {
             writer.println("Skipping test: both time and iterations parameters are invalid");
@@ -76,8 +77,10 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                 writer.println("Skipping test: destination list is empty");
             } else {
                 //normalize values
-                time = time < 1 ? Integer.MAX_VALUE : time;
+                time = time < 1 ? Long.MAX_VALUE : time;
                 iterations = iterations < 1 ? Integer.MAX_VALUE : iterations;
+                writer.println("[testSendImpl] Max Time: "+time);
+                writer.println("[testSendImpl] Max Iterations: "+iterations);
                 int iter = iterations;
                 long start = System.currentTimeMillis();
                 AbstractMessage resp = null;
@@ -97,7 +100,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                         req.data = senddata;
                         req.datalen = (byte) (req.data == null ? 0 : req.data.length);
                         try {
-                            resp = sendMessageAndReceive(req);
+                            resp = processMRFSend(req);
                             if ( resp != null && resp.getCode() == Constants.MSGCODE_RFSENDACK ) {
                                 stats.successCount ++;
                             } else {
@@ -122,6 +125,38 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                 stats.runTime = (int) (System.currentTimeMillis() - start ) / 1000;
             }
         }
+    }
+
+    protected AbstractMessage processMRFSend(MRFSend req) throws Exception {
+        AbstractMessage result = sendMessageAndReceive(req);
+        boolean sendSeqComplete = false;
+        do {
+            if ( result != null ) {
+                switch (result.getCode()) {
+                    case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) result); break;
+                    case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) result); break;
+                    case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) result); break;
+                    case Constants.MSGCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) result); sendSeqComplete = true; break;
+                    case Constants.MSGCODE_NOK: sendSeqComplete = true; break;
+                }
+                if ( !sendSeqComplete ) {
+                    MessageData data = readMessageUntil(consoleReadTimeout, req.seq);
+                    result = adapter.deserialize(data);
+                }
+            } else {
+                sendSeqComplete = true;
+            }
+        }
+        while (!sendSeqComplete);
+        return result;
+    }
+
+    public void processMRFSendAck(PrintWriter writer, MRFSendACK result) {
+        writer.println("Received MRFSendACK");
+        if (result != null)
+            result.toString(writer, null, null, null);
+        writer.println();
+        writer.flush();
     }
 
     public void testSendDirect(TestSendDirectStats stats) {

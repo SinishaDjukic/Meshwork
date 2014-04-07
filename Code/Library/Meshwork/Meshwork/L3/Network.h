@@ -132,6 +132,8 @@ namespace Meshwork {
 		//Send errors code group
 		/** Driver send has failed. */
 		static const int8_t ERROR_DRIVER_SEND_FAILED = -51;
+		/** Send aborted by the app. */
+		static const int8_t ERROR_DRIVER_SEND_ABORTED = -52;
 		
 		/** First possible node ID. */
 		static const uint8_t MIN_NODE_ID 	= 1;
@@ -152,6 +154,7 @@ namespace Meshwork {
 			uint8_t m_channel;
 			char* m_networkKey;
 			uint8_t m_networkKeyLen;
+			bool m_sendAbort;
 
 		//public constructor and functions
 		public:
@@ -164,7 +167,8 @@ namespace Meshwork {
 			  m_nwkcaps(nwkcaps),
 			  m_delivery(delivery),
 			  m_retry(retry),
-			  m_channel(0)
+			  m_channel(0),
+			  m_sendAbort(false)
 			  {}
 
 			Wireless::Driver* get_driver() {
@@ -251,6 +255,10 @@ namespace Meshwork {
 				return m_driver == NULL ? false : m_driver->end();
 			}
 
+			virtual void sendAbort() {
+				m_sendAbort = true;
+			}
+			
 			//main send method
 			virtual int send(uint8_t delivery, uint8_t retry,
 								uint8_t dest, uint8_t port,

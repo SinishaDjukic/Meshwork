@@ -34,6 +34,10 @@
 #include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
 #include "Utils/LineReader.h"
 
+#if defined (__ARDUINO_MEGA__)
+#include "Cosa/IOBuffer.hh"
+#endif
+
 // Select Wireless device driver
 // #include "Cosa/Wireless/Driver/CC1101.hh"
 // CC1101 rf(0xC05A, 0x01);
@@ -55,7 +59,10 @@ NRF24L01P rf(0x0001, 0x01,
 //Mega
 #if defined (__ARDUINO_MEGA__)
 #define BOARD_VARIANT	2
-NRF24L01P rf(0x0001, 0x01);
+NRF24L01P rf(0x0001, 0x01,
+	    Board::DigitalPin(Board::D53), 
+	    Board::DigitalPin(Board::D48), 
+	    Board::ExternalInterruptPin(Board::EXT2));
 
 //Mini Pro or Nano
 #else
@@ -68,16 +75,36 @@ NRF24L01P rf(0x0001, 0x01,
 
 #endif
 
+#if defined (__ARDUINO_MEGA__)
+// Create buffer for HC UART
+static IOBuffer<UART::BUFFER_MAX> ibuf;
+static IOBuffer<UART::BUFFER_MAX> obuf;
+
+// HC UART will be used for Host-Controller communication
+UART uartHC(3, &ibuf, &obuf);
+
+Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, NULL);
+Meshwork::L3::NetworkV1::NetworkSerial networkSerial(&mesh, &uartHC);
+#else
 Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, NULL);
 Meshwork::L3::NetworkV1::NetworkSerial networkSerial(&mesh, &uart);
+#endif
 
 void setup()
-{  
+{
   uart.begin(9600);
+#if defined (__ARDUINO_MEGA__)
+  trace.begin(&uart, PSTR("SerialMega Console: started"));
+  
+  uartHC.begin(9600);
+
+  trace.begin(&uart, PSTR("UART1: opened"));
+#endif  
   uint8_t mode = SLEEP_MODE_IDLE;
   Watchdog::begin(16, mode);  
   rf.set_sleep(mode);
   RTC::begin();
+  
   networkSerial.initSerial();
 }
 
@@ -86,6 +113,9 @@ void loop()
 	static uint8_t databuf[Meshwork::L3::NetworkV1::NetworkSerial::MAX_SERIALMSG_LEN];
 	static Meshwork::L3::NetworkV1::NetworkSerial::serialmsg_t msg;
 	*msg.data = *databuf;
+#if defined (__ARDUINO_MEGA__)
+	trace.begin(&uart, PSTR("Processing message..."));
+#endif
 	networkSerial.processOneMessage(&msg);
 }
 

@@ -35,10 +35,10 @@ public class MRFGetRoute extends AbstractMessage implements Constants {
     @Override
     public void serialize(MessageData msg) {
         msg.seq = seq;
-        msg.len = 1+2;
         msg.code = getCode();
-        msg.data = new byte[msg.len - 1];
+        msg.data = new byte[2];
         msg.data[0] = dst;
         msg.data[1] = index;
+        msg.len = (byte) (msg.data.length + 1);
     }
 }
