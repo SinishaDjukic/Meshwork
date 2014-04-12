@@ -32,6 +32,7 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
+#include "Meshwork/L3/NetworkV1/RouteCache.h"
 #include "Utils/LineReader.h"
 
 // Select Wireless device driver

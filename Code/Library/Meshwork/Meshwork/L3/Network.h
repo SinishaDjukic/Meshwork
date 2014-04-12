@@ -145,6 +145,22 @@ namespace Meshwork {
 		/** Maximum length of a network key. */
 		static const uint8_t MAX_NETWORK_KEY_LEN 	= 8;
 		
+		/** Worst QoS level */
+		static const int8_t QOS_LEVEL_MIN 		= -100;
+		/** Best QoS level */
+		static const int8_t QOS_LEVEL_AVERAGE	=  0;
+		/** Best QoS level */
+		static const int8_t QOS_LEVEL_MAX 		=  100;
+		/** Unknown QoS level */
+		static const int8_t QOS_LEVEL_UNKNOWN 	=  -127;
+		
+		/** Calculate worst QoS level */
+		static const int8_t QOS_CALCULATE_WORST 	= -1;
+		/** Calculate average QoS level */
+		static const int8_t QOS_CALCULATE_AVERAGE 	=  0;
+		/** Calculate best QoS level */
+		static const int8_t QOS_CALCULATE_BEST 		=  1;
+		
 		//protected fields
 		protected:
 			Wireless::Driver* m_driver;
