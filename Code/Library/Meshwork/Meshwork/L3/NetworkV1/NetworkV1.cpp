@@ -78,7 +78,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 						univmsg_t* msg,
 						void* bufACK, size_t& maxACKLen
 #ifdef SUPPORT_DELIVERY_ROUTED
-						, void* returnRoute, size_t& returnRouteSize//returnRouteSize should be initialized with the MAX size of the buffer
+						, route_t* returnRoute, size_t& returnRouteSize//returnRouteSize should be initialized with the MAX size of the buffer
 #endif
 						) {
 	MW_LOG_INFO("Send to: %d:%d, ACK=%d", dest, port, ack);
@@ -165,11 +165,18 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 #endif
 							) && hopCount <= returnRouteSize && reply_msg.msg_routed.route_info.route.hops != NULL ) {
 						MW_LOG_DEBUG("Copy hops=%d", hopCount);
+						/* TODO remove old and wrong code
 						((uint8_t*)returnRoute)[0] = hopCount;
 						((uint8_t*)returnRoute)[1] = reply_msg.msg_routed.route_info.route.src;
 						if ( hopCount > 0 )
 							memcpy(returnRoute, reply_msg.msg_routed.route_info.route.hops, hopCount);
 						((uint8_t*)returnRoute)[2 + hopCount] = reply_msg.msg_routed.route_info.route.dst;
+						*/
+						returnRoute->hopCount = hopCount;
+						returnRoute->src = reply_msg.msg_routed.route_info.route.src;
+						if ( hopCount > 0 )
+							memcpy(returnRoute->hops, reply_msg.msg_routed.route_info.route.hops, hopCount);
+						returnRoute->dst = reply_msg.msg_routed.route_info.route.dst;
 						returnRouteSize = hopCount;
 					} else {
 						returnRouteSize = 0;
@@ -401,6 +408,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 					send_msg.msg_flood.data = NULL;
 					size_t hopCount = MAX_ROUTING_HOPS;
 					route_t returnRoute;
+					uint8_t hops[MAX_ROUTING_HOPS];
+					returnRoute.hops = hops;
 					result = sendWithACK(count, RETRY_WAIT_FLOOD, ACK, TIMEOUT_ACK_FLOOD, Wireless::Driver::BROADCAST, port,
 											&send_msg, NULL, none, &returnRoute, hopCount);
 

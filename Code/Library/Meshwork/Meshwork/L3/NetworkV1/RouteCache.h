@@ -22,6 +22,7 @@
 #define __MESHWORK_L3_NETWORKV1_ROUTECACHE_H__
 
 #include "Cosa/Wireless.hh"
+#include "Cosa/IOStream.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
@@ -86,13 +87,14 @@ namespace Meshwork {
 			protected:
 				route_table_t m_table;
 				RouteCacheListener* m_route_cache_listener;
-			
+				
 			private:
 				bool array_compare(uint8_t* a, uint8_t* b, uint8_t len);
 				
 				uint8_t normalize_QoS(uint8_t qos);
 
 			public:
+				
 				RouteCache(RouteCacheListener* listener):
 					m_route_cache_listener(listener)
 				{
@@ -125,9 +127,16 @@ namespace Meshwork {
 				
 				int8_t get_QoS(uint8_t dst, int8_t calculate);
 				
+				//Well, for some reason overloading << with RouteCache's structs didn't work...
+				void print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs);
+				void print(IOStream& outs, RouteCache::route_entry_t& route_entry, uint8_t tabs);
+				void print(IOStream& outs, RouteCache::route_list_t& route_list, uint8_t tabs);
+				void print(IOStream& outs);
+
 			};//RouteCache
 		};
 	};
 };
+
 #endif
 

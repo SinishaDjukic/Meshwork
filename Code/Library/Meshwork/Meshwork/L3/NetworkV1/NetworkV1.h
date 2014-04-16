@@ -332,7 +332,7 @@ namespace Meshwork {
 					univmsg_t* msg,
 					void* bufACK, size_t& maxACKLen
 			#ifdef SUPPORT_DELIVERY_ROUTED
-					, void* returnRoute, size_t& returnRouteSize
+					, route_t* returnRoute, size_t& returnRouteSize
 			#endif
 					);
 

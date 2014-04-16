@@ -64,16 +64,25 @@ RouteCache::route_list_t* RouteCache::get_route_list(uint8_t dst) {
 void RouteCache::remove_all_for_dst(uint8_t dst) {
 	route_list_t* list = get_route_list(dst);
 	if ( list != NULL ) {
-		if ( m_route_cache_listener != NULL )
-			for ( int i = 0; i < MAX_DST_ROUTES; i ++ )
+		for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
+			if ( m_route_cache_listener != NULL )
 				m_route_cache_listener->route_entry_change(this, &list->entries[i], RouteCacheListener::ROUTE_ENTRY_REMOVING);
+			list->entries[i].route.dst = 0;
+		}
 		list->dst = 0;
 	}
 }
 				
 void RouteCache::remove_all() {
-	for ( int i = 0; i < MAX_DST_NODES; i ++ )
-		remove_all_for_dst(m_table.lists[i].dst);
+	for ( int i = 0; i < MAX_DST_NODES; i ++ ) {
+		for ( int j = 0; j < MAX_DST_ROUTES; j ++ ) {
+			m_table.lists[i].entries[j].route.hops = m_table.lists[i].entries[j].route_hops;
+			if ( m_route_cache_listener != NULL )
+				m_route_cache_listener->route_entry_change(this, &m_table.lists[i].entries[j], RouteCacheListener::ROUTE_ENTRY_REMOVING);
+			m_table.lists[i].entries[j].route.dst = 0;
+		}
+		m_table.lists[i].dst = 0;
+	}
 }
 				
 uint8_t RouteCache::get_route_count(uint8_t dst) {
@@ -175,15 +184,18 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 	//TODO add logs
 	route_entry_t* result = NULL;
 	if ( get_route_entry(route) == NULL ) {
+		trace << PSTR("*** Route not in the cache. Force replace: ") << forceReplace << endl;
 		uint8_t dst = route->dst;
 		route_list_t* list = get_route_list(dst);
 		if ( list != NULL ) {
+			trace << PSTR("*** Route list exists for dst: ") << dst << endl;
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_ROUTES - 1;
 			//try to add to exising routes
-			for ( int i = 0; i < MAX_DST_ROUTES; i ++ )
+			for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
 				if ( list->entries[i].route.dst == 0 ) {
 					result = &list->entries[i];
+					trace << PSTR("*** Empty slot found at: ") << i << PSTR(", Address: ") << result << endl;
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = list->entries[i].qos;
@@ -192,11 +204,15 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 						worstIndex = i;
 					}
 				}
+			}
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
-			if ( result == NULL && forceReplace )
+			if ( result == NULL && forceReplace ) {
+				trace << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
 				result = &list->entries[worstIndex];
+			}
 		} else {
+			trace << PSTR("*** Route list doesn't exist for dst: ") << dst << endl;
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_NODES - 1;
 			//try to add a new node
@@ -206,6 +222,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 					result = &m_table.lists[i].entries[0];
 					//mark the list as used
 					m_table.lists[i].dst = dst;
+					trace << PSTR("*** Found empty route slot at: ") << i << PSTR(", Address: ") << result << endl;
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = get_QoS(dst, Network::QOS_CALCULATE_AVERAGE);
@@ -217,24 +234,108 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
 			if ( result == NULL && forceReplace ) {
+				trace << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
 				//choose the first element
 				result = &m_table.lists[worstIndex].entries[0];
-				//mark the list as used
+				//mark the list as used by this dst
 				m_table.lists[worstIndex].dst = dst;
+				//clear other entries
+				for ( int i = 1; i < MAX_DST_ROUTES; i ++ )
+					m_table.lists[worstIndex].entries[i].route.dst = 0;
 			}
 		}
 		if ( result != NULL ) {
+			trace << PSTR("*** Updating with new route data: ");
+			print(trace, *route, 0);
+			
 			result->route.hopCount = route->hopCount;
 			result->route.src = route->src;
 			memset(result->route.hops, 0, Meshwork::L3::NetworkV1::NetworkV1::MAX_ROUTING_HOPS);
+			
 			if ( route->hopCount > 0 )
-				memcpy(result->route.hops, route, route->hopCount);
+				memcpy(result->route.hops, route->hops, route->hopCount);
+			
 			result->route.dst = route->dst;
 			result->qos = Network::QOS_LEVEL_AVERAGE;
+			
+			trace << PSTR("*** New route data: ");
+			print(trace, result->route, 0);
 			
 			if ( m_route_cache_listener != NULL )
 				m_route_cache_listener->route_entry_change(this, result, RouteCacheListener::ROUTE_ENTRY_CHANGED);
 		}
 	} //otherwise it is already there
 	return result;
+}
+
+void printTabs(IOStream& outs, uint8_t tabs) {
+	while ( tabs-- > 0 )
+		outs << PSTR("\t");
+}
+
+void RouteCache::print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs) {
+  outs << PSTR("route: { ") << endl;
+  printTabs(outs, ++tabs);
+  outs << PSTR(" src: ") << route.src << PSTR(", dst: ") << route.dst
+	   << PSTR(", hopCount: ") << route.hopCount;
+  
+  outs << PSTR(", hops: { ") << endl;
+  printTabs(outs, ++tabs);
+  uint8_t count = route.hopCount < 0 ? 0 : route.hopCount;
+  count = count > NetworkV1::MAX_ROUTING_HOPS ? NetworkV1::MAX_ROUTING_HOPS : count;
+  for ( int i = 0; i < count; i ++ )
+    outs << route.hops[i] << PSTR(", ");
+  outs << endl;
+  printTabs(outs, --tabs);
+  outs << PSTR(" }") << endl;
+  printTabs(outs, --tabs);
+  outs << PSTR(" }") << endl;
+}
+
+void RouteCache::print(IOStream& outs, RouteCache::route_entry_t& route_entry, uint8_t tabs) {
+  outs << PSTR("route_entry_t { ") << endl;
+  printTabs(outs, ++tabs);
+  outs << PSTR("qos: ") << route_entry.qos << PSTR(", ");
+  Meshwork::L3::NetworkV1::NetworkV1::route_t& route = route_entry.route;
+  print(outs, route, tabs);
+  printTabs(outs, --tabs);
+  outs << PSTR(" }");
+}
+
+void RouteCache::print(IOStream& outs, RouteCache::route_list_t& route_list, uint8_t tabs) {
+  outs << PSTR("route_list_t { ") << endl;
+  printTabs(outs, ++tabs);
+  outs << PSTR("MAX_DST_ROUTES: ") << RouteCache::MAX_DST_ROUTES << PSTR(", ");
+  outs << PSTR("dst: ") << route_list.dst << (route_list.dst == 0 ? PSTR(" (INACTIVE)") : PSTR(" (ACTIVE)")) << PSTR(", ");
+  for ( int i = 0; i < RouteCache::MAX_DST_ROUTES; i ++ ) {
+	outs << endl;
+	printTabs(outs, tabs);
+	outs << PSTR("entries[") << i << PSTR("]: ");
+	print(outs, route_list.entries[i], tabs+1);
+	outs << PSTR(", ") << endl;
+  }
+  printTabs(outs, --tabs);
+  outs << PSTR(" }") << endl;
+}
+
+void RouteCache::print(IOStream& outs) {
+  uint8_t tabs = 0;
+  outs << PSTR("RouteCache { ") << endl;
+  printTabs(outs, ++tabs);
+  outs << PSTR("m_route_cache_listener: ") << (m_route_cache_listener != NULL ) << PSTR(", ");
+  outs << PSTR("m_table: ") << PSTR("route_table_t { ") << endl;
+  printTabs(outs, ++tabs);
+  outs << PSTR("MAX_DST_NODES: ") << RouteCache::MAX_DST_NODES << PSTR(", ") << endl;
+  tabs ++;
+  for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ ) {
+	printTabs(outs, tabs);
+	outs << PSTR("lists[") << i << PSTR("]: ");
+	print(outs, m_table.lists[i], tabs+1);
+	outs << PSTR(", ") << endl;
+  }
+  tabs--;
+  printTabs(outs, --tabs);
+  outs << PSTR(" }") << endl;
+  printTabs(outs, --tabs);
+  outs << PSTR("}") << endl;
 }

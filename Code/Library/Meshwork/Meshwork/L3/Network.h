@@ -140,7 +140,7 @@ namespace Meshwork {
 		/** Last possible node ID. */
 		static const uint8_t MAX_NODE_ID 	= 254;
 		/** Maximum node count in the network. */
-		static const uint8_t MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID;
+		static const uint8_t MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID + 1;
 		
 		/** Maximum length of a network key. */
 		static const uint8_t MAX_NETWORK_KEY_LEN 	= 8;
