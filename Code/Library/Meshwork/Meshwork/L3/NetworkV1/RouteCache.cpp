@@ -184,18 +184,18 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 	//TODO add logs
 	route_entry_t* result = NULL;
 	if ( get_route_entry(route) == NULL ) {
-		trace << PSTR("*** Route not in the cache. Force replace: ") << forceReplace << endl;
+		MW_LOG_DEBUG_TRACE << PSTR("*** Route not in the cache. Force replace: ") << forceReplace << endl;
 		uint8_t dst = route->dst;
 		route_list_t* list = get_route_list(dst);
 		if ( list != NULL ) {
-			trace << PSTR("*** Route list exists for dst: ") << dst << endl;
+			MW_LOG_DEBUG_TRACE << PSTR("*** Route list exists for dst: ") << dst << endl;
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_ROUTES - 1;
 			//try to add to exising routes
 			for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
 				if ( list->entries[i].route.dst == 0 ) {
 					result = &list->entries[i];
-					trace << PSTR("*** Empty slot found at: ") << i << PSTR(", Address: ") << result << endl;
+					MW_LOG_DEBUG_TRACE << PSTR("*** Empty slot found at: ") << i << PSTR(", Address: ") << result << endl;
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = list->entries[i].qos;
@@ -208,11 +208,11 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
 			if ( result == NULL && forceReplace ) {
-				trace << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
+				MW_LOG_DEBUG_TRACE << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
 				result = &list->entries[worstIndex];
 			}
 		} else {
-			trace << PSTR("*** Route list doesn't exist for dst: ") << dst << endl;
+			MW_LOG_DEBUG_TRACE << PSTR("*** Route list doesn't exist for dst: ") << dst << endl;
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_NODES - 1;
 			//try to add a new node
@@ -222,7 +222,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 					result = &m_table.lists[i].entries[0];
 					//mark the list as used
 					m_table.lists[i].dst = dst;
-					trace << PSTR("*** Found empty route slot at: ") << i << PSTR(", Address: ") << result << endl;
+					MW_LOG_DEBUG_TRACE << PSTR("*** Found empty route slot at: ") << i << PSTR(", Address: ") << result << endl;
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = get_QoS(dst, Network::QOS_CALCULATE_AVERAGE);
@@ -234,7 +234,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
 			if ( result == NULL && forceReplace ) {
-				trace << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
+				MW_LOG_DEBUG_TRACE << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
 				//choose the first element
 				result = &m_table.lists[worstIndex].entries[0];
 				//mark the list as used by this dst
@@ -245,7 +245,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			}
 		}
 		if ( result != NULL ) {
-			trace << PSTR("*** Updating with new route data: ");
+			MW_LOG_DEBUG_TRACE << PSTR("*** Updating with new route data: ");
 			print(trace, *route, 0);
 			
 			result->route.hopCount = route->hopCount;
@@ -258,7 +258,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			result->route.dst = route->dst;
 			result->qos = Network::QOS_LEVEL_AVERAGE;
 			
-			trace << PSTR("*** New route data: ");
+			MW_LOG_DEBUG_TRACE << PSTR("*** New route data: ");
 			print(trace, result->route, 0);
 			
 			if ( m_route_cache_listener != NULL )

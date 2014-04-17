@@ -123,11 +123,13 @@ namespace Meshwork {
 								
 				bool get_route_entry_index(route_entry_t* entry, uint8_t& node_index, uint8_t& route_index);
 				
+				
 				bool update_QoS(NetworkV1::route_t* route, bool increase);
 				
 				int8_t get_QoS(uint8_t dst, int8_t calculate);
 				
-				//Well, for some reason overloading << with RouteCache's structs didn't work...
+				
+				//Well, for some reason overloading << with RouteCache's structs caused ambiguous declarations
 				void print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs);
 				void print(IOStream& outs, RouteCache::route_entry_t& route_entry, uint8_t tabs);
 				void print(IOStream& outs, RouteCache::route_list_t& route_list, uint8_t tabs);

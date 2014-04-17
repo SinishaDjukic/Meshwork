@@ -62,6 +62,7 @@ namespace Meshwork {
 #define MW_LOG_NOTICE(msg, ...) 	if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); NOTICE(msg, __VA_ARGS__); } while (0)
 #define MW_LOG_INFO(msg, ...) 		if (MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); INFO(msg, __VA_ARGS__); } while (0)
 #define MW_LOG_DEBUG(msg, ...) 		if (MW_LOG_DEBUG_ENABLE) do { Meshwork::Debug::printTimestamp(); DEBUG(msg, __VA_ARGS__); } while (0)
+#define MW_LOG_DEBUG_TRACE 			if (MW_LOG_DEBUG_ENABLE) trace
 
 
 # define MW_LOG_ARRAY_BYTES(array, len)							\
