@@ -35,6 +35,39 @@ using Meshwork::L3::Network;
 using Meshwork::L3::NetworkV1::NetworkV1;
 using Meshwork::L3::NetworkV1::RouteCache;
 
+void setupDefaultRouteData(void* route_ptr, void* route_hops_ptr) {
+	//Setup hop pointers and hop data
+	//Nasty... but we want a nice array-handling piece of code
+	NetworkV1::route_t (&route)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES] = 
+		*reinterpret_cast<NetworkV1::route_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES]>(route_ptr);
+	uint8_t (&route_hops)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES][NetworkV1::MAX_ROUTING_HOPS] =
+		*reinterpret_cast<uint8_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES][NetworkV1::MAX_ROUTING_HOPS]>(route_hops_ptr);
+
+	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
+		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ ) {
+			route[i][j].src = 1;//1 always
+			route[i][j].dst = 50 + i;//50, 51, ...
+			route[i][j].hopCount = NetworkV1::MAX_ROUTING_HOPS;//max always
+			route[i][j].hops = &route_hops[i][j][0];
+			//hop data 
+			for ( int k = 0; k < NetworkV1::MAX_ROUTING_HOPS; k ++ ) {
+				route_hops[i][j][k] = 50 + route[i][j].dst + j + k;
+			}
+			//Filled data:
+			//dst=50, route=0, hops=[100, 101, ...]
+			//dst=50, route=1, hops=[101, 102, ...]
+			//dst=50, route=2, hops=[102, 103, ...]
+			
+			//dst=51, route=0, hops=[101, 102, ...]
+			//dst=51, route=1, hops=[102, 103, ...]
+			//dst=51, route=2, hops=[103, 104, ...]
+			
+			//dst=52, route=0, hops=[102, 103, ...]
+			//dst=52, route=1, hops=[103, 104, ...]
+			//dst=52, route=2, hops=[104, 105, ...]
+		}
+}
+
 void printDelimiter1() {
 	trace << PSTR("***************************") << endl;
 }
@@ -91,8 +124,9 @@ bool testRemove(RouteCache* route_cache, void* route_ptr) {
 		*reinterpret_cast<NetworkV1::route_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES]>(route_ptr);
 	
 	//Phase 1: check remove_all()
-	trace << PSTR("[testRemove] Phase 1: check remove_all() ") << endl;
+	trace << PSTR("[testRemove] Phase 1: check remove_all()") << endl;
 	//Step 1: add routes
+	trace << PSTR("[testRemove] Adding routes...") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
 			route_cache->add_route_entry(&route[i][j], false);
@@ -100,6 +134,7 @@ bool testRemove(RouteCache* route_cache, void* route_ptr) {
 	trace << PSTR("[testRemove] Test routes added. RouteCache:") << endl;
 	printRouteCache(route_cache);
 	
+	trace << PSTR("[testRemove] Removing all routes via remove_all()") << endl;
 	//Step 2: remove all routes via remove_all
 	route_cache->remove_all();
 	
@@ -109,10 +144,12 @@ bool testRemove(RouteCache* route_cache, void* route_ptr) {
 	//Phase 2: check remove_all_for_dst()
 	trace << PSTR("[testRemove] Phase 2: check remove_all_for_dst() ") << endl;
 	//Step 1: add routes
+	trace << PSTR("[testRemove] Adding routes...") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
 			route_cache->add_route_entry(&route[i][j], false);
 	
+	trace << PSTR("[testRemove] Removing all routes via remove_all_for_dst()") << endl;
 	//Step 2: remove all routes via remove_all_for_dst
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
@@ -125,12 +162,13 @@ bool testRemove(RouteCache* route_cache, void* route_ptr) {
 	//Phase 3: check remove_route_entry()
 	trace << PSTR("[testRemove] Phase 3: check remove_route_entry() ") << endl;
 	//Step 1: add routes
+	trace << PSTR("[testRemove] Adding routes...") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
 			route_cache->add_route_entry(&route[i][j], false);
 	
 	//Step 2: remove all routes via remove_route_entry
-	//Right way: remove only the ones we added
+	trace << PSTR("[testRemove] Removing all routes via remove_route_entry()") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ ) {
 			RouteCache::route_list_t* route_list = route_cache->get_route_list(route[i][j].dst);
@@ -148,74 +186,101 @@ bool testRemove(RouteCache* route_cache, void* route_ptr) {
 	return result;
 }
 
-//Tests: get_route_count, get_route_list, get_route_entry, get_route_entry, get_route_entry_index	
-bool testGetters(RouteCache* route_cache, void* route_ptr) {
+bool testRoute(NetworkV1::route_t* route1, NetworkV1::route_t* route2) {
+	bool result = true;
+	result &= route1->src == route2->src;
+	result &= route1->dst == route2->dst;
+	result &= route1->hopCount == route2->hopCount;
+	if ( result ) {
+		for ( int i = 0; i < route1->hopCount && result; i ++ ) {
+			result &= route1->hops[i] == route2->hops[i];
+		}
+	}
+	return result;
+}
+
+//Tests: get_route_count, get_route_list
+bool testGetters1(RouteCache* route_cache, void* route_ptr) {
 	printDelimiter2();
-	trace << PSTR("[testGetters] Started") << endl;
+	trace << PSTR("[testGetters1] Started") << endl;
 	bool result = true;
 	NetworkV1::route_t (&route)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES] = 
 		*reinterpret_cast<NetworkV1::route_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES]>(route_ptr);
 	
 	//Setup: add routes
+	trace << PSTR("[testGetters1] Adding routes...") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
 			route_cache->add_route_entry(&route[i][j], false);
 	
 	//Phase 1: check get_route_count()
+	trace << PSTR("[testGetters1] Testing routes via get_route_count()") << endl;
 	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ ) {
 			//Note: actually, all dst nodes for the inner loop will be the same...
 			uint8_t count = route_cache->get_route_count(route[i][j].dst);
 			if ( count != 3 ) {
 				result = false;
-				trace	<< PSTR("[testGetters] Unexpected route count ") << count
+				trace	<< PSTR("[testGetters1] Unexpected route count ") << count
 						<< PSTR(" for destination: ") << route[i][j].dst << endl;
 			}
 		}
 	
-	trace << PSTR("[testGetters] Finished: ") << (result ? PSTR("PASSED") : PSTR("FAILED")) << endl << endl;
+	//Phase 2: check get_route_list()
+	trace << PSTR("[testGetters1] Testing routes via get_route_list()") << endl;
+	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ ) {
+		uint8_t dst = route[i][0].dst;//first route element in our default data set
+		RouteCache::route_list_t* list = route_cache->get_route_list(dst);
+		if ( list == NULL ) {
+			result = false;
+			trace	<< PSTR("[testGetters1] Unexpected NULL route list for dst: ") << dst << endl;
+		} else if ( list->dst != dst ) {
+			result = false;
+			trace	<< PSTR("[testGetters1] Unexpected route list dst value: ") << list->dst << PSTR(", expected: ") << dst << endl;
+		} else {
+			for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ ) {
+				RouteCache::route_entry_t* entry = &list->entries[j];
+//				trace	<< PSTR("[testGetters1] Testing route at index: ") << j << endl;
+//				route_cache->print(trace, *entry, 1);
+//				trace << endl
+				if ( entry == NULL ) {
+					result = false;
+					trace	<< PSTR("[testGetters1] Unexpected NULL route entry at index: ") << j << endl;
+				} else if ( !testRoute(&entry->route, &route[i][j]) ) {
+					result = false;
+					trace	<< PSTR("[testGetters1] Route data not matching at index: ") << j << endl;
+				}
+			}
+		}
+	}
+	
+	trace << PSTR("[testGetters1] Finished: ") << (result ? PSTR("PASSED") : PSTR("FAILED")) << endl << endl;
 	printDelimiter2();
 	return result;
 }
 
-void setupDefaultRouteData(void* route_ptr, void* route_hops_ptr) {
-	//Setup hop pointers and hop data
-	//Nasty... but we want a nice array-handling piece of code
+//Tests: get_route_entry(uint8_t, uint8_t), get_route_entry(NetworkV1::route_t*), get_route_entry_index	
+bool testGetters2(RouteCache* route_cache, void* route_ptr) {
+	printDelimiter2();
+	trace << PSTR("[testGetters2] Started") << endl;
+	bool result = true;
 	NetworkV1::route_t (&route)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES] = 
 		*reinterpret_cast<NetworkV1::route_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES]>(route_ptr);
-	uint8_t (&route_hops)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES][NetworkV1::MAX_ROUTING_HOPS] =
-		*reinterpret_cast<uint8_t (*)[RouteCache::MAX_DST_NODES][RouteCache::MAX_DST_ROUTES][NetworkV1::MAX_ROUTING_HOPS]>(route_hops_ptr);
-
-	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
-		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ ) {
-			route[i][j].src = 1;//1 always
-			route[i][j].dst = 50 + i;//50, 51, ...
-			route[i][j].hopCount = NetworkV1::MAX_ROUTING_HOPS;//max always
-			route[i][j].hops = &route_hops[i][j][0];
-			//hop data 
-			for ( int k = 0; k < NetworkV1::MAX_ROUTING_HOPS; k ++ ) {
-				route_hops[i][j][k] = 50 + route[i][j].dst + j + k;
-			}
-			/*
-			trace << PSTR("Setting hops: ");
-			for ( int k = 0; k < NetworkV1::MAX_ROUTING_HOPS; k ++ )
-				trace << ((uint8_t*)route[i][j].hops)[k] << PSTR(", ");
-			trace << endl;
-			*/
-				//Filled data:
-				//dst=50, route=0, hops=[100, 101, ...]
-				//dst=50, route=1, hops=[101, 102, ...]
-				//dst=50, route=2, hops=[102, 103, ...]
-				
-				//dst=51, route=0, hops=[101, 102, ...]
-				//dst=51, route=1, hops=[102, 103, ...]
-				//dst=51, route=2, hops=[103, 104, ...]
-				
-				//dst=52, route=0, hops=[102, 103, ...]
-				//dst=52, route=1, hops=[103, 104, ...]
-				//dst=52, route=2, hops=[104, 105, ...]
-		}
 	
+	//Setup: add routes
+	trace << PSTR("[testGetters1] Adding routes...") << endl;
+	for ( int i = 0; i < RouteCache::MAX_DST_NODES; i ++ )
+		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
+			route_cache->add_route_entry(&route[i][j], false);
+	
+	//Phase 1: check get_route_entry()
+	trace << PSTR("[testGetters2] Testing routes via get_route_entry()") << endl;
+	
+	
+	
+	trace << PSTR("[testGetters2] Finished: ") << (result ? PSTR("PASSED") : PSTR("FAILED")) << endl << endl;
+	printDelimiter2();
+	return result;
 }
 
 bool testStart() {
@@ -244,13 +309,15 @@ bool testStart() {
 	//ok, must assume that this works in order to use it as a cleanup
 	route_cache.remove_all();
 	
-	//Test 3: verify that getters return correct data
-	result &= testGetters(&route_cache, (void*)routes);
-//	if (!result)
-//		printRouteCache(&route_cache);
+	//Test 3: verify that getters1 return correct data
+	result &= testGetters1(&route_cache, (void*)routes);
 	//ok, must assume that this works in order to use it as a cleanup
 	route_cache.remove_all();
 	
+	//Test 4: verify that getters2 return correct data
+	result &= testGetters2(&route_cache, (void*)routes);
+	//ok, must assume that this works in order to use it as a cleanup
+	route_cache.remove_all();
 	
 	//add_route_entry(route, true)//force replace
 	//update_QoS, get_QoS
