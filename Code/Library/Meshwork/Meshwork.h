@@ -43,7 +43,7 @@ namespace Meshwork {
 //dummy file required to force Arduino IDE include
 //Meshwork library dir in the project compilation path
 
-//set to false to disable all logging, except for DEBUG (handled separately)
+//set to false to disable all logging, except for DEBUG and DEBUG_TRACE (handled separately)
 #ifndef MW_LOG_ALL_ENABLE
 #define MW_LOG_ALL_ENABLE true
 #endif

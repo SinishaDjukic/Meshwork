@@ -38,17 +38,18 @@ bool RouteCache::array_compare(uint8_t* a, uint8_t* b, uint8_t len) {
 
 bool RouteCache::get_route_entry_index(route_entry_t* entry, uint8_t& node_index, uint8_t& route_index) {
 	for ( int i = 0; i < MAX_DST_NODES; i ++ )
-		for ( int j = 0; j < MAX_DST_ROUTES; j ++ )
+		for ( int j = 0; j < MAX_DST_ROUTES; j ++ ) {
 			if ( &m_table.lists[i].entries[j] == entry ) {
 				node_index = i;
 				route_index = j;
 				return true;
 			}
+		}
 	return false;
 }
 
 				
-uint8_t RouteCache::normalize_QoS(uint8_t qos) {
+int8_t RouteCache::normalize_QoS(int8_t qos) {
 	return qos == Network::QOS_LEVEL_UNKNOWN ? Network::QOS_LEVEL_UNKNOWN :
 			( qos < Network::QOS_LEVEL_MIN ? Network::QOS_LEVEL_MIN :
 				(qos > Network::QOS_LEVEL_MAX ? Network::QOS_LEVEL_MAX : qos));
@@ -145,9 +146,10 @@ bool RouteCache::update_QoS(NetworkV1::route_t* route, bool increase) {
 	route_entry_t* entry = get_route_entry(route);
 	if ( entry != NULL ) {
 		//local var saves flash
-		uint8_t qos = entry->qos + increase ? 1 : -1;
+		int8_t qos = entry->qos + (increase ? 1 : -1);
 		//make sure we stay in range
 		entry->qos = normalize_QoS(qos);
+//		trace << endl << PSTR("...qos: ") << entry->qos << endl;
 	}
 	//may be used by the caller to determine if there was such a route at all
 	return entry != NULL;
@@ -161,18 +163,33 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 		result = calculate == Network::QOS_CALCULATE_BEST ? Network::QOS_LEVEL_MIN :
 					(calculate == Network::QOS_CALCULATE_WORST ? Network::QOS_LEVEL_MAX : 0);
 		//yes, this looks weird, but single loop makes the code smaller
+		//trace << PSTR("QoS for dst: ") << dst << PSTR(", method: ") << calculate << endl;
+		//print(trace, *list, 1);
 		for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
 			NetworkV1::route_t r = list->entries[i].route;
+			//trace << PSTR("Checking route with index: ") << i << endl;
+			//print(trace, r, 2);
 			if ( r.dst != 0 ) {//valid route
-				uint8_t tmp = list->entries[i].qos;
+				int8_t tmp = list->entries[i].qos;
+				//trace << PSTR("Avg: ") << result << PSTR(", route QoS: ") << tmp << endl;
+				/*
 				if ( calculate == Network::QOS_CALCULATE_BEST ) {
-					result = result > tmp ? result : tmp;
+					result = result < tmp ? tmp : result;
 				} else if ( calculate == Network::QOS_CALCULATE_WORST ) {
-					result = result < tmp ? result : tmp;
+					result = result > tmp ? tmp : result;
 				} if ( calculate == Network::QOS_CALCULATE_AVERAGE ) {
-					result = (result + tmp) >> 2;
+					result = (result + tmp) >> 1;
 				} else {
+					trace << PSTR("Unknown method: ") << calculate << endl;
 					break;
+				}*/
+				switch ( calculate ) {
+					case Network::QOS_CALCULATE_BEST: result = result < tmp ? tmp : result; break;
+					case Network::QOS_CALCULATE_WORST: result = result > tmp ? tmp : result; break;
+					case Network::QOS_CALCULATE_AVERAGE: (result + tmp) >> 1; break;
+					default:
+						MW_LOG_DEBUG_TRACE << PSTR("Unknown method: ") << calculate << endl;
+						break;
 				}
 			}
 		}
@@ -181,7 +198,6 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 }
 				
 RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route, bool forceReplace) {
-	//TODO add logs
 	route_entry_t* result = NULL;
 	if ( get_route_entry(route) == NULL ) {
 		MW_LOG_DEBUG_TRACE << PSTR("*** Route not in the cache. Force replace: ") << forceReplace << endl;

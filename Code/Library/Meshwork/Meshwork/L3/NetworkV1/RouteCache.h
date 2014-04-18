@@ -91,7 +91,7 @@ namespace Meshwork {
 			private:
 				bool array_compare(uint8_t* a, uint8_t* b, uint8_t len);
 				
-				uint8_t normalize_QoS(uint8_t qos);
+				int8_t normalize_QoS(int8_t qos);
 
 			public:
 				
@@ -121,7 +121,7 @@ namespace Meshwork {
 				
 				route_entry_t* get_route_entry(NetworkV1::route_t* route);
 								
-				bool get_route_entry_index(route_entry_t* entry, uint8_t& node_index, uint8_t& route_index);
+				bool get_route_entry_index(route_entry_t* entry, uint8_t &node_index, uint8_t &route_index);
 				
 				
 				bool update_QoS(NetworkV1::route_t* route, bool increase);
