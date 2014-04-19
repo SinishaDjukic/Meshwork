@@ -378,6 +378,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 			//needed to make sure we have enough data arrived in the buffer for the entire command
 			int msgcode = msg->code = m_serial->getchar();//msgcode
 			//TODO now that we have a len check here we should remove "if (available)" calls from (most) processXYZ messages
+			//TODO add support for send abort
 			m_currentMsg = msg;
 			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
 				switch ( msgcode ) {
