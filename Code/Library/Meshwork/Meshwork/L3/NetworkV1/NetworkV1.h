@@ -395,22 +395,22 @@ namespace Meshwork {
 									{ seq = 0; };
 				
 			#ifdef SUPPORT_DELIVERY_ROUTED
-				virtual RouteProvider* get_route_advisor() {
+				RouteProvider* get_route_advisor() {
 					return m_advisor;
 				}
-				virtual void set_route_advisor(RouteProvider* provider) {
+				void set_route_advisor(RouteProvider* provider) {
 					m_advisor = provider;
 				}
 			#endif
 				
-				virtual bool begin(const void* config = NULL);
-				virtual bool end();
-				virtual int send(uint8_t delivery, uint8_t retry,
+				bool begin(const void* config = NULL);
+				bool end();
+				int send(uint8_t delivery, uint8_t retry,
 									uint8_t dest, uint8_t port,
 									const void* buf, size_t len,
 									void* bufACK, size_t& lenACK);
 				
-				virtual int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
+				int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
 						uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
 
 			};

@@ -191,68 +191,68 @@ namespace Meshwork {
 			  return m_driver;
 			}
 
-			virtual uint8_t getChannel() {
+			uint8_t getChannel() {
 				return m_channel;//TODO update Cosa and change to m_driver->get_channel();
 			}
 			
-			virtual void setChannel(uint8_t channel) {
+			void setChannel(uint8_t channel) {
 				m_channel = channel;//TODO update Cosa and remove the field entirely
 //				m_driver->set_channel(channel);
 			}
 			
-			virtual uint8_t getNetworkCaps() {
+			uint8_t getNetworkCaps() {
 				return m_nwkcaps;
 			}
 			
-			virtual void setNetworkCaps(uint8_t nwkcaps) {
+			void setNetworkCaps(uint8_t nwkcaps) {
 				m_nwkcaps = nwkcaps;
 			}
 			
-			virtual uint8_t getDelivery() {
+			uint8_t getDelivery() {
 				return m_delivery;
 			}
 			
-			virtual void setDelivery(uint8_t delivery) {
+			void setDelivery(uint8_t delivery) {
 				m_delivery = delivery;
 			}
 			
-			virtual uint8_t getRetry() {
+			uint8_t getRetry() {
 				return m_retry;
 			}
 			
-			virtual void setRetry(uint8_t retry) {
+			void setRetry(uint8_t retry) {
 				m_retry = retry;
 			}
 			
-			virtual int16_t getNetworkID() {
+			int16_t getNetworkID() {
 				return m_driver->get_network_address();
 			}
 			
-			virtual void setNetworkID(int16_t networkID) {
+			void setNetworkID(int16_t networkID) {
 				m_driver->set_address(networkID, m_driver->get_device_address());
 			}
 			
-			virtual uint8_t getNodeID() {
+			uint8_t getNodeID() {
 				return m_driver->get_device_address();
 			}
 			
-			virtual void setNodeID(uint8_t networkID) {
+			void setNodeID(uint8_t networkID) {
 				m_driver->set_address(m_driver->get_network_address(), networkID);
 			}
 						
-			virtual char* getNetworkKey() {
+			char* getNetworkKey() {
 				return m_networkKey;
 			}
 			
-			virtual void setNetworkKey(char* networkKey) {
+			void setNetworkKey(char* networkKey) {
 				m_networkKey = networkKey;
 			}
 			
-			virtual uint8_t getNetworkKeyLen() {
+			uint8_t getNetworkKeyLen() {
 				return m_networkKeyLen;
 			}
 			
-			virtual void setNetworkKeyLen(uint8_t networkKeyLen) {
+			void setNetworkKeyLen(uint8_t networkKeyLen) {
 				m_networkKeyLen = networkKeyLen;
 			}
 			
@@ -271,7 +271,7 @@ namespace Meshwork {
 				return m_driver == NULL ? false : m_driver->end();
 			}
 
-			virtual void sendAbort() {
+			void sendAbort() {
 				m_sendAbort = true;
 			}
 			

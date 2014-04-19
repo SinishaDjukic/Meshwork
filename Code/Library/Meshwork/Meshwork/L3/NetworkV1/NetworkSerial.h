@@ -146,20 +146,20 @@ namespace Meshwork {
 				char m_networkKey[Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1];//+1 for NULL
 				
 				//this saves us ~500 bytes against repetitive putchar calls
-				virtual void writeMessage(uint8_t len, uint8_t* data, bool flush);
+				void writeMessage(uint8_t len, uint8_t* data, bool flush);
 				
-				virtual void respondWCode(serialmsg_t* msg, uint8_t code);
-				virtual void respondNOK(serialmsg_t* msg, uint8_t error);
-				virtual void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData);
+				void respondWCode(serialmsg_t* msg, uint8_t code);
+				void respondNOK(serialmsg_t* msg, uint8_t error);
+				void respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData);
 				
-				virtual bool processCfgBasic(serialmsg_t* msg);
-				virtual bool processCfgNwk(serialmsg_t* msg);
-				virtual bool processRFInit(serialmsg_t* msg);
-				virtual bool processRFDeinit(serialmsg_t* msg);
+				bool processCfgBasic(serialmsg_t* msg);
+				bool processCfgNwk(serialmsg_t* msg);
+				bool processRFInit(serialmsg_t* msg);
+				bool processRFDeinit(serialmsg_t* msg);
 
-				virtual bool processRFStartRecv(serialmsg_t* msg);
-				virtual bool processRFSend(serialmsg_t* msg);
-				virtual bool processRFBroadcast(serialmsg_t* msg);
+				bool processRFStartRecv(serialmsg_t* msg);
+				bool processRFSend(serialmsg_t* msg);
+				bool processRFBroadcast(serialmsg_t* msg);
 
 			public:
 				NetworkSerial(Meshwork::L3::Network* network, UART* serial):
@@ -171,19 +171,19 @@ namespace Meshwork {
 					((Meshwork::L3::NetworkV1::NetworkV1*)network)->set_route_advisor(this);
 				}
 				
-				virtual bool initSerial();
-				virtual bool waitForBytes(uint8_t count, uint16_t millis);
+				bool initSerial();
+				bool waitForBytes(uint8_t count, uint16_t millis);
 				
-				virtual bool processOneMessage(serialmsg_t* msg);
-				virtual bool processOneMessageEx(serialmsg_t* msg);
+				bool processOneMessage(serialmsg_t* msg);
+				bool processOneMessageEx(serialmsg_t* msg);
 				
-				virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
+				int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK);
 				
-				virtual void set_address(uint8_t src);
-				virtual uint8_t get_routeCount(uint8_t dst);
-				virtual NetworkV1::route_t* get_route(uint8_t dst, uint8_t index);
-				virtual void route_found(NetworkV1::route_t* route);
-				virtual void route_failed(NetworkV1::route_t* route);
+				void set_address(uint8_t src);
+				uint8_t get_routeCount(uint8_t dst);
+				NetworkV1::route_t* get_route(uint8_t dst, uint8_t index);
+				void route_found(NetworkV1::route_t* route);
+				void route_failed(NetworkV1::route_t* route);
 			  };
 		};
 	};
