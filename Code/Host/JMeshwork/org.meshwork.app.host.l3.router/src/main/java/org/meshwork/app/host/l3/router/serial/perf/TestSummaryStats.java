@@ -27,14 +27,18 @@ public class TestSummaryStats {
             int runCount = stats.getRunCount();
             int runTime = stats.getRunTime();
             writer.println("Test Name: "+stats.getTestName());
-            writer.println("\tSuccess count: "+stats.getSuccessCount());
-            writer.println("\t   Fail count: "+stats.getFailCount());
-            writer.println("\t    Run count: "+runCount);
-            writer.println("\t Success rate: "+(runCount == 0 ? 0f : (stats.getSuccessCount() / runTime)));
-            writer.println("\t Run time (s): "+stats.getRunTime());
-            writer.println("\tSend rate (s): "+(runTime == 0 ? 0f : (stats.getRunCount() / runTime)));
-            writer.println("\t  Description: "+stats.getTestDescription());
-            writer.println("\t      Details: "+stats.getTestDetails());
+            writer.println("\t    Success count: "+stats.getSuccessCount());
+            writer.println("\t       Fail count: "+stats.getFailCount());
+            if ( runCount > 0 ) {
+                writer.println("\t        Run count: "+runCount);
+                writer.println("\t Success rate (%): "+100 * (runCount == 0 ? 0f : ((float)stats.getSuccessCount() / runCount)));
+            }
+            if ( runTime > 0 ) {
+                writer.println("\t     Run time (s): "+runTime);
+                writer.println("\tSend rate (msg/s): "+(runTime == 0 ? 0f : ((float)stats.getRunCount() / runTime)));
+            }
+            writer.println("\t      Description: "+stats.getTestDescription());
+            writer.println("\t          Details: "+stats.getTestDetails());
             writer.println();
         }
     }
