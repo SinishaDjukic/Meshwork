@@ -92,13 +92,10 @@ Meshwork::L3::NetworkV1::NetworkSerial networkSerial(&mesh, &uart);
 
 void setup()
 {
-  uart.begin(9600);
+  uart.begin(115200);
 #if defined (__ARDUINO_MEGA__)
   trace.begin(&uart, PSTR("SerialMega Console: started"));
-  
-  uartHC.begin(9600);
-
-  trace.begin(&uart, PSTR("UART1: opened"));
+  uartHC.begin(115200);
 #endif  
   uint8_t mode = SLEEP_MODE_IDLE;
   Watchdog::begin(16, mode);  
