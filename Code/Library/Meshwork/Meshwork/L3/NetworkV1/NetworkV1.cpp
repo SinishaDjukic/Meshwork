@@ -150,7 +150,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			//TODO check if we should use a diff criteria here, since IGNORED = 3, which is a valid byte count too!
 			if (reply_result >= 0) {
 				if (reply_result == OK_MESSAGE_IGNORED) {
-					MSLEEP(attemptsDelay + (seq & 0x03) * 8); //delay simple pseudo-random ms before retry
+					MSLEEP(attemptsDelay + (seq & 0x03) * 32); //delay simple pseudo-random ms before retry
 				} else {
 #ifdef SUPPORT_DELIVERY_ROUTED
 					//check if we have the route
