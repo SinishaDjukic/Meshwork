@@ -29,7 +29,8 @@
 using Meshwork::L3::NetworkV1::NetworkV1;
 
 /**
- * TODO
+ * RouteProvider implementation, which uses a given RouteCache and policy to keep the routes
+ * cached and up-to-date.
  */
 namespace Meshwork {
 
