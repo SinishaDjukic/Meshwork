@@ -54,20 +54,23 @@ namespace Meshwork {
 		  virtual int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK) = 0;
 		};//end of Meshwork::L3::Network::ACKProvider
 		
-		// Define node roles.
-		//TODO detailed semantics and refinement
-		static const uint8_t ROLE_ROUTER_NODE 		= 0x00;
-		static const uint8_t ROLE_EDGE_NODE 		= 0x01;
-		static const uint8_t ROLE_CONTROLLER_NODE 	= 0x03;
-		static const uint8_t ROLE_GATEWAY_NODE 		= 0x04;
+		// Define networking capabilities.
 
-		// Defines network capabilities.
-		//TODO detailed semantics and refinement
-		static const uint8_t NWKCAPS_ALWAYS_LISTENING 	= 0x01;//always reachable
-		static const uint8_t NWKCAPS_PERIODIC_WAKEUP 	= 0x02;//sleeps but wakes up periodically
-		static const uint8_t NWKCAPS_ALWAYS_SLEEPING 	= 0x03;//never wakes up, only sends msgs
-		static const uint8_t NWKCAPS_ROUTER 			= 0x04;//routing node
-		static const uint8_t NWKCAPS_EDGE 				= 0x08;//edge node
+		// Bits: 0, 1
+		/** If set: sleeping node. Not set: always on*/
+		static const uint8_t NWKCAPS_SLEEPING 			= 1;
+		/** If set: periodically wakes up. Not set: always sleeping. Relevant only if NWKCAPS_SLEEPING is set. */
+		static const uint8_t NWKCAPS_PERIODIC_WAKEUP 	= 2;
+
+		// Bits: 2, 3
+		/** If set: supports re-routing. Not set: doesn't re-route (typically an edge node). */
+		static const uint8_t NWKCAPS_ROUTER				= 4;
+		/** If set: acts as gateway to other networks.*/
+		static const uint8_t NWKCAPS_GATEWAY 			= 8;
+
+		// Bits: 4
+		/** If set: can include new nodes in the network (aka a controller).*/
+		static const uint8_t NWKCAPS_CONTROLLER			= 16;
 
 		//define delivery methods
 		/** Defines direct delivery. */
@@ -176,7 +179,7 @@ namespace Meshwork {
 		public:
 
 			Network(Wireless::Driver* driver,
-						uint8_t nwkcaps = ROLE_ROUTER_NODE,
+						uint8_t nwkcaps = NWKCAPS_ROUTER,
 							uint8_t delivery = DELIVERY_EXHAUSTIVE,
 									uint8_t retry = 2) :
 			  m_driver(driver),

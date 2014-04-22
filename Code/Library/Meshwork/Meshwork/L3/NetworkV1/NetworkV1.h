@@ -172,7 +172,7 @@ namespace Meshwork {
 					iovec_end(vp);
 					return vec;
 				}
-
+				
 				static univmsg_t* get_msg_direct(univmsg_t* msg, uint8_t* data, int len) {
 					msg->msg_direct.nwk_ctrl.seq = data[0];
 					msg->msg_direct.nwk_ctrl.delivery = data[1];
@@ -380,7 +380,7 @@ namespace Meshwork {
 			#ifdef SUPPORT_DELIVERY_ROUTED
 						RouteProvider* advisor = NULL,
 			#endif
-						uint8_t nwkcaps = ROLE_ROUTER_NODE,
+						uint8_t nwkcaps = NWKCAPS_ROUTER,
 						uint8_t delivery = DELIVERY_EXHAUSTIVE,
 			#ifdef SUPPORT_DELIVERY_ROUTED
 						uint8_t maxHops = MAX_ROUTING_HOPS,
