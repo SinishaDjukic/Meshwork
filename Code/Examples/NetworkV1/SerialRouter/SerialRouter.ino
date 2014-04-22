@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __EXAMPLES_BEACON_H__
-#define __EXAMPLES_BEACON_H__
+#ifndef __EXAMPLES_SERIALROUTER_H__
+#define __EXAMPLES_SERIALROUTER_H__
 
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
@@ -38,39 +38,52 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
-static const uint16_t 	BEACON_NWK_ID 		= 1;
-static const uint8_t 	BEACON_CHANNEL_ID 	= 0;
-static const uint8_t 	BEACON_NODE_ID 		= 100;
-static const uint8_t 	BEACON_BCAST_PORT 	= 0;
-static const char 		BEACON_BCAST_MSG[] 	= "*BEACON*";
-static const uint8_t	BEACON_BCAST_MSG_LEN = sizeof(BEACON_BCAST_MSG) - 1;//without null termination
+#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
+#include "Utils/LineReader.h"
+
+//Setup extra UART on Mega
+#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+	#include "Cosa/IOBuffer.hh"
+	// Create buffer for HC UART
+	static IOBuffer<UART::BUFFER_MAX> ibuf;
+	static IOBuffer<UART::BUFFER_MAX> obuf;
+	// HC UART will be used for Host-Controller communication
+	UART uartHC(3, &ibuf, &obuf);
+	NetworkSerial networkSerial(&mesh, &uartHC);
+#else
+	NetworkSerial networkSerial(&mesh, &uart);
+#endif
 
 void setup()
 {
   uart.begin(115200);
-  trace.begin(&uart, PSTR("Beacon: started\n"));
-  
-  MW_LOG_DEBUG_TRACE << PSTR("Network ID: ") << BEACON_NWK_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Channel ID: ") << BEACON_CHANNEL_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Node ID: ") << BEACON_NODE_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Bcast port: ") << BEACON_BCAST_PORT << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Bcast msg len: ") << BEACON_BCAST_MSG_LEN << endl;
-  
-  mesh.setNetworkID(BEACON_NWK_ID);
-  mesh.setChannel(BEACON_CHANNEL_ID);
-  mesh.setNodeID(BEACON_NODE_ID);
-  mesh.begin(NULL);
-  
+
+//Trace debugs only supported on Mega, since it has extra UARTs
+#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+  trace.begin(&uart, NULL);
+  trace << PSTR("Serial Console: started");
+  uartHC.begin(115200);
+#endif
+
   uint8_t mode = SLEEP_MODE_IDLE;
   Watchdog::begin(16, mode);  
   rf.set_sleep(mode);
   RTC::begin();
+  
+  networkSerial.initSerial();
 }
 
 void loop()
 {
-	MW_LOG_DEBUG_TRACE << PSTR("Broadcasting...") << endl;
-	mesh.broadcast(BEACON_BCAST_PORT, BEACON_BCAST_MSG, BEACON_BCAST_MSG_LEN);
-	SLEEP(1);
+#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+	trace << PSTR("Processing message...") << endl;
+#endif
+
+	static uint8_t databuf[NetworkSerial::MAX_SERIALMSG_LEN];
+	static NetworkSerial::serialmsg_t msg;
+	*msg.data = *databuf;
+	networkSerial.processOneMessage(&msg);
 }
+
 #endif

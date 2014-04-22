@@ -1,7 +1,7 @@
 /**
  * This file is part of the Meshwork project.
  *
- * Copyright (C) 2013, Sinisha Djukic
+ * Copyright (C) 2014, Sinisha Djukic
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __EXAMPLES_NETWORKV1CONSOLE_STATICACKPROVIDER_H__
-#define __EXAMPLES_NETWORKV1CONSOLE_STATICACKPROVIDER_H__
+#ifndef __EXAMPLES_CONSOLE_STATICACKPROVIDER_H__
+#define __EXAMPLES_CONSOLE_STATICACKPROVIDER_H__
 
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
