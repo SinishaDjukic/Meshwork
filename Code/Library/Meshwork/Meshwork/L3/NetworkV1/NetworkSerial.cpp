@@ -96,7 +96,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_RFGETROUTECOUNT, dst};
 	writeMessage(sizeof(data), data, true);
 	
-	if ( waitForBytes(4, TIMEOUT_RESPONSE) ) {
+//	if ( waitForBytes(4, TIMEOUT_RESPONSE) ) {
 		uint8_t seq = m_serial->getchar();
 		if ( m_currentMsg->seq == seq ) {
 			uint8_t len = m_serial->getchar();
@@ -114,9 +114,9 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 		} else {
 			respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 		}
-	} else {
-		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
-	}
+//	} else {
+//		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+//	}
 	return result;
 }
 
@@ -126,7 +126,7 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_RFGETROUTE, dst, index};
 	writeMessage(sizeof(data), data, true);
 	
-	if ( waitForBytes(3, TIMEOUT_RESPONSE) ) {
+//	if ( waitForBytes(3, TIMEOUT_RESPONSE) ) {
 			uint8_t seq = m_serial->getchar();
 			if ( m_currentMsg->seq == seq ) {
 				uint8_t len = m_serial->getchar();
@@ -139,8 +139,8 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 					//some magic goes here...
 					//first wait ensure we have at least 3 bytes (HOPCOUNT = 0 | SRC | DST), so that we can read the hopCount value
 					//second wait ensures we have at least 3 + hopCount bytes (HOPCOUNT | SRC | <list> | DST)
-					if ( waitForBytes(3, TIMEOUT_RESPONSE) && 
-						 waitForBytes(3 + (hopCount = m_serial->getchar()) > 0 ? hopCount : 0, TIMEOUT_RESPONSE)) {
+//					if ( waitForBytes(3, TIMEOUT_RESPONSE) && 
+//						 waitForBytes(3 + (hopCount = m_serial->getchar()) > 0 ? hopCount : 0, TIMEOUT_RESPONSE)) {
 						m_currentRoute.hopCount = hopCount;
 						m_currentRoute.src = m_serial->getchar();
 						for ( int i = 0; i < hopCount; i ++ )
@@ -148,9 +148,9 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 						m_currentRoute.hops = m_currentRouteHops;
 						m_currentRoute.dst = m_serial->getchar();
 						result = &m_currentRoute;
-					} else {
-						respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
-					}	
+//					} else {
+//						respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+//					}	
 				} else {
 					//TODO we should always read out the entire message len
 					respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
@@ -158,9 +158,9 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 			} else {
 				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
-	} else {
-		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
-	}	
+//	} else {
+//		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+//	}	
 	return result;
 }
 
@@ -244,7 +244,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 		writeMessage(sizeof(data), data, false);
 		writeMessage(len, (uint8_t*)buf, true);
 		
-		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
+//		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
 			uint8_t seq = m_serial->getchar();
 			if ( m_currentMsg->seq == seq ) {
 				uint8_t len = m_serial->getchar();
@@ -263,9 +263,9 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 			} else {
 //				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
-		} else {
-			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
-		}
+//		} else {
+//			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+//		}
 	} else {
 		respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
 	}
@@ -313,7 +313,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 		uint8_t port = rfsend->port = m_serial->getchar();
 		uint8_t datalen = rfsend->datalen = m_serial->getchar();
 		MW_LOG_DEBUG("Seq=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
-		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
+//		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
 			//TODO debug print the array
@@ -328,9 +328,9 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 			} else {
 				respondNOK(msg, ERROR_SEND);
 			}
-		} else {
-			respondNOK(msg, ERROR_INSUFFICIENT_DATA);
-		}
+//		} else {
+//			respondNOK(msg, ERROR_INSUFFICIENT_DATA);
+//		}
 	} else {
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
@@ -377,7 +377,6 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 		if ( len >= 0 ) {
 			//needed to make sure we have enough data arrived in the buffer for the entire command
 			int msgcode = msg->code = m_serial->getchar();//msgcode
-			//TODO now that we have a len check here we should remove "if (available)" calls from (most) processXYZ messages
 			//TODO add support for send abort
 			m_currentMsg = msg;
 			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
