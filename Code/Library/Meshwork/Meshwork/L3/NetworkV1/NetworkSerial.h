@@ -21,7 +21,7 @@
 #ifndef __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_H__
 #define __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_H__
 
-#include "Cosa/Pins.hh"
+#include "Cosa/Pin.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
@@ -135,7 +135,7 @@ namespace Meshwork {
 				static const uint8_t ERROR_KEY_TOO_LONG 		= 7;
 				static const uint8_t ERROR_SEQUENCE_MISMATCH	= 8;
 				
-				static const uint16_t TIMEOUT_RESPONSE 			= 300;
+				static const uint16_t TIMEOUT_RESPONSE 			= 5000;
 				
 			protected:
 				Meshwork::L3::Network* m_network;

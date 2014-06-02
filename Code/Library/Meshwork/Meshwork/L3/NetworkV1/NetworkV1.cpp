@@ -36,7 +36,7 @@ bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t ho
 		if ((sendCode = m_driver->send(dest, hopPort, vp)) < 0) {//send back ACK
 			MW_LOG_ERROR("Driver send failed: %d", sendCode);
 			if ( i < attempts - 1 )//don't sleep after last send
-				MSLEEP(RETRY_WAIT_DIRECT);
+				Watchdog::delay(RETRY_WAIT_DIRECT);
 		}
 	}
 	if ( sendCode >= 0 ) {
@@ -54,7 +54,7 @@ bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t ho
 		if ((sendCode = m_driver->send(dest, hopPort, buf, len)) < 0) {//send back ACK
 			MW_LOG_ERROR("Driver send failed, code: %d", sendCode);
 			if ( i < attempts - 1 )//don't sleep after last send
-				MSLEEP(RETRY_WAIT_DIRECT);
+				Watchdog::delay(RETRY_WAIT_DIRECT);
 		}
 	}
 	if ( sendCode >= 0 ) {
@@ -150,7 +150,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			//TODO check if we should use a diff criteria here, since IGNORED = 3, which is a valid byte count too!
 			if (reply_result >= 0) {
 				if (reply_result == OK_MESSAGE_IGNORED) {
-					MSLEEP(attemptsDelay + (seq & 0x03) * 32); //delay simple pseudo-random ms before retry
+					Watchdog::delay(attemptsDelay + (seq & 0x03) * 32); //delay simple pseudo-random ms before retry
 				} else {
 #ifdef SUPPORT_DELIVERY_ROUTED
 					//check if we have the route
@@ -463,8 +463,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 		void* newData, size_t& newDataLenMax,
 		uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider) {
-	MW_LOG_INFO("Recv: timeout(ms)=%l", ms);
-	MW_LOG_DEBUG("src=%d, port=%d, newData=%d, newDataLenMax=%d, ackProvider=%d", srcA, portA, newData, newDataLenMax, ackProvider);
+	MW_LOG_INFO("Recv: timeout(ms)=%l, newDataLenMax=%d, ackProvider=%d", ms, newDataLenMax, ackProvider);
+//	MW_LOG_DEBUG("src=%d, port=%d, newData=%d, newDataLenMax=%d, ackProvider=%d", srcA, portA, newData, newDataLenMax, ackProvider);
 
 	uint8_t data[ACK_PAYLOAD_MAX];
 	uint8_t src, port;//use local vars to reduce code size
@@ -475,6 +475,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 	
 	if (result > 0) { //not timeouted, no crc error
 		MW_LOG_INFO("Received data, len: %d", result);
+		MW_LOG_DEBUG("src=%d, port=%d", srcA, portA);
 		MW_LOG_DEBUG_ARRAY(PSTR("L2 DATA RECV: "), data, result);
 //		trace.print(data, result, IOStream::hex, Meshwork::L3::NetworkV1::NetworkV1::PAYLOAD_MAX);
 
@@ -558,7 +559,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 					result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DELIVERY_METHOD_INVALID;
 				}
 			} else {//it is broadcast
-			//TODO check why this fails at the receiver?!
+			//TODO check why this fails at the receiver?! we get here regularly after some traffic???
 				MW_LOG_INFO("Received BROADCAST, delivery=%d", recv_msg.nwk_ctrl.delivery);
 				if (recv_msg.nwk_ctrl.delivery & DELIVERY_DIRECT) {
 					MW_LOG_INFO("Received BROADCAST DIRECT, will not ACK", NULL);

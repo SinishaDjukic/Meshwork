@@ -66,24 +66,29 @@ void setup()
   uartHC.begin(115200);
 #endif
 
-  uint8_t mode = SLEEP_MODE_IDLE;
-  Watchdog::begin(16, mode);  
-  rf.set_sleep(mode);
+//  uint8_t mode = SLEEP_MODE_IDLE;
+  Watchdog::begin(16);
   RTC::begin();
   
   networkSerial.initSerial();
 }
 
+uint32_t last_message_timestamp = 0;
+
 void loop()
 {
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-	trace << PSTR("Processing message...") << endl;
-#endif
-
 	static uint8_t databuf[NetworkSerial::MAX_SERIALMSG_LEN];
 	static NetworkSerial::serialmsg_t msg;
 	*msg.data = *databuf;
-	networkSerial.processOneMessage(&msg);
+	bool processed = networkSerial.processOneMessage(&msg);
+#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+	if ( processed )
+		last_message_timestamp = RTC::millis();
+	else if ( RTC::since(last_message_timestamp) > 5000 ) {
+		last_message_timestamp = RTC::millis();
+		MW_LOG_WARNING("No serial messages processed for 5000 ms", NULL);
+	}
+#endif
 }
 
 #endif

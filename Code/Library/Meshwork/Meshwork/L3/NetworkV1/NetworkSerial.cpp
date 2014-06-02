@@ -48,7 +48,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::waitForBytes(uint8_t count, uint16_
 	uint32_t start = RTC::millis();
 	while (true) {
 		if ( m_serial->available() < count )//minimum response size
-			MSLEEP(millis/10);
+			Watchdog::delay(16);
 		else
 			result = true;
 		if ( result || RTC::since(start) >= millis )
@@ -202,6 +202,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 		m_network->setChannel(cfgnwk->channel);
 		m_network->setNetworkID(cfgnwk->nwkid);
 		m_network->setNodeID(cfgnwk->nodeid);
+		MW_LOG_INFO("Configuring node: NodeID=%d, NwkID=%d, Channel=%d", cfgnwk->nodeid, cfgnwk->nwkid, cfgnwk->channel);
 		size_t keyLen = m_serial->getchar();
 		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
 			m_networkKey[0] = 0;
@@ -238,34 +239,41 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
+	MW_LOG_DEBUG("Src=%d, Port=%d, Len=%d", src, port, len);
 	if ( m_currentMsg != NULL ) {//must be the case, but need a sanity check
+		MW_LOG_DEBUG("Sending RFRECV", NULL);
 		//first, send RFRECV
 		uint8_t data[] = {m_currentMsg->seq, 4 + len, MSGCODE_RFRECV, src, port, len};
 		writeMessage(sizeof(data), data, false);
 		writeMessage(len, (uint8_t*)buf, true);
 		
-//		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
+		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
 			uint8_t seq = m_serial->getchar();
+			MW_LOG_DEBUG("Response to RFRECV, seq=%d", seq);
 			if ( m_currentMsg->seq == seq ) {
 				uint8_t len = m_serial->getchar();
 				uint8_t code = m_serial->getchar();
 				//TODO check if code == MSGCODE_RFRECVACK
 
 				uint8_t reslen = m_serial->getchar();
+				MW_LOG_DEBUG("Response to RFRECV, reslen=%d", reslen);
 				if ( reslen >=0 && reslen <= lenACK && waitForBytes(reslen, TIMEOUT_RESPONSE) ) {
 					for ( int i = 0; i < reslen; i ++ )
 						((char*) bufACK)[i] = m_serial->getchar();
 //					respondWCode(m_currentMsg, MSGCODE_OK);
 					bytes = reslen;
 				} else {
+					MW_LOG_ERROR("Response to RFRECV, ERROR_TOO_LONG_DATA", NULL);
 //					respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
 				}
 			} else {
+				MW_LOG_ERROR("Response to RFRECV, seq WRONG", NULL);
 //				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
-//		} else {
-//			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
-//		}
+		} else {
+			MW_LOG_ERROR("Response to RFRECV, ERROR_INSUFFICIENT_DATA", NULL);
+			respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+		}
 	} else {
 		respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
 	}
@@ -379,6 +387,8 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 			int msgcode = msg->code = m_serial->getchar();//msgcode
 			//TODO add support for send abort
 			m_currentMsg = msg;
+			trace << endl << endl << endl;
+			MW_LOG_INFO("PROCESSING SERIAL MESSAGE: Seq=%d, Len=%d, Code=%d", msg->seq, len, msgcode);
 			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
 				switch ( msgcode ) {
 					case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
@@ -394,11 +404,14 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 							respondWCode(msg, MSGCODE_UNKNOWN);
 						m_currentMsg = NULL;
 				}
+				trace << endl << endl;
 			} else {
-			respondWCode(msg, ERROR_INSUFFICIENT_DATA);
-			result = false;
+				MW_LOG_ERROR("INSUFFICIENT_DATA", NULL);
+				respondWCode(msg, ERROR_INSUFFICIENT_DATA);
+				result = false;
 			}
 		} else {
+			MW_LOG_ERROR("MSGCODE_UNKNOWN: Seq=%d, Len=%d", msg->seq, len);
 			respondWCode(msg, MSGCODE_UNKNOWN);
 			result = false;
 		}

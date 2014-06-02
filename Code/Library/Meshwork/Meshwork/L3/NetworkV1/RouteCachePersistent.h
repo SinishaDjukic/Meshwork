@@ -55,19 +55,45 @@ namespace Meshwork {
 				static const uint16_t ROUTE_SIZE_SINGLE	= 1 + 1 + 1 +
 															NetworkV1::MAX_ROUTING_HOPS;
 				
+				//Header storing a formatting marker
+				static const uint8_t ROUTE_SIZE_TABLE_MARKER = 1;
+				//Marker value denoting a formatted eeprom
+				static const uint8_t ROUTE_VALUE_TABLE_MARKER = 0x00;
 				//EEPROM bytecount for the entire routing table
-				static const uint16_t ROUTE_SIZE_TABLE	= ROUTE_SIZE_SINGLE *
-															RouteCache::MAX_DST_NODES *
-																RouteCache::MAX_DST_ROUTES;
+				static const uint16_t ROUTE_SIZE_TABLE	= ROUTE_SIZE_TABLE_MARKER + 
+															ROUTE_SIZE_SINGLE *
+																RouteCache::MAX_DST_NODES *
+																	RouteCache::MAX_DST_ROUTES;
 			
 				RouteCachePersistent(EEPROM* eeprom, uint16_t eeprom_offset):
 					RouteCache(this),
 					m_eeprom(eeprom),
 					m_eeprom_offset(eeprom_offset)
 				{
-					//Note: make sure to format EEPROM with zero bytes before instantiating!
+					init_eeprom();
 					read_routes();
 				};
+				
+				void format_eeprom() {
+					MW_LOG_DEBUG_TRACE << PSTR("Formatting EEPROM... ");
+					//start backwards to optimize the loop check
+					uint16_t data_start = m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1;
+					uint8_t marker = ROUTE_VALUE_TABLE_MARKER;
+					do {
+						m_eeprom->write((void*) &data_start, (void*) &marker, 1);
+					} while (--data_start >= m_eeprom_offset);
+					MW_LOG_DEBUG_TRACE << PSTR("Done") << endl;
+				}
+				
+				void init_eeprom() {
+					uint16_t index = m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER;
+					uint8_t formatted = m_eeprom->read((void*) &formatted, (void*) &index, 1);
+					if ( formatted != ROUTE_VALUE_TABLE_MARKER ) {
+						format_eeprom();
+					} else {
+						MW_LOG_DEBUG_TRACE << PSTR("EEPROM already formatted") << endl;
+					}
+				}
 				
 				void read_routes() {
 					for ( int i = 0; i < MAX_DST_NODES; i ++ )
