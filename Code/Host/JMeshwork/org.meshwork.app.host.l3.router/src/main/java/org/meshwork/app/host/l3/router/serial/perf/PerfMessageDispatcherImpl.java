@@ -84,15 +84,23 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                 int iter = iterations;
                 long start = System.currentTimeMillis();
                 AbstractMessage resp = null;
-                byte[] senddata = new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE};
+//                byte[] senddata = new byte[] {(byte) 0xCA, (byte) 0xFE, (byte) 0xBA, (byte) 0xBE};
+                byte[] senddata = new byte[4];
                 byte dstnode;
                 do {
+                    int dataSeq = iterations - iter;
+                    senddata[0] = (byte) (( dataSeq >> 24 ) & 0xFF);
+                    senddata[1] = (byte) (( dataSeq >> 16 ) & 0xFF);
+                    senddata[2] = (byte) (( dataSeq >> 8  ) & 0xFF);
+                    senddata[3] = (byte) (( dataSeq >> 0  ) & 0xFF);
                     long sleepTime = iterationDelaySeconds * 1000;
                     int dstcount = dst.size();
                     for ( int i = 0; i < dstcount; i ++ ) {
 //                        //TODO cleanup this shortcut
 //                        if ( stats.getTestUID() == TestSendFloodStats.UID_SEND_FLOOD )
 //                            routeMap.clearRouteList();
+                        writer.println();
+                        writer.println(".............");
                         dstnode = dst.get(i);
                         MRFSend req = new MRFSend(nextSeq());
                         req.dst = dstnode;
@@ -113,6 +121,8 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                             stats.failCount ++;
                         }
                         stats.runCount ++;
+                        writer.println(".............");
+                        writer.println();
                         writer.flush();
                     }
                     if ( sleepTime > 0 ) {

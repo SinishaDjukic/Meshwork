@@ -20,6 +20,24 @@ public class MNOK extends AbstractMessage implements Constants {
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
         writer.print("MNOK: Error=");writer.print(error);
+
+        String errorText = null;
+        //TODO put error strings into a hash map
+        switch ( error ) {
+            case ERROR_GENERAL: errorText = "(GENERAL ERROR)";break;
+            case ERROR_INSUFFICIENT_DATA: errorText = "(INSUFFICIENT DATA)";break;
+            case ERROR_TOO_LONG_DATA: errorText = "(TOO LONG DATA)";break;
+            case ERROR_ILLEGAL_STATE: errorText = "(ILLEGAL STATE)";break;
+            case ERROR_RECV: errorText = "(RECEIVE ERROR)";break;
+            case ERROR_SEND: errorText = "(SEND ERROR)";break;
+            case ERROR_BCAST: errorText = "(BROADCAST ERROR)";break;
+            case ERROR_KEY_TOO_LONG: errorText = "(KEY TOO LONG)";break;
+            case ERROR_SEQUENCE_MISMATCH: errorText = "(SEQUENCE MISMATCH)";break;
+        }
+        if ( errorText != null ) {
+            writer.print(" ");
+            writer.print(errorText);
+        }
     }
 
     @Override
