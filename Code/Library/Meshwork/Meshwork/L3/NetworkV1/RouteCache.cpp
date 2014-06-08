@@ -22,6 +22,10 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
+#ifndef LOG_ROUTECACHE
+#define LOG_ROUTECACHE  true
+#endif
+
 using Meshwork::L3::NetworkV1::NetworkV1;
 using Meshwork::L3::NetworkV1::RouteCache;
 
@@ -149,7 +153,6 @@ bool RouteCache::update_QoS(NetworkV1::route_t* route, bool increase) {
 		int8_t qos = entry->qos + (increase ? 1 : -1);
 		//make sure we stay in range
 		entry->qos = normalize_QoS(qos);
-//		trace << endl << PSTR("...qos: ") << entry->qos << endl;
 	}
 	//may be used by the caller to determine if there was such a route at all
 	return entry != NULL;
@@ -163,15 +166,17 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 		result = calculate == Network::QOS_CALCULATE_BEST ? Network::QOS_LEVEL_MIN :
 					(calculate == Network::QOS_CALCULATE_WORST ? Network::QOS_LEVEL_MAX : 0);
 		//yes, this looks weird, but single loop makes the code smaller
-		//trace << PSTR("QoS for dst: ") << dst << PSTR(", method: ") << calculate << endl;
-		//print(trace, *list, 1);
+		MW_LOG_DEBUG(LOG_ROUTECACHE, "QoS for dst: %d, method: %d", dst, calculate);
+		if ( LOG_ROUTECACHE )
+			print(trace, *list, 1);
 		for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
 			NetworkV1::route_t r = list->entries[i].route;
-			//trace << PSTR("Checking route with index: ") << i << endl;
-			//print(trace, r, 2);
+			MW_LOG_DEBUG(LOG_ROUTECACHE, "Checking route with index: %d", i);
+			if ( LOG_ROUTECACHE )
+				print(trace, r, 2);
 			if ( r.dst != 0 ) {//valid route
 				int8_t tmp = list->entries[i].qos;
-				//trace << PSTR("Avg: ") << result << PSTR(", route QoS: ") << tmp << endl;
+				MW_LOG_DEBUG(LOG_ROUTECACHE, "Avg: %d, route QoS: %d", result, tmp);
 				/*
 				if ( calculate == Network::QOS_CALCULATE_BEST ) {
 					result = result < tmp ? tmp : result;
@@ -180,7 +185,7 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 				} if ( calculate == Network::QOS_CALCULATE_AVERAGE ) {
 					result = (result + tmp) >> 1;
 				} else {
-					trace << PSTR("Unknown method: ") << calculate << endl;
+					MW_LOG_ERROR(LOG_ROUTECACHE, "Unknown method: %d", calculate);
 					break;
 				}*/
 				switch ( calculate ) {
@@ -188,7 +193,7 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 					case Network::QOS_CALCULATE_WORST: result = result > tmp ? tmp : result; break;
 					case Network::QOS_CALCULATE_AVERAGE: (result + tmp) >> 1; break;
 					default:
-						MW_LOG_DEBUG_TRACE << PSTR("Unknown method: ") << calculate << endl;
+						MW_LOG_DEBUG(LOG_ROUTECACHE, "Unknown method: %d", calculate);
 						break;
 				}
 			}
@@ -200,18 +205,18 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route, bool forceReplace) {
 	route_entry_t* result = NULL;
 	if ( get_route_entry(route) == NULL ) {
-		MW_LOG_DEBUG_TRACE << PSTR("*** Route not in the cache. Force replace: ") << forceReplace << endl;
+		MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Route not in the cache. Force replace: %d", forceReplace);
 		uint8_t dst = route->dst;
 		route_list_t* list = get_route_list(dst);
 		if ( list != NULL ) {
-			MW_LOG_DEBUG_TRACE << PSTR("*** Route list exists for dst: ") << dst << endl;
+			MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Route list exists for dst: %d", dst);
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_ROUTES - 1;
 			//try to add to exising routes
 			for ( int i = 0; i < MAX_DST_ROUTES; i ++ ) {
 				if ( list->entries[i].route.dst == 0 ) {
 					result = &list->entries[i];
-					MW_LOG_DEBUG_TRACE << PSTR("*** Empty slot found at: ") << i << PSTR(", Address: ") << result << endl;
+					MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Empty slot found at: %d, Address: %d", dst, result);
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = list->entries[i].qos;
@@ -224,11 +229,11 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
 			if ( result == NULL && forceReplace ) {
-				MW_LOG_DEBUG_TRACE << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
+				MW_LOG_DEBUG(LOG_ROUTECACHE, "*** No free slot. Replacing at: %d", worstIndex);
 				result = &list->entries[worstIndex];
 			}
 		} else {
-			MW_LOG_DEBUG_TRACE << PSTR("*** Route list doesn't exist for dst: ") << dst << endl;
+			MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Route list doesn't exist for dst: %d", dst);
 			uint8_t worst = Network::QOS_LEVEL_MAX;
 			uint8_t worstIndex = MAX_DST_NODES - 1;
 			//try to add a new node
@@ -238,7 +243,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 					result = &m_table.lists[i].entries[0];
 					//mark the list as used
 					m_table.lists[i].dst = dst;
-					MW_LOG_DEBUG_TRACE << PSTR("*** Found empty route slot at: ") << i << PSTR(", Address: ") << result << endl;
+					MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Found empty route slot at: %d, Address: %d", i, result);
 					break;
 				} else if ( forceReplace ) {
 					uint8_t qos = get_QoS(dst, Network::QOS_CALCULATE_AVERAGE);
@@ -250,7 +255,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			//if no free space, and we should force a replace
 			//then choose the one with worst QoS
 			if ( result == NULL && forceReplace ) {
-				MW_LOG_DEBUG_TRACE << PSTR("*** No free slot. Replacing at: ") << worstIndex << endl;
+				MW_LOG_DEBUG(LOG_ROUTECACHE, "*** No free slot. Replacing at: %d", worstIndex);
 				//choose the first element
 				result = &m_table.lists[worstIndex].entries[0];
 				//mark the list as used by this dst
@@ -261,8 +266,9 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			}
 		}
 		if ( result != NULL ) {
-			MW_LOG_DEBUG_TRACE << PSTR("*** Updating with new route data: ");
-			print(trace, *route, 0);
+			MW_LOG_DEBUG(LOG_ROUTECACHE, "*** Updating with new route data", NULL);
+			if ( LOG_ROUTECACHE )
+				print(trace, *route, 0);
 			
 			result->route.hopCount = route->hopCount;
 			result->route.src = route->src;
@@ -274,8 +280,9 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 			result->route.dst = route->dst;
 			result->qos = Network::QOS_LEVEL_AVERAGE;
 			
-			MW_LOG_DEBUG_TRACE << PSTR("*** New route data: ");
-			print(trace, result->route, 0);
+			MW_LOG_DEBUG(LOG_ROUTECACHE, "*** New route data", NULL);
+			if ( LOG_ROUTECACHE )
+				print(trace, result->route, 0);
 			
 			if ( m_route_cache_listener != NULL )
 				m_route_cache_listener->route_entry_change(this, result, RouteCacheListener::ROUTE_ENTRY_CHANGED);

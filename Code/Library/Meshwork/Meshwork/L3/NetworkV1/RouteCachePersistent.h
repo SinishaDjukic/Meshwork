@@ -26,6 +26,10 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
+#ifndef LOG_ROUTECACHEPERSISTENT
+#define LOG_ROUTECACHEPERSISTENT  true
+#endif
+
 using Meshwork::L3::NetworkV1::NetworkV1;
 
 /**
@@ -75,14 +79,14 @@ namespace Meshwork {
 				};
 				
 				void format_eeprom() {
-					MW_LOG_DEBUG_TRACE << PSTR("Formatting EEPROM... ");
+					MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "Formatting EEPROM...", NULL);
 					//start backwards to optimize the loop check
 					uint16_t data_start = m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1;
 					uint8_t marker = ROUTE_VALUE_TABLE_MARKER;
 					do {
 						m_eeprom->write((void*) &data_start, (void*) &marker, 1);
 					} while (--data_start >= m_eeprom_offset);
-					MW_LOG_DEBUG_TRACE << PSTR("Done") << endl;
+					MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "Done", NULL);
 				}
 				
 				void init_eeprom() {
@@ -91,7 +95,7 @@ namespace Meshwork {
 					if ( formatted != ROUTE_VALUE_TABLE_MARKER ) {
 						format_eeprom();
 					} else {
-						MW_LOG_DEBUG_TRACE << PSTR("EEPROM already formatted") << endl;
+						MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "EEPROM already formatted", NULL);
 					}
 				}
 				
