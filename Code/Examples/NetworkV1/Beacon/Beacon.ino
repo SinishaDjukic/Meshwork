@@ -38,6 +38,10 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
+#ifndef LOG_BEACON
+#define LOG_BEACON  true
+#endif
+
 static const uint16_t 	BEACON_NWK_ID 		= 1;
 static const uint8_t 	BEACON_CHANNEL_ID 	= 0;
 static const uint8_t 	BEACON_NODE_ID 		= 100;
@@ -50,11 +54,11 @@ void setup()
   uart.begin(115200);
   trace.begin(&uart, PSTR("Beacon: started\n"));
   
-  MW_LOG_DEBUG_TRACE << PSTR("Network ID: ") << BEACON_NWK_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Channel ID: ") << BEACON_CHANNEL_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Node ID: ") << BEACON_NODE_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Bcast port: ") << BEACON_BCAST_PORT << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Bcast msg len: ") << BEACON_BCAST_MSG_LEN << endl;
+  MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Network ID: ") << BEACON_NWK_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Channel ID: ") << BEACON_CHANNEL_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Node ID: ") << BEACON_NODE_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Bcast port: ") << BEACON_BCAST_PORT << endl;
+  MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Bcast msg len: ") << BEACON_BCAST_MSG_LEN << endl;
   
   mesh.setNetworkID(BEACON_NWK_ID);
   mesh.setChannel(BEACON_CHANNEL_ID);
@@ -62,14 +66,14 @@ void setup()
   mesh.begin(NULL);
   
   uint8_t mode = SLEEP_MODE_IDLE;
-  Watchdog::begin(16, mode);  
-  rf.set_sleep(mode);
+  Watchdog::begin(16);  
+//  rf.set_sleep(mode);
   RTC::begin();
 }
 
 void loop()
 {
-	MW_LOG_DEBUG_TRACE << PSTR("Broadcasting...") << endl;
+	MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Broadcasting...") << endl;
 	mesh.broadcast(BEACON_BCAST_PORT, BEACON_BCAST_MSG, BEACON_BCAST_MSG_LEN);
 	SLEEP(1);
 }

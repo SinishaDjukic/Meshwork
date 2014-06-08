@@ -38,6 +38,10 @@
 #include "Meshwork/L3/NetworkV1/RouteCache.h"
 #include "Utils/LineReader.h"
 
+#ifndef LOG_CONSOLE
+#define LOG_CONSOLE  true
+#endif
+
 // Select Wireless device driver
 // #include "Cosa/Wireless/Driver/CC1101.hh"
 // CC1101 rf(0xC05A, 0x01);
@@ -89,9 +93,9 @@ void setup()
   uart.begin(9600);
   uint8_t mode = SLEEP_MODE_IDLE;
   //TODO revert back watchdog settings
-  Watchdog::begin(16, mode);  
+  Watchdog::begin(16);  
 //  Watchdog::begin();
-  rf.set_sleep(mode);
+//  rf.set_sleep(mode);
   RTC::begin();
   trace.begin(&uart, PSTR("NetworkV1 Serial Console: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT;
@@ -205,7 +209,7 @@ void run_send(uint8_t address, uint8_t port, char * pStart, char * pEnd) {
 	trace << PSTR("\nAck len: ") << ackLen;
 	trace << PSTR("\nAck: \t");
 	print_message((char *)ack, ackLen);
-	//MW_LOG_DEBUG_ARRAY(PSTR("Ack: "), ack, ackLen);
+	//MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("Ack: "), ack, ackLen);
 //	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 	trace.println();
 	
@@ -261,7 +265,7 @@ void run_recv() {
 		if ( result != -1 ) {
 			trace << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			trace.println();
 		}
 		if ( RTC::since(start) >= duration )

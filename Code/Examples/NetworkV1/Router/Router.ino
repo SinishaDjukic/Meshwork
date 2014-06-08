@@ -38,6 +38,10 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
+#ifndef LOG_ROUTER
+#define LOG_ROUTER  true
+#endif
+
 
 static const uint16_t 	ROUTER_NWK_ID 		= 1;
 static const uint8_t 	ROUTER_CHANNEL_ID 	= 0;
@@ -48,18 +52,18 @@ void setup()
   uart.begin(115200);
   trace.begin(&uart, PSTR("Router: started\n"));
   
-  MW_LOG_DEBUG_TRACE << PSTR("Network ID: ") << ROUTER_NWK_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Channel ID: ") << ROUTER_CHANNEL_ID << endl;
-  MW_LOG_DEBUG_TRACE << PSTR("Node ID: ") << ROUTER_NODE_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("Network ID: ") << ROUTER_NWK_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("Channel ID: ") << ROUTER_CHANNEL_ID << endl;
+  MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("Node ID: ") << ROUTER_NODE_ID << endl;
   
   mesh.setNetworkID(ROUTER_NWK_ID);
   mesh.setChannel(ROUTER_CHANNEL_ID);
   mesh.setNodeID(ROUTER_NODE_ID);
   mesh.begin(NULL);
   
-  uint8_t mode = SLEEP_MODE_IDLE;
-  Watchdog::begin(16, mode);  
-  rf.set_sleep(mode);
+//  uint8_t mode = SLEEP_MODE_IDLE;
+  Watchdog::begin(16);  
+//  rf.set_sleep(mode);
   RTC::begin();
 }
 
@@ -68,22 +72,22 @@ void run_recv() {
 	uint8_t src, port;
 	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
-	MW_LOG_DEBUG_TRACE << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
+	MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
 	while (true) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
 		if ( result != -1 ) {
-			MW_LOG_DEBUG_TRACE << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
-			MW_LOG_DEBUG_TRACE << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
-			MW_LOG_DEBUG_TRACE << endl;
+			MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
+			MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
+			MW_LOG_DEBUG_ARRAY(LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_DEBUG_TRACE(LOG_ROUTER) << endl;
 		}
 		if ( RTC::since(start) >= duration )
 			break;
 	} 
 	
-	MW_LOG_DEBUG_TRACE << PSTR("RECV: done\n");
+	MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("RECV: done\n");
 }
 
 void loop()
