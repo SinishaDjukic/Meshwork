@@ -21,6 +21,18 @@
 #ifndef __EXAMPLES_SERIALROUTER_H__
 #define __EXAMPLES_SERIALROUTER_H__
 
+
+#define MW_LOG_ALL_ENABLE false
+#define MW_LOG_DEBUG_ENABLE false
+#define LOG_NETWORKV1  false
+#define LOG_NETWORKSERIAL false
+#define LOG_SERIALROUTER true
+
+
+#ifndef LOG_SERIALROUTER
+#define LOG_SERIALROUTER true
+#endif
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
@@ -53,7 +65,9 @@
 	NetworkSerial networkSerial(&mesh, &uartHC);
 #else
 	NetworkSerial networkSerial(&mesh, &uart);
+	IOStream::Device null_device;
 #endif
+
 
 void setup()
 {
@@ -62,8 +76,10 @@ void setup()
 //Trace debugs only supported on Mega, since it has extra UARTs
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
   trace.begin(&uart, NULL);
-  trace << PSTR("Serial Console: started");
+  trace << PSTR("Serial Console: started") << endl;
   uartHC.begin(115200);
+#else
+  trace.begin(&null_device, NULL);
 #endif
 
 //  uint8_t mode = SLEEP_MODE_IDLE;
@@ -86,7 +102,7 @@ void loop()
 		last_message_timestamp = RTC::millis();
 	else if ( RTC::since(last_message_timestamp) > 5000 ) {
 		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING("No serial messages processed for 5000 ms", NULL);
+		MW_LOG_WARNING(LOG_SERIALROUTER, "No serial messages processed for 5000 ms", NULL);
 	}
 #endif
 }
