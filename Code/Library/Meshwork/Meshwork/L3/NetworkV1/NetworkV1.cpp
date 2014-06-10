@@ -94,7 +94,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	
 	MW_LOG_DEBUG_VP_BYTES(LOG_NETWORKV1, PSTR("L2 DATA TO SEND: "), toSend);
 
-//	for (int i = 0; i < attempts; i ++) {
+	for (int i = 0; i < attempts; i ++) {
 		//TODO consider if we should really check for m_sendAbort in sendWithoutACK because:
 		//1) send is typically quick
 		//2) the return value needs to be changed
@@ -154,7 +154,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			//TODO check if we should use a diff criteria here, since IGNORED = 3, which is a valid byte count too!
 			if (reply_result >= 0) {
 				if (reply_result == OK_MESSAGE_IGNORED) {
-					Watchdog::delay(attemptsDelay + (seq & 0x03) * 32); //delay simple pseudo-random ms before retry
+					//simple pseudo-random delay before retry
+					Watchdog::delay(attemptsDelay + (seq & 0x03) * 32);
 				} else {
 #ifdef SUPPORT_DELIVERY_ROUTED
 					//check if we have the route
@@ -197,15 +198,16 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 					} else {
 						result = OK;//just need to make it > 0 to mark success
 					}
-					//break;
+					//break the retry loop
+					break;
 				}
 			} else {
 				result = m_sendAbort ? Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED : ERROR_ACK_NOT_RECEIVED;
 			}
-		} else {
+		} else {//no need to wait for ACK, so we are OK
 			result = OK;
 		}
-//	}
+	}
 #ifdef SUPPORT_DELIVERY_ROUTED
 	//notify RouteProvider about a failed route
 	if ( result == ERROR_ACK_NOT_RECEIVED && m_advisor != NULL && (msg->nwk_ctrl.delivery & DELIVERY_ROUTED) ) {

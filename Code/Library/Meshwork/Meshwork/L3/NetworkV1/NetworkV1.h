@@ -348,30 +348,32 @@ namespace Meshwork {
 				static const uint8_t PAYLOAD_MAX = 16;
 				/** The maximum ACK payload length. */
 				static const uint8_t ACK_PAYLOAD_MAX = 8;
+				/** Default value for additional send retries. */
+				static const uint8_t DEFAULT_SEND_RETRY = 2;
 
 				/** Network Control byte's ACK flag. */
 				static const uint8_t ACK = 128;
-				/** Timeout for single ACK receive. */
-				static const uint32_t TIMEOUT_ACK_RECEIVE = (uint16_t) 500;
-				/** Timeout for ACK from DIRECT delivery send. */
-				static const uint32_t TIMEOUT_ACK_DIRECT = (uint16_t) 1000;
+				/** Timeout for single ACK receive when sending. */
+				static const uint16_t TIMEOUT_ACK_RECEIVE = (uint16_t) 500;
+				/** Maximum timeout for DIRECT ACK when sending, including retries. */
+				static const uint16_t TIMEOUT_ACK_DIRECT = (uint16_t) TIMEOUT_ACK_RECEIVE * (DEFAULT_SEND_RETRY + 1);
 				/** Wait period before DIRECT delivery retry. */
-				static const uint32_t RETRY_WAIT_DIRECT = (uint16_t) TIMEOUT_ACK_DIRECT * 2;
+				static const uint16_t RETRY_WAIT_DIRECT = (uint16_t) TIMEOUT_ACK_RECEIVE;
 				
 			#ifdef SUPPORT_DELIVERY_ROUTED
 				/** Maximum routing hops for this network design. */
 				static const uint8_t MAX_ROUTING_HOPS = 8;
 				
 				/** Timeout for ACK from ROUTED delivery send. */
-				static const uint32_t TIMEOUT_ACK_ROUTED = (uint16_t) TIMEOUT_ACK_DIRECT * (8 + 0); //max 8 hops + 0 spare cycles
+				static const uint32_t TIMEOUT_ACK_ROUTED = (uint16_t) TIMEOUT_ACK_DIRECT * (MAX_ROUTING_HOPS + 0); //extra 0 spare cycles
 				/** Wait period before ROUTED delivery retry. */
-				static const uint32_t RETRY_WAIT_ROUTED = (uint16_t) TIMEOUT_ACK_DIRECT * 3;
+				static const uint32_t RETRY_WAIT_ROUTED = (uint16_t) TIMEOUT_ACK_RECEIVE;
 				
 			#ifdef SUPPORT_DELIVERY_FLOOD
 				/** Timeout for ACK from FLOOD delivery send. */
-				static const uint32_t TIMEOUT_ACK_FLOOD = (uint16_t) TIMEOUT_ACK_DIRECT * (8 + 2); //max 8 hops + 2 spare cycles, just in case
+				static const uint32_t TIMEOUT_ACK_FLOOD = (uint16_t) TIMEOUT_ACK_DIRECT * (MAX_ROUTING_HOPS + 2); //extra 2 spare cycles, just in case
 				/** Wait period before FLOOD delivery retry. */
-				static const uint32_t RETRY_WAIT_FLOOD = (uint16_t) TIMEOUT_ACK_DIRECT * 4;
+				static const uint32_t RETRY_WAIT_FLOOD = (uint16_t) TIMEOUT_ACK_RECEIVE;
 
 			#endif
 			#endif
@@ -385,7 +387,7 @@ namespace Meshwork {
 			#ifdef SUPPORT_DELIVERY_ROUTED
 						uint8_t maxHops = MAX_ROUTING_HOPS,
 			#endif
-						uint8_t retry = 2):
+						uint8_t retry = DEFAULT_SEND_RETRY):
 							Meshwork::L3::Network(driver, nwkcaps, delivery, retry)
 			#ifdef SUPPORT_DELIVERY_ROUTED
 							, m_advisor(advisor),
