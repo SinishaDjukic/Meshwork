@@ -1,3 +1,4 @@
+
 /**
  * This file is part of the Meshwork project.
  *
@@ -111,10 +112,12 @@ namespace Meshwork {
 		//Wrong parameters code group
 		/** Unknown delivery invalid or incompatible with destination. */
 		static const int8_t ERROR_DELIVERY_METHOD_INVALID = -10;
-		/** Payload to long for delivery. */
+		/** Payload too long for delivery. */
 		static const int8_t ERROR_PAYLOAD_TOO_LONG = -11;
 		/** Retry count is invalid. */
 		static const int8_t ERROR_INVALID_RETRY_COUNT = -12;
+		/** Received ACK too long or RF RECV buffer overflow. */
+		static const int8_t ERROR_ACK_TOO_LONG = -13;
 		
 		//Internal network errors code group
 		/** Message ignored due to max hops reached. */
