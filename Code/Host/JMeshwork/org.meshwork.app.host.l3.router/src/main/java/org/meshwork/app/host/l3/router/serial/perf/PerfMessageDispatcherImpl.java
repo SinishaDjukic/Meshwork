@@ -143,15 +143,17 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
         do {
             if ( result != null ) {
                 switch (result.getCode()) {
-                    case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) result); break;
-                    case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) result); break;
-                    case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) result); break;
                     case Constants.MSGCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) result); sendSeqComplete = true; break;
                     case Constants.MSGCODE_NOK: sendSeqComplete = true; break;
                 }
                 if ( !sendSeqComplete ) {
                     MessageData data = readMessageUntil(consoleReadTimeout, req.seq);
-                    result = adapter.deserialize(data);
+                    if ( data != null )
+                        result = adapter.deserialize(data);
+                    else {
+                        writer.println("[processMRFSend] Error! Message seq number could not be read: "+req.seq);
+                        writer.flush();
+                    }
                 }
             } else {
                 sendSeqComplete = true;
@@ -170,6 +172,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
     }
 
     public void testSendDirect(TestSendDirectStats stats) {
+        writer.println();
         writer.println("--------------------------------------");
         writer.println("Starting test: "+stats.getTestName());
         writer.println();
@@ -191,9 +194,11 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
 
         writer.println("Finished test: "+stats.getTestName());
         writer.println("--------------------------------------");
+        writer.println();
     }
 
     public void testSendRouted(TestSendRoutedStats stats) {
+        writer.println();
         writer.println("--------------------------------------");
         writer.println("Starting test: "+stats.getTestName());
         writer.println();
@@ -243,9 +248,11 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
 
         writer.println("Finished test: "+stats.getTestName());
         writer.println("--------------------------------------");
+        writer.println();
     }
 
     public void testSendFlood(TestSendFloodStats stats) {
+        writer.println();
         writer.println("--------------------------------------");
         writer.println("Starting test: "+stats.getTestName());
         writer.println();
@@ -267,6 +274,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
 
         writer.println("Finished test: "+stats.getTestName());
         writer.println("--------------------------------------");
+        writer.println();
     }
 
 }
