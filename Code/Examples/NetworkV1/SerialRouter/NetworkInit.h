@@ -108,6 +108,7 @@ using namespace Meshwork::L3::NetworkV1;
 #include "Cosa/Wireless/Driver/NRF24L01P.hh"
 
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
+//TODO also check for ARDUINO_MEGA2560
 	#if defined (BOARD_ATMEGA2560)
 	#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
 	#else
