@@ -74,6 +74,13 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                     switch ( message.getCode() ) {
                         case Constants.MSGCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) message); break;
                         case Constants.MSGCODE_RFRECV: processMRFReceive(writer, (MRFReceive) message); break;
+
+                        case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
+                        case Constants.MSGCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
+                        case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
+                        case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
+//                        case Constants.MSGCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) message); break;
+                        case Constants.MSGCODE_NOK: break;
                     }
                 }
                 writer.println();
@@ -124,15 +131,19 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     }
 
     public void processMRFRouteFailed(PrintWriter writer, MRFRouteFailed message) {
+        writer.print("\tRoute failed: "+message);
         RouteList list = routeMap.getRouteList(message.route.dst, true);
         Route route = list.getRoute(message.route, true, config.getNodeid());
         message.route.addStatsFailed();
+        writer.flush();
     }
 
     public void processMRFRouteFound(PrintWriter writer, MRFRouteFound message) {
+        writer.print("\tRoute found: "+message);
         RouteList list = routeMap.getRouteList(message.route.dst, true);
         Route route = list.getRoute(message.route, true, config.getNodeid());
         message.route.addStatsFound();
+        writer.flush();
     }
 
     public void processMCfgRequest(PrintWriter writer, MConfigRequest message) throws Exception {
@@ -159,10 +170,6 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 if ( result != null ) {
                     switch ( result.getCode() ) {
                         case Constants.MSGCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) result); finished = true; break;
-                        case Constants.MSGCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) result); break;
-                        case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) result); break;
-                        case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) result); break;
-                        case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) result); break;
                         case Constants.MSGCODE_OK: writer.println("... [processMRFReceive] MSGCODE_OK received"); finished = true; break;
                         case Constants.MSGCODE_INTERNAL: writer.println("... [processMRFReceive] MSGCODE_INTERNAL received"); finished = true; break;
                         case Constants.MSGCODE_NOK: writer.println("... [processMRFReceive] MSGCODE_NOK received"); finished = true; break;//throw exception?
@@ -259,6 +266,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     }
 
     protected AbstractMessage sendMessageAndReceive(AbstractMessage msg) throws Exception {
+        writer.println();
+        writer.println("[sendMessageAndReceive] Entered");
         readMessagesAndDiscardAll();
         sendMessage(msg);
         writer.println("[sendMessageAndReceive] Receiving with timeout: " + consoleReadTimeout);
@@ -277,7 +286,24 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         else
             writer.println("<Null or timeout>");
         writer.println();
+        writer.println("[sendMessageAndReceive] Exited");
+        writer.println();
         writer.flush();
+        return result;
+    }
+
+    protected boolean autoConfig(AbstractMessage message) {
+        boolean result = false;
+        try {
+            if (isAutoCfgRequestAllowed()) {
+                processMCfgRequest(writer, (MConfigRequest) message);
+                result = true;
+            } else {
+                writer.println("Received MSGCODE_CFGREQUEST, but not allowed!");
+            }
+        } catch (Throwable t) {
+        }
+        readMessagesAndDiscardAll();
         return result;
     }
 
@@ -289,20 +315,25 @@ public class MessageDispatcherImpl implements MessageDispatcher {
             try {
                 count++;
                 temp = transport.readMessage(readTimeout);
-                if (temp != null) {
+                boolean breakout = false;
+                if (temp != null) {//shouldn't happen?
                     if (temp.seq == seq) {
-                        result = temp;
-                        break;
+                        AbstractMessage message = adapter.deserialize(temp);
+                        switch ( message.getCode() ) {
+                            case Constants.MSGCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
+                            case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
+                            case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
+                            case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
+                            case Constants.MSGCODE_CFGREQUEST: breakout = autoConfig(message); break;
+                            default:
+                                result = temp;
+                                breakout = true;
+                                break;
+                        }
                     } else {
                         AbstractMessage message = adapter.deserialize(temp);
                         if (message != null && message.getCode() == Constants.MSGCODE_CFGREQUEST) {
-                            if (isAutoCfgRequestAllowed()) {
-                                processMCfgRequest(writer, (MConfigRequest) message);
-                            } else {
-                                writer.println("Received MSGCODE_CFGREQUEST, but not allowed!");
-                            }
-                            readMessagesAndDiscardAll();
-                            break;
+                            breakout = autoConfig(message);
                         } else {
                             writer.println("<Unexpected message> " + message);
                             if (message != null)
@@ -311,9 +342,16 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                             writer.flush();
                         }
                     }
+                    if ( breakout )
+                        break;
                 }
             } catch (TransportTimeoutException e) {
+                writer.println("*** Transport timeout error: "+e.getMessage());
+                writer.flush();
             } catch (Exception e) {
+                writer.println("*** Read error: "+e.getMessage());
+                e.printStackTrace(writer);
+                writer.flush();
             }
             //invoked here to ensure at least one read in case readTimeout is really low or zero
             if (System.currentTimeMillis() - start >= readTimeout)
