@@ -21,21 +21,31 @@
 #ifndef __EXAMPLES_CONSOLE_H__
 #define __EXAMPLES_CONSOLE_H__
 
+#define __ARDUINO_MEGA__
+#define MW_LOG_ALL_ENABLE true
+#define MW_LOG_DEBUG_ENABLE true
+#define LOG_NETWORKV1  true
+#define LOG_NETWORKSERIAL true
+#define LOG_SERIALROUTER true
+
 #include <stdlib.h>
-#include <ctype.h>
-#include "Cosa/Trace.hh"
-#include "Cosa/Types.h"
-#include "Cosa/IOStream.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
-#include "Cosa/Watchdog.hh"
-#include "Cosa/RTC.hh"
-#include "Cosa/Wireless.hh"
-#include "Cosa/Memory.h"
+#include <Cosa/Trace.hh>
+#include <Cosa/Types.h>
+#include <Cosa/IOStream.hh>
+#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/Watchdog.hh>
+#include <Cosa/RTC.hh>
+#include <Cosa/Wireless.hh>
+
+//BEGIN: Include set for initializing the network
 #include <Meshwork.h>
-#include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkV1/NetworkV1.h"
-#include "Meshwork/L3/NetworkV1/NetworkV1.cpp"
-#include "Meshwork/L3/NetworkV1/RouteCache.h"
+#include <Meshwork/L3/Network.h>
+#include <Meshwork/L3/NetworkV1/NetworkV1.h>
+#include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
+//END: Include set for initializing the network
+
+#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
 #include "Utils/LineReader.h"
 
 #ifndef LOG_CONSOLE
@@ -97,7 +107,7 @@ void setup()
 //  Watchdog::begin();
 //  rf.set_sleep(mode);
   RTC::begin();
-  trace.begin(&uart, PSTR("NetworkV1 Serial Console: started"));
+  trace.begin(&uart, PSTR("Interactive Serial Console: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT;
   trace.println();
 }
