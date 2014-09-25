@@ -29,16 +29,27 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-//SEQ | LEN | MSG
-//MSG = MSGCODE | MSGDATA
-//CFGBASIC = NKWCAPS | DELIVERY | RETRY
-//CFGNWK = NWK ID | NODE ID | CHANNEL
-//RFRECV = SRC | PORT | DATALEN | DATA
-//RFRECVACK = DATALEN | DATA
-//RFSTARTRECV = TIMEOUT
-//RFSEND = DST | PORT | DATALEN | DATA
-//RFSENDACK = DATALEN | DATA
-//RFBCAST = PORT | DATALEN | DATA
+/*
+	SEQ | LEN | MSG
+	MSG = MSGCODE | MSGDATA
+
+    ERRORCODE = <list of possible errors TBD>
+    CFGBASIC = NKWCAPS | DELIVERY | RETRY
+    CFGNWK = CHANNEL ID | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
+    NWKKEY = <char seq>
+    RFRECV = SRC | PORT | DATALEN | DATA
+    RFRECVACK = DATALEN | DATA
+    RFSTARTRECV = TIMEOUT
+    RFSEND = DST | PORT | DATALEN | DATA
+    RFSENDACK = DATALEN | DATA
+    RFBCAST = PORT | DATALEN | DATA
+    RFROUTEFOUND = HOPCOUNT | SRC | <list of HOPs> | DST
+    RFROUTEFAILED = HOPCOUNT | SRC | <list of HOPs> | DST
+    RFGETROUTECOUNT = DST
+    RFGETROUTECOUNTRES = ROUTECOUNT
+    RFGETROUTE = DST | ROUTEINDEX
+    RFGETROUTERES = HOPCOUNT | SRC | <list of HOPs> | DST
+*/
 namespace Meshwork {
 
 	namespace L3 {
@@ -53,7 +64,7 @@ namespace Meshwork {
 				uint8_t seq;
 				uint8_t len;
 				uint8_t code;
-				uint8_t data[];
+				uint8_t* data;
 			  };
 			  
 			  struct data_cfgbasic_t {
@@ -63,21 +74,21 @@ namespace Meshwork {
 			  };
 			  
 			  struct data_cfgnwk_t {
+				uint8_t channel;
 				uint16_t nwkid;
 				uint8_t nodeid;
-				uint8_t channel;
 			  };
 			  
 			  struct data_rfrecv_t {
 				uint8_t src;
 				uint8_t port;
 				uint8_t datalen;
-				uint8_t data[];
+				uint8_t* data;
 			  };
 			  
 			  struct data_rfrecvack_t {
 				uint8_t datalen;
-				uint8_t data[];
+				uint8_t* data;
 			  };
 			  
 			  struct data_rfstartrecv_t {
@@ -88,41 +99,41 @@ namespace Meshwork {
 				uint8_t dst;
 				uint8_t port;
 				uint8_t datalen;
-				uint8_t data[];
+				uint8_t* data;
 			  };
 			  
 			  struct data_rfbcast_t {
 				uint8_t port;
 				uint8_t datalen;
-				uint8_t data[];
+				uint8_t* data;
 			  };  
 			  
 			  //TODO sync structures with below constants and remove unused ones
 			  
 			public:
-				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size! 64 may be too much
 				
 				static const uint8_t MSGCODE_OK 				= 0;
 				static const uint8_t MSGCODE_NOK 				= 1;
 				static const uint8_t MSGCODE_UNKNOWN 			= 2;
 				static const uint8_t MSGCODE_INTERNAL 			= 3;
-				static const uint8_t MSGCODE_CFGBASIC 			= 10;
-				static const uint8_t MSGCODE_CFGNWK 			= 11;
-				static const uint8_t MSGCODE_RFINIT 			= 20;
-				static const uint8_t MSGCODE_RFDEINIT 			= 21;
-				static const uint8_t MSGCODE_RFRECV 			= 22;
-				static const uint8_t MSGCODE_RFRECVACK 			= 23;
-				static const uint8_t MSGCODE_RFSTARTRECV 		= 24;
-				static const uint8_t MSGCODE_RFSEND 			= 25;
-				static const uint8_t MSGCODE_RFSENDACK 			= 26;
-				static const uint8_t MSGCODE_RFBCAST 			= 27;
-				static const uint8_t MSGCODE_CFGREQUEST			= 28;
-				static const uint8_t MSGCODE_RFROUTEFOUND		= 29;//called from MSGCODE_RFRECV
-				static const uint8_t MSGCODE_RFROUTEFAILED		= 30;//called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTECOUNT	= 31;//called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTECOUNTRES	= 32;//response to MSGCODE_RFGETROUTECOUNT
-				static const uint8_t MSGCODE_RFGETROUTE			= 33;//called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTERES		= 34;//response to MSGCODE_RFGETROUTE
+				static const uint8_t MSGCODE_CFGBASIC 			= 10;//0x0A
+				static const uint8_t MSGCODE_CFGNWK 			= 11;//0x0B
+				static const uint8_t MSGCODE_RFINIT 			= 20;//0x14
+				static const uint8_t MSGCODE_RFDEINIT 			= 21;//0x15
+				static const uint8_t MSGCODE_RFRECV 			= 22;//0x16
+				static const uint8_t MSGCODE_RFRECVACK 			= 23;//0x17
+				static const uint8_t MSGCODE_RFSTARTRECV 		= 24;//0x18
+				static const uint8_t MSGCODE_RFSEND 			= 25;//0x19
+				static const uint8_t MSGCODE_RFSENDACK 			= 26;//0x1A
+				static const uint8_t MSGCODE_RFBCAST 			= 27;//0x1B
+				static const uint8_t MSGCODE_CFGREQUEST			= 28;//0x1C
+				static const uint8_t MSGCODE_RFROUTEFOUND		= 29;//0x1D //called from MSGCODE_RFRECV
+				static const uint8_t MSGCODE_RFROUTEFAILED		= 30;//0x1E //called from MSGCODE_RFSEND
+				static const uint8_t MSGCODE_RFGETROUTECOUNT	= 31;//0x1F //called from MSGCODE_RFSEND
+				static const uint8_t MSGCODE_RFGETROUTECOUNTRES	= 32;//0x20 //response to MSGCODE_RFGETROUTECOUNT
+				static const uint8_t MSGCODE_RFGETROUTE			= 33;//0x21 //called from MSGCODE_RFSEND
+				static const uint8_t MSGCODE_RFGETROUTERES		= 34;//0x22 //response to MSGCODE_RFGETROUTE
 				
 				//0-63
 				static const uint8_t ERROR_GENERAL 				= 0;
@@ -140,11 +151,16 @@ namespace Meshwork {
 			protected:
 				Meshwork::L3::Network* m_network;
 				UART* m_serial;
+				uint16_t m_timeout;
 				serialmsg_t* m_currentMsg;
 				NetworkV1::route_t m_currentRoute;
 				uint8_t m_currentRouteHops[NetworkV1::MAX_ROUTING_HOPS];
 				char m_networkKey[Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1];//+1 for NULL
-				
+				uint8_t m_lastMsgSrc;
+				uint8_t m_lastMsgPort;
+				uint8_t m_lastMsgData[NetworkV1::PAYLOAD_MAX];
+				uint16_t m_lastMsgLen;
+		
 				//this saves us ~500 bytes against repetitive putchar calls
 				void writeMessage(uint8_t len, uint8_t* data, bool flush);
 				
@@ -162,9 +178,11 @@ namespace Meshwork {
 				bool processRFBroadcast(serialmsg_t* msg);
 
 			public:
-				NetworkSerial(Meshwork::L3::Network* network, UART* serial):
+				NetworkSerial(Meshwork::L3::Network* network, UART* serial, uint16_t timeout = TIMEOUT_RESPONSE):
 					m_network(network),
-					m_serial(serial)
+					m_serial(serial),
+					m_timeout(timeout),
+					m_lastMsgLen(NetworkV1::PAYLOAD_MAX)
 				{
 					m_networkKey[0] = 0;
 					//TODO should pull into Network class API

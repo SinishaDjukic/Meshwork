@@ -62,11 +62,13 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::waitForBytes(uint8_t count, uint16_
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Code=%d", msg->seq, code);
 	uint8_t data[] = {msg->seq, 1, code};
 	writeMessage(sizeof(data), data, true);
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Error=%d", msg->seq, error);
 	uint8_t data[] = {msg->seq, 2, MSGCODE_NOK, error};
 	writeMessage(sizeof(data), data, true);
 }
@@ -76,6 +78,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::set_address(uint8_t src) {
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
 	uint8_t hopCount = route->hopCount;	
 	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFOUND, hopCount, route->src};
 	writeMessage(sizeof(data), data, false);
@@ -85,6 +88,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
 	uint8_t hopCount = route->hopCount;
 	uint8_t data[] = {m_currentMsg->seq, 4 + hopCount, MSGCODE_RFROUTEFAILED, hopCount, route->src};
 	writeMessage(sizeof(data), data, false);
@@ -94,28 +98,31 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV
 }
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
-	MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Asking for route count... seq=%d, dst=%d", m_currentMsg->seq, dst);
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d", m_currentMsg->seq, dst);
 
 	uint8_t result = 0;
 	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_RFGETROUTECOUNT, dst};
 	writeMessage(sizeof(data), data, true);
 	
-	if ( waitForBytes(4, TIMEOUT_RESPONSE) ) {
+	if ( waitForBytes(4, m_timeout) ) {
 		uint8_t seq = m_serial->getchar();
 		if ( m_currentMsg->seq == seq ) {
 			uint8_t len = m_serial->getchar();
 			uint8_t code = m_serial->getchar();
 			if ( code == MSGCODE_NOK ) {
 				//read the error code and return NULL;
+				//TODO this should actually be an invalid response! so remove...
 				m_serial->getchar();
 			} else if ( code == MSGCODE_RFGETROUTECOUNTRES ) {
 				result = m_serial->getchar();
-				MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Route cound: %d", result);
+				MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Route count: %d", result);
 			} else {
 				//TODO we should always read out the entire message len
-				respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
+				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Wrong response received: %d", code);
+				respondNOK(m_currentMsg, ERROR_GENERAL);
 			}
 		} else {
+			MW_LOG_ERROR(LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SEQSEQ=%d", m_currentMsg->seq, seq);
 			respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 		}
 	} else {
@@ -125,12 +132,13 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 }
 
 Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSerial::get_route(uint8_t dst, uint8_t index) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, index=%d", m_currentMsg->seq, dst, index);
 	Meshwork::L3::NetworkV1::NetworkV1::route_t* result = NULL;
 	
 	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_RFGETROUTE, dst, index};
 	writeMessage(sizeof(data), data, true);
 	
-	if ( waitForBytes(3, TIMEOUT_RESPONSE) ) {
+	if ( waitForBytes(3, m_timeout) ) {
 			uint8_t seq = m_serial->getchar();
 			if ( m_currentMsg->seq == seq ) {
 				uint8_t len = m_serial->getchar();
@@ -138,13 +146,15 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 				if ( code == MSGCODE_NOK ) {
 					//read the error code and return NULL;
 					m_serial->getchar();
+					//TODO improve error handling here
+					m_currentRoute.hopCount = 0;
 				} else if ( code == MSGCODE_RFGETROUTERES ) {
 					uint8_t hopCount = 0;
 					//some magic goes here...
 					//first wait ensure we have at least 3 bytes (HOPCOUNT = 0 | SRC | DST), so that we can read the hopCount value
 					//second wait ensures we have at least 3 + hopCount bytes (HOPCOUNT | SRC | <list> | DST)
-					if ( waitForBytes(3, TIMEOUT_RESPONSE) && 
-						 waitForBytes(3 + (hopCount = m_serial->getchar()) > 0 ? hopCount : 0, TIMEOUT_RESPONSE)) {
+					if ( waitForBytes(3, m_timeout) && 
+						 waitForBytes(3 + (hopCount = m_serial->getchar()) > 0 ? hopCount : 0, m_timeout)) {
 						m_currentRoute.hopCount = hopCount;
 						m_currentRoute.src = m_serial->getchar();
 						for ( int i = 0; i < hopCount; i ++ )
@@ -160,6 +170,7 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 					respondNOK(m_currentMsg, ERROR_ILLEGAL_STATE);
 				}
 			} else {
+				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SEQSEQ=%d", m_currentMsg->seq, seq);
 				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
 	} else {
@@ -169,13 +180,14 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData) {
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, DataLen=%d", msg->seq, datalen);
 	uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
 	writeMessage(sizeof(data), data, false);
 	writeMessage(datalen, data, true);
 }
 
 bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
-	bool result = false;//TODO check if we need the result at all
+	bool result = false;
 	if ( m_serial->available() >= 3 ) {
 		data_cfgbasic_t* cfgbasic;
 		cfgbasic = (data_cfgbasic_t*) msg->data;
@@ -186,6 +198,8 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 		m_network->setNetworkCaps(cfgbasic->nwkcaps);
 		m_network->setDelivery(cfgbasic->delivery);
 		m_network->setRetry(cfgbasic->retry);
+		
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "NwkCaps=%d, Delivery=%d, Retry=%d", cfgbasic->nwkcaps, cfgbasic->delivery, cfgbasic->retry);
 		
 		respondWCode(msg, MSGCODE_OK);
 		result = true;
@@ -206,7 +220,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 		m_network->setChannel(cfgnwk->channel);
 		m_network->setNetworkID(cfgnwk->nwkid);
 		m_network->setNodeID(cfgnwk->nodeid);
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "Configuring node: NodeID=%d, NwkID=%d, Channel=%d", cfgnwk->nodeid, cfgnwk->nwkid, cfgnwk->channel);
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "NodeID=%d, NwkID=%d, Channel=%d", cfgnwk->nodeid, cfgnwk->nwkid, cfgnwk->channel);
 		size_t keyLen = m_serial->getchar();
 		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
 			m_networkKey[0] = 0;
@@ -229,12 +243,14 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 
 bool Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(serialmsg_t* msg) {
 	bool result = m_network->begin();
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
 	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return result;
 }
 
 bool Meshwork::L3::NetworkV1::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
 	bool result = m_network->end();
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
 	result ? respondWCode(msg, MSGCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return result;
 }
@@ -243,7 +259,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
-	MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Src=%d, Port=%d, Len=%d", src, port, len);
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Port=%d, SerLen=%d", m_currentMsg->seq, src, port, len);
 	if ( m_currentMsg != NULL ) {//must be the case, but need a sanity check
 		MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Sending RFRECV", NULL);
 		//first, send RFRECV
@@ -251,9 +267,9 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 		writeMessage(sizeof(data), data, false);
 		writeMessage(len, (uint8_t*)buf, true);
 		
-		if ( waitForBytes(4, TIMEOUT_RESPONSE) )  {
+		if ( waitForBytes(4, m_timeout) )  {
 			uint8_t seq = m_serial->getchar();
-			MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Response to RFRECV, seq=%d", seq);
+			MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Response to RFRECV, SERSEQ=%d", seq);
 			if ( m_currentMsg->seq == seq ) {
 				uint8_t len = m_serial->getchar();
 				uint8_t code = m_serial->getchar();
@@ -261,7 +277,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 
 				uint8_t reslen = m_serial->getchar();
 				MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Response to RFRECV, reslen=%d", reslen);
-				if ( reslen >=0 && reslen <= lenACK && waitForBytes(reslen, TIMEOUT_RESPONSE) ) {
+				if ( reslen >=0 && reslen <= lenACK && waitForBytes(reslen, m_timeout) ) {
 					for ( int i = 0; i < reslen; i ++ )
 						((char*) bufACK)[i] = m_serial->getchar();
 //					respondWCode(m_currentMsg, MSGCODE_OK);
@@ -271,7 +287,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 //					respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
 				}
 			} else {
-				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Response to RFRECV, seq WRONG", NULL);
+				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Response to RFRECV, serial seq WRONG", NULL);
 //				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
 		} else {
@@ -294,12 +310,12 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg
 								(uint32_t) m_serial->getchar() << 16 |
 								(uint32_t) m_serial->getchar() << 8 |
 								(uint32_t) m_serial->getchar();
-		uint8_t src, port;
-		size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
-		uint8_t* data[dataLenMax];
-//		m_currentMsg = msg;
-		int res = m_network->recv(src, port, &data, dataLenMax, timeout, this);
-//		m_currentMsg = NULL;
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "Receiving with timeout=%l", timeout);
+//not needed here		m_currentMsg = msg;
+
+		int res = m_network->recv(m_lastMsgSrc, m_lastMsgPort, &m_lastMsgData, m_lastMsgLen, timeout, this);
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "Receive done. SerResult=%d, Src=%d, Port=%d", res, m_lastMsgSrc, m_lastMsgPort);
+//not needed here		m_currentMsg = NULL;
 		if ( res == Meshwork::L3::Network::OK ) {
 			respondWCode(msg, MSGCODE_OK);
 		} else if ( res == Meshwork::L3::Network::OK_MESSAGE_INTERNAL ) {
@@ -318,26 +334,32 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg
 
 bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 	bool result = false;
+	MW_LOG_INFO(LOG_NETWORKSERIAL, "Entered", NULL);
 	if ( m_serial->available() >= 3 ) {//minimal msg len
 		data_rfsend_t* rfsend;
 		rfsend = (data_rfsend_t*) msg->data;
 		uint8_t dst = rfsend->dst = m_serial->getchar();
 		uint8_t port = rfsend->port = m_serial->getchar();
 		uint8_t datalen = rfsend->datalen = m_serial->getchar();
-		MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Seq=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
-//		if ( waitForBytes(datalen, TIMEOUT_RESPONSE) ) {
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
+//		if ( waitForBytes(datalen, m_timeout) ) {
+		MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Reading data to send...", NULL);
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfsend->data[i] = m_serial->getchar();
 			//TODO debug print the array
 			size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
-			uint8_t bufACK[maxACKLen];
+			static uint8_t bufACK[NetworkV1::ACK_PAYLOAD_MAX];
+			MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Sending data...", NULL);
 			int res = m_network->send(dst, port, rfsend->data, datalen, bufACK, maxACKLen);
 			if ( res == Meshwork::L3::Network::OK ) {
+				MW_LOG_INFO(LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, datalen);
+//				MW_LOG_DEBUG_ARRAY(LOG_NETWORKSERIAL, PSTR("Response data: "), bufACK, datalen);
 				uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
 				writeMessage(sizeof(data), data, false);
 				writeMessage(datalen, bufACK, true);
 				result = true;
 			} else {
+				MW_LOG_INFO(LOG_NETWORKSERIAL, "Send error. Code=%d", res);
 				respondNOK(msg, ERROR_SEND);
 			}
 //		} else {
@@ -356,6 +378,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(serialmsg_t* msg
 		rfbcast = (data_rfbcast_t*) msg->data;
 		uint8_t port = rfbcast->port = m_serial->getchar();
 		uint8_t datalen = rfbcast->datalen = m_serial->getchar();
+		MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Port=%d, DataLen=%d", msg->seq, port, datalen);
 		if ( m_serial->available() >= datalen ) {
 			for ( int i = 0; i < datalen; i ++ )//ok, this can be optimized
 				rfbcast->data[i] = m_serial->getchar();
@@ -389,11 +412,10 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 		if ( len >= 0 ) {
 			//needed to make sure we have enough data arrived in the buffer for the entire command
 			int msgcode = msg->code = m_serial->getchar();//msgcode
-			//TODO add support for send abort
 			m_currentMsg = msg;
 			MW_LOG_DEBUG_TRACE(LOG_NETWORKSERIAL) << endl << endl << endl;
-			MW_LOG_INFO(LOG_NETWORKSERIAL, "PROCESSING SERIAL MESSAGE: Seq=%d, Len=%d, Code=%d", msg->seq, len, msgcode);
-			if ( waitForBytes(len - 1, TIMEOUT_RESPONSE) ) {
+			MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Len=%d, Code=%d", msg->seq, len, msgcode);
+			if ( waitForBytes(len - 1, m_timeout) ) {
 				switch ( msgcode ) {
 					case MSGCODE_CFGBASIC: processCfgBasic(msg); break;
 					case MSGCODE_CFGNWK: processCfgNwk(msg); break;
@@ -415,7 +437,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 				result = false;
 			}
 		} else {
-			MW_LOG_ERROR(LOG_NETWORKSERIAL, "MSGCODE_UNKNOWN: Seq=%d, Len=%d", msg->seq, len);
+			MW_LOG_ERROR(LOG_NETWORKSERIAL, "MSGCODE_UNKNOWN: SERSEQ=%d, Len=%d", msg->seq, len);
 			respondWCode(msg, MSGCODE_UNKNOWN);
 			result = false;
 		}
