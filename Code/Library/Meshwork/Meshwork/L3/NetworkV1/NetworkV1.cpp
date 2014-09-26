@@ -463,6 +463,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 
 	uint8_t data[ACK_PAYLOAD_MAX];
 	uint8_t src, port;//use local vars to reduce code size
+
 	int dataLen = m_driver->recv(src, port, &data, PAYLOAD_MAX, ms);
 	int result = dataLen;
 	srcA = src;
@@ -470,7 +471,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 	
 	if (result > 0) { //not timeouted, no crc error
 		MW_LOG_INFO(LOG_NETWORKV1, "Received data, len: %d", result);
-		MW_LOG_DEBUG(LOG_NETWORKV1, "src=%d, port=%d", srcA, portA);
+		MW_LOG_DEBUG(LOG_NETWORKV1, "src=%d, port=%d", src, port);
 		MW_LOG_DEBUG_ARRAY(LOG_NETWORKV1, PSTR("L2 DATA RECV: "), data, result);
 
 		univmsg_t recv_msg;
@@ -485,6 +486,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 				if ( len > 0 )
 					memcpy(newData, recv_msg.msg_direct.data, len);
 				MW_LOG_INFO(LOG_NETWORKV1, "Payload len: %d", len);
+				
 				result = sendDirectACK(ackProvider, &recv_msg, src, port);
 				result = result > 0 ? OK : result;
 			}
@@ -501,6 +503,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 					if ( len > 0 )
 						memcpy(newData, recv_msg.msg_routed.data, len);
 					MW_LOG_INFO(LOG_NETWORKV1, "Payload len: %d", len);
+
 					result = sendRoutedACK(ackProvider, &recv_msg, src, port);
 					result = result > 0 ? OK : result;
 				} else {//re-route, but first check and update breadcrumbs. if ACK use reverse order to determine next dest
