@@ -23,6 +23,12 @@
 
 #include "Config.h"
 
+#if FULL_DEBUG != false
+	#define LOG_ROUTER	true
+#else
+	#define LOG_ROUTER	false
+#endif
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
@@ -40,8 +46,6 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
-#ifndef LOG_ROUTER
-#define LOG_ROUTER  true
 #endif
 
 

@@ -23,6 +23,12 @@
 
 #include "Config.h"
 
+#if FULL_DEBUG != false
+	#define LOG_BEACON	true
+#else
+	#define LOG_BEACON	false
+#endif
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
@@ -40,8 +46,7 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
-#ifndef LOG_BEACON
-#define LOG_BEACON  true
+
 #endif
 
 static const uint16_t 	BEACON_NWK_ID 		= 1;

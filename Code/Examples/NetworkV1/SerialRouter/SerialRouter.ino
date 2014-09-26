@@ -23,6 +23,12 @@
 
 #include "Config.h"
 
+#if FULL_DEBUG != false
+	#define LOG_SERIALROUTER	true
+#else
+	#define LOG_SERIALROUTER	false
+#endif
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
@@ -71,8 +77,7 @@ void setup()
   trace.begin(&null_device, NULL);
 #endif
 
-//  uint8_t mode = SLEEP_MODE_IDLE;
-  Watchdog::begin(16);
+  Watchdog::begin();
   RTC::begin();
   
   networkSerial.initSerial();

@@ -45,28 +45,29 @@
 #warning ARDUINO_MEGA2560
 #endif
 
+
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
 	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__) || defined (ARDUINO_MEGA2560)
-	#warning "Mega selected"
+		#warning "Mega selected"
 		#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
-		#define FULL_DEBUG
+		#define FULL_DEBUG		true
 	#else
 		#define EXAMPLE_BOARD	EXAMPLE_BOARD_UNO
 	#endif
 #endif
 
 //One-stop-shop for debug flags. Just uncomment if you don't want debugs on the Mega
-//#undefine FULL_DEBUG
+//#define FULL_DEBUG	false
 
 #if defined (FULL_DEBUG)
 	#warning "Full debugs enabled"
-	#define MW_LOG_ALL_ENABLE 	true
-	#define MW_LOG_DEBUG_ENABLE	true
-	#define LOG_NETWORKV1		true
-	#define LOG_NETWORKSERIAL	true
-	#define LOG_SERIALROUTER	true
-	#define LOG_NETWORKINIT		true
 #endif
+
+#define MW_LOG_ALL_ENABLE 	FULL_DEBUG
+#define MW_LOG_DEBUG_ENABLE	FULL_DEBUG
+#define LOG_NETWORKV1		FULL_DEBUG
+#define LOG_NETWORKSERIAL	FULL_DEBUG
+#define LOG_NETWORKINIT		FULL_DEBUG
 
 #endif
 
