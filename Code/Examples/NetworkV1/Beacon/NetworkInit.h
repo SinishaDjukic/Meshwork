@@ -37,6 +37,10 @@ using namespace Meshwork::L3::NetworkV1;
 //////////////////////// BEGIN: CONFIGURATION SECTION ////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
+#ifndef LOG_NETWORKINIT
+#define LOG_NETWORKINIT  true
+#endif
+
 //Define the used cache variant. Uncomment your combination
 #if !defined(EXAMPLE_ROUTECACHE)
 #define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_NONE
@@ -104,7 +108,7 @@ using namespace Meshwork::L3::NetworkV1;
 #include "Cosa/Wireless/Driver/NRF24L01P.hh"
 
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
-	#if defined (__ARDUINO_MEGA__)
+	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__)
 	#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
 	#else
 	#define EXAMPLE_BOARD	EXAMPLE_BOARD_UNO

@@ -1,7 +1,7 @@
 /**
  * This file is part of the Meshwork project.
  *
- * Copyright (C) 2013, Sinisha Djukic
+ * Copyright (C) 2014, Sinisha Djukic
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -108,7 +108,7 @@ using namespace Meshwork::L3::NetworkV1;
 #include "Cosa/Wireless/Driver/NRF24L01P.hh"
 
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
-	#if defined (BOARD_ATMEGA2560)
+	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__)
 	#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
 	#else
 	#define EXAMPLE_BOARD	EXAMPLE_BOARD_UNO
