@@ -60,57 +60,6 @@ namespace Meshwork {
 										 Meshwork::L3::NetworkV1::NetworkV1::RouteProvider {
 
 			public:
-			  struct serialmsg_t {
-				uint8_t seq;
-				uint8_t len;
-				uint8_t code;
-				uint8_t* data;
-			  };
-			  
-			  struct data_cfgbasic_t {
-				uint8_t nwkcaps;
-				uint8_t delivery;
-				uint8_t retry;
-			  };
-			  
-			  struct data_cfgnwk_t {
-				uint8_t channel;
-				uint16_t nwkid;
-				uint8_t nodeid;
-			  };
-			  
-			  struct data_rfrecv_t {
-				uint8_t src;
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t* data;
-			  };
-			  
-			  struct data_rfrecvack_t {
-				uint8_t datalen;
-				uint8_t* data;
-			  };
-			  
-			  struct data_rfstartrecv_t {
-				uint32_t timeout;
-			  };
-			  
-			  struct data_rfsend_t {
-				uint8_t dst;
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t* data;
-			  };
-			  
-			  struct data_rfbcast_t {
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t* data;
-			  };  
-			  
-			  //TODO sync structures with below constants and remove unused ones
-			  
-			public:
 				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size! 64 may be too much
 				
 				static const uint8_t MSGCODE_OK 				= 0;
@@ -148,6 +97,57 @@ namespace Meshwork {
 				
 				static const uint16_t TIMEOUT_RESPONSE 			= 5000;
 				
+			public:
+			  struct serialmsg_t {
+				uint8_t seq;
+				uint8_t len;
+				uint8_t code;
+				uint8_t data[MAX_SERIALMSG_LEN];
+			  };
+			  
+			  struct data_cfgbasic_t {
+				uint8_t nwkcaps;
+				uint8_t delivery;
+				uint8_t retry;
+			  };
+			  
+			  struct data_cfgnwk_t {
+				uint8_t channel;
+				uint16_t nwkid;
+				uint8_t nodeid;
+			  };
+			  
+			  struct data_rfrecv_t {
+				uint8_t src;
+				uint8_t port;
+				uint8_t datalen;
+				uint8_t data[NetworkV1::PAYLOAD_MAX];
+			  };
+			  
+			  struct data_rfrecvack_t {
+				uint8_t datalen;
+				uint8_t data[NetworkV1::ACK_PAYLOAD_MAX];
+			  };
+			  
+			  struct data_rfstartrecv_t {
+				uint32_t timeout;
+			  };
+			  
+			  struct data_rfsend_t {
+				uint8_t dst;
+				uint8_t port;
+				uint8_t datalen;
+				uint8_t data[NetworkV1::PAYLOAD_MAX];
+			  };
+			  
+			  struct data_rfbcast_t {
+				uint8_t port;
+				uint8_t datalen;
+				uint8_t data[NetworkV1::PAYLOAD_MAX];
+			  };  
+			  
+			  //TODO sync structures with below constants and remove unused ones
+			  
 			protected:
 				Meshwork::L3::Network* m_network;
 				UART* m_serial;
@@ -160,6 +160,7 @@ namespace Meshwork {
 				uint8_t m_lastMsgPort;
 				uint8_t m_lastMsgData[NetworkV1::PAYLOAD_MAX];
 				uint16_t m_lastMsgLen;
+				uint8_t m_lastAckData[NetworkV1::ACK_PAYLOAD_MAX];
 		
 				//this saves us ~500 bytes against repetitive putchar calls
 				void writeMessage(uint8_t len, uint8_t* data, bool flush);
