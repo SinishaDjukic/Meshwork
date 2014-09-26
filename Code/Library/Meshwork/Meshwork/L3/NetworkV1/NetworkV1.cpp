@@ -177,20 +177,20 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 				}
 #endif
 				reply_len = reply_result >= 0 && reply_len > 0 ? get_msg_payload_len(&reply_msg) : 0;
+				MW_LOG_DEBUG(LOG_NETWORKV1, "Reply len=%d", reply_len);
 				if ( reply_len > 0 ) {
 					//copy only the L3 payload, which is the ACK data
-					uint8_t dataLen = 0;
 					if ( reply_len <= maxACKLen ) {
-						dataLen = get_msg_payload_len(&reply_msg);
-						memcpy(bufACK, get_msg_payload(&reply_msg), dataLen);
+						memcpy(bufACK, get_msg_payload(&reply_msg), reply_len);
+						MW_LOG_DEBUG_ARRAY(LOG_NETWORKV1, PSTR("Reply data: "), dataACK, reply_len);
 						result = OK;
 					} else {
 						result = OK_WARNING_ACK_TOO_LONG;
 					}
-					maxACKLen = dataLen;
 				} else {
 					result = OK;//just need to make it > 0 to mark success
 				}
+				maxACKLen = reply_len;
 				break;
 			} else { //some other error happened
 				if ( reply_result == -1 ) {//lenACK or RF RCV buffer overflow; break loop
