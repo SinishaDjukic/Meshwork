@@ -351,12 +351,12 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 			MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Sending data...", NULL);
 			int res = m_network->send(dst, port, rfsend->data, datalen, m_lastAckData, maxACKLen);
 			if ( res == Meshwork::L3::Network::OK ) {
-				MW_LOG_INFO(LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, datalen);
+				MW_LOG_INFO(LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, maxACKLen);
 				//TODO check why m_lastAckData always has zeros
-				MW_LOG_DEBUG_ARRAY(LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, datalen);
-				uint8_t data[] = {msg->seq, 2 + datalen, MSGCODE_RFSENDACK, datalen};
+				MW_LOG_DEBUG_ARRAY(LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, maxACKLen);
+				uint8_t data[] = {msg->seq, 2 + maxACKLen, MSGCODE_RFSENDACK, maxACKLen};
 				writeMessage(sizeof(data), data, false);
-				writeMessage(datalen, m_lastAckData, true);
+				writeMessage(maxACKLen, m_lastAckData, true);
 				result = true;
 			} else {
 				MW_LOG_INFO(LOG_NETWORKSERIAL, "Send error. Code=%d", res);
