@@ -21,17 +21,7 @@
 #ifndef __EXAMPLES_SERIALROUTER_H__
 #define __EXAMPLES_SERIALROUTER_H__
 
-
-#define MW_LOG_ALL_ENABLE false
-#define MW_LOG_DEBUG_ENABLE false
-#define LOG_NETWORKV1  false
-#define LOG_NETWORKSERIAL false
-#define LOG_SERIALROUTER true
-
-
-#ifndef LOG_SERIALROUTER
-#define LOG_SERIALROUTER true
-#endif
+#include "Config.h"
 
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
@@ -52,7 +42,6 @@
 
 #include "Meshwork/L3/NetworkV1/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
-#include "Utils/LineReader.h"
 
 //Setup extra UART on Mega
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
@@ -76,7 +65,7 @@ void setup()
 //Trace debugs only supported on Mega, since it has extra UARTs
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
   trace.begin(&uart, NULL);
-  trace << PSTR("Serial Console: started") << endl;
+  trace << PSTR("Serial Router: started") << endl;
   uartHC.begin(115200);
 #else
   trace.begin(&null_device, NULL);
@@ -89,14 +78,13 @@ void setup()
   networkSerial.initSerial();
 }
 
+NetworkSerial::serialmsg_t msg;
+bool processed;
 uint32_t last_message_timestamp = 0;
 
 void loop()
 {
-	static uint8_t databuf[NetworkSerial::MAX_SERIALMSG_LEN];
-	static NetworkSerial::serialmsg_t msg;
-	*msg.data = *databuf;
-	bool processed = networkSerial.processOneMessage(&msg);
+	processed = networkSerial.processOneMessage(&msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 	if ( processed )
 		last_message_timestamp = RTC::millis();

@@ -28,18 +28,9 @@ using namespace Meshwork::L3::NetworkV1;
 #define EXAMPLE_ROUTECACHE_RAM 			1
 #define EXAMPLE_ROUTECACHE_PERSISTENT	2
 
-#define EXAMPLE_BOARD_AUTO				0
-#define EXAMPLE_BOARD_RBBB				1
-#define EXAMPLE_BOARD_MEGA				2
-#define EXAMPLE_BOARD_UNO				3
-
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////// BEGIN: CONFIGURATION SECTION ////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-
-#ifndef LOG_NETWORKINIT
-#define LOG_NETWORKINIT  true
-#endif
 
 //Define the used cache variant. Uncomment your combination
 #if !defined(EXAMPLE_ROUTECACHE)
@@ -52,19 +43,9 @@ using namespace Meshwork::L3::NetworkV1;
 //#define EXAMPLE_NWKCAPS NetworkV1::NWKCAPS_SLEEPING
 #define EXAMPLE_NWKCAPS NetworkV1::NWKCAPS_ROUTER
 
-//Choose board flavor
-#if !defined(EXAMPLE_BOARD)
-//Uncomment to use real bare-bone board (atmega328)
-//#define EXAMPLE_BOARD EXAMPLE_BOARD_RBBB
-//Otherwise auto-detect Mega and Uno
-#define EXAMPLE_BOARD EXAMPLE_BOARD_AUTO
-#endif
-
 //////////////////////////////////////////////////////////////////////////////
 ////////////////////////   END: CONFIGURATION SECTION ////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-
-
 
 ////////////////////////  IMPL: INITIALIZE ROUTE CACHE ///////////////////////
 #if EXAMPLE_ROUTECACHE != EXAMPLE_ROUTECACHE_NONE
@@ -107,19 +88,12 @@ using namespace Meshwork::L3::NetworkV1;
 
 #include "Cosa/Wireless/Driver/NRF24L01P.hh"
 
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
-	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__)
-	#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
-	#else
-	#define EXAMPLE_BOARD	EXAMPLE_BOARD_UNO
-	#endif
-#endif
-
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_RBBB
 NRF24L01P rf(0x0001, 0x01,
 	    Board::DigitalPin(Board::D7), 
 	    Board::DigitalPin(Board::D8), 
 	    Board::ExternalInterruptPin(Board::EXT0));
+
 #elif EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 NRF24L01P rf(0x0001, 0x01,
 	    Board::DigitalPin(Board::D53), 

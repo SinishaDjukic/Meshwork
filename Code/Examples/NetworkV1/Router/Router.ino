@@ -21,6 +21,8 @@
 #ifndef __EXAMPLES_ROUTER_H__
 #define __EXAMPLES_ROUTER_H__
 
+#include "Config.h"
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>

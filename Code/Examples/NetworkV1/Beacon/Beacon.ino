@@ -21,6 +21,8 @@
 #ifndef __EXAMPLES_BEACON_H__
 #define __EXAMPLES_BEACON_H__
 
+#include "Config.h"
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
