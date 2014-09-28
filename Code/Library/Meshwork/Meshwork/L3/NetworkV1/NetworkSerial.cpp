@@ -126,6 +126,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 			respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 		}
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "No response to MSGCODE_RFGETROUTECOUNT, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
@@ -163,6 +164,7 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 						m_currentRoute.dst = m_serial->getchar();
 						result = &m_currentRoute;
 					} else {
+						MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough hops in MSGCODE_RFGETROUTE, ERROR_INSUFFICIENT_DATA", NULL);
 						respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
 					}	
 				} else {
@@ -174,6 +176,7 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 				respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "No response to MSGCODE_RFGETROUTE, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(m_currentMsg, ERROR_INSUFFICIENT_DATA);
 	}	
 	return result;
@@ -204,6 +207,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(serialmsg_t* msg) {
 		respondWCode(msg, MSGCODE_OK);
 		result = true;
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Config Basic, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
@@ -236,6 +240,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 			result = false;
 		}
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Config Network, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
@@ -327,6 +332,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(serialmsg_t* msg
 		}
 		result = true;
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Start Recv, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
@@ -366,6 +372,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(serialmsg_t* msg) {
 //			respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 //		}
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Send, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;
@@ -390,9 +397,11 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(serialmsg_t* msg
 				respondNOK(msg, ERROR_BCAST);
 			}
 		} else {
+			MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data to send in Broadcast, ERROR_INSUFFICIENT_DATA", NULL);
 			respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 		}
 	} else {
+		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Broadcast, ERROR_INSUFFICIENT_DATA", NULL);
 		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 	}
 	return result;

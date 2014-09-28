@@ -177,7 +177,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 				}
 #endif
 				reply_len = reply_result >= 0 && reply_len > 0 ? get_msg_payload_len(&reply_msg) : 0;
-				MW_LOG_DEBUG(LOG_NETWORKV1, "Reply len=%d", reply_len);
+				
 				if ( reply_len > 0 ) {
 					//copy only the L3 payload, which is the ACK data
 					if ( reply_len <= maxACKLen ) {
