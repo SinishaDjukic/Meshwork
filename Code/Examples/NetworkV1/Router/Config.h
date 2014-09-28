@@ -45,6 +45,7 @@
 #warning ARDUINO_MEGA2560
 #endif
 
+#define FULL_DEBUG	false
 
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
 	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__) || defined (ARDUINO_MEGA2560)

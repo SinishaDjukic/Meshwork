@@ -46,8 +46,6 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
-#endif
-
 
 static const uint16_t 	ROUTER_NWK_ID 		= 1;
 static const uint8_t 	ROUTER_CHANNEL_ID 	= 0;
