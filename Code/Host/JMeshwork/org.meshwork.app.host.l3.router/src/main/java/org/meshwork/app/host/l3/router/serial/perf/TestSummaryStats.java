@@ -24,22 +24,7 @@ public class TestSummaryStats {
         writer.println("-------------------");
         for ( int i = 0; i < tests; i ++ ) {
             TestStats stats = testStats.get(i);
-            int runCount = stats.getRunCount();
-            int runTime = stats.getRunTime();
-            writer.println("Test Name: "+stats.getTestName());
-            writer.println("\t    Success count: "+stats.getSuccessCount());
-            writer.println("\t       Fail count: "+stats.getFailCount());
-            if ( runCount > 0 ) {
-                writer.println("\t        Run count: "+runCount);
-                writer.println("\t Success rate (%): "+100 * (runCount == 0 ? 0f : ((float)stats.getSuccessCount() / runCount)));
-            }
-            if ( runTime > 0 ) {
-                writer.println("\t     Run time (s): "+runTime);
-                writer.println("\tSend rate (msg/s): "+(runTime == 0 ? 0f : ((float)stats.getRunCount() / runTime)));
-            }
-            writer.println("\t      Description: "+stats.getTestDescription());
-            writer.println("\t          Details: "+stats.getTestDetails());
-            writer.println();
+            stats.printTestStats(writer);
         }
     }
 
