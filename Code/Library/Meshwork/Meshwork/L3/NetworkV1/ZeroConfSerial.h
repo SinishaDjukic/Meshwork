@@ -56,15 +56,15 @@ namespace Meshwork {
 				struct reporting_t {
 					uint8_t targetnodeid;
 					uint8_t repflags;
-				}
+				};
 			
 				class ZeroConfListener {
-				public:
-					//called after Meshwork object has been updated
-					//the listener must decide if/when to call Meshwork::end/begin expicitly!
-					virtual void network_updated(route_t* route) = 0;
-					//called to deliver the new reporting flags
-					virtual void reporting_updated(reporting_t* reporting) = 0;
+					public:
+						//called after Meshwork object has been updated
+						//the listener must decide if/when to call Meshwork::end/begin expicitly!
+						virtual void network_updated() = 0;
+						//called to deliver the new reporting flags
+						virtual void reporting_updated(reporting_t* reporting) = 0;
 				};
 				
 				struct serialmsg_t {
@@ -124,6 +124,7 @@ namespace Meshwork {
 				UART* m_serial;
 				char* m_networkKey;//Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1
 				char* m_sernum;
+				uint8_t m_sernumlen;
 				ZeroConfListener* m_listener;
 				uint16_t m_timeout;
 				bool m_initmode;
@@ -152,6 +153,7 @@ namespace Meshwork {
 					m_serial(serial),
 					m_networkKey(networkKey),
 					m_sernum(sernum),
+					m_sernumlen(0),
 					m_listener(listener),
 					m_timeout(timeout),
 					m_initmode(false)
