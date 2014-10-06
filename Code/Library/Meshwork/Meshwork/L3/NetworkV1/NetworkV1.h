@@ -68,9 +68,8 @@
  NWKID | 0xFF	| DSTPORT | SEQ | DELIVERY_FLOOD			| FLOOD_INFO | (DataL3)
  NWKID | 0xFF	| DSTPORT | SEQ | DELIVERY_FLOOD			| Node Count X | SRCID | Node 1 | … | Node X | DSTID | (DataL3)
  
- 7) DELIVERY_FLOOD + ACK: Singlecast Only
- NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| FLOOD_INFO | (DataL3)
- NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| Node Count X | SRCID | Node 1 | … | Node X | DSTID | (DataL3)
+ 7) DELIVERY_FLOOD + ACK: Singlecast Only (used ONLY to enable fast fail of FLOOD sends)
+ NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| <Empty>
 */
 
 namespace Meshwork {
