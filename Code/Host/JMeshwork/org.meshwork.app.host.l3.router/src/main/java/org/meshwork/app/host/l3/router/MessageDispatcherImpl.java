@@ -295,15 +295,15 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     protected boolean autoConfig(AbstractMessage message) {
         boolean result = false;
         try {
-            if (isAutoCfgRequestAllowed()) {
-                processMCfgRequest(writer, (MConfigRequest) message);
-                result = true;
-            } else {
-                writer.println("Received MSGCODE_CFGREQUEST, but not allowed!");
-            }
+            result = isAutoCfgRequestAllowed();
+            processMCfgRequest(writer, (MConfigRequest) message);
         } catch (Throwable t) {
         }
         readMessagesAndDiscardAll();
+        if ( !result ) {
+            writer.println("Received MSGCODE_CFGREQUEST, but not allowed! Test run will fail!");
+            throw new IllegalStateException("Received MSGCODE_CFGREQUEST, but not allowed! Test run will fail!");
+        }
         return result;
     }
 
