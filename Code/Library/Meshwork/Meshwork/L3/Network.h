@@ -128,6 +128,10 @@ namespace Meshwork {
 		static const int8_t ERROR_ACK_NOT_RECEIVED = -30;
 		/** Sending an ACK has failed. */
 		static const int8_t ERROR_ACK_SEND_FAILED = -31;
+#ifdef SUPPORT_DELIVERY_FLOOD
+		/** Flood message not received by neighbours. */
+		static const int8_t FLOOD_NOT_RECEIVED_BY_NEIGHBOURS = -32;
+#endif
 		
 		//Routing errors code group
 		/** No known routes to the destination. */
