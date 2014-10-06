@@ -93,9 +93,9 @@ void loop()
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 	if ( processed )
 		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > 5000 ) {
+	else if ( RTC::since(last_message_timestamp) > SERIAL_NEXT_MSG_TIMEOUT ) {
 		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING(LOG_SERIALROUTER, "No serial messages processed for 5000 ms", NULL);
+		MW_LOG_WARNING(LOG_SERIALROUTER, "No serial messages processed for %d ms", SERIAL_NEXT_MSG_TIMEOUT);
 	}
 #endif
 }
