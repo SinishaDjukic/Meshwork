@@ -97,15 +97,19 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	vp = get_iovec_msg(vp, msg);
 	
 	MW_LOG_DEBUG_VP_BYTES(LOG_NETWORKV1, PSTR("L2 DATA TO SEND: "), toSend);
-
+	
 	for (int i = 0; i < attempts; i ++) {
+		#ifdef SUPPORT_DELIVERY_FLOOD
+			bool oneFloodACK = false;
+		#endif
+
 		//Currently, we don't differentiate between regular fail and m_sendAbort within sendWithoutACK
 		bool sent = sendWithoutACK(dest, port, vp, attempts);
 		if ( !sent ) {
 			result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DRIVER_SEND_FAILED;
 //			break;
 		} else
-		//we wait for ACK if not broadcast
+		//wait for ACK (covers the FLOOD case as well)
 		if (ack != 0) { //need nwk ack
 			MW_LOG_INFO(LOG_NETWORKV1, "Wait ACK", NULL);
 			uint8_t reply_src, reply_port, reply_len;
@@ -116,6 +120,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			univmsg_t reply_msg;
 			bool ignored = false;
 			do {
+				ignored = false;
+				
 				reply_result = m_driver->recv(reply_src, reply_port, &dataACK, ACK_PAYLOAD_MAX, TIMEOUT_ACK_RECEIVE); //no ack received
 				reply_len = reply_result >= 0 ? (uint8_t) reply_result : 0;
 				MW_LOG_DEBUG(LOG_NETWORKV1, "Reply byte count=%d", reply_len);
@@ -124,6 +130,18 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 					get_msg(&reply_msg, dataACK, reply_result);
 					MW_LOG_DEBUG(LOG_NETWORKV1, "Reply port=%d, Exp. port=%d, Reply seq=%d, Exp. seq=%d", reply_port, port, reply_msg.nwk_ctrl.seq, seq);
 					MW_LOG_DEBUG(LOG_NETWORKV1, "Deliv is ACK=%d", (reply_msg.nwk_ctrl.delivery & ACK), reply_port, port);
+					
+#ifdef SUPPORT_DELIVERY_FLOOD
+					//In case of FLOOD the above sendWithoutACK might have been missed by ALL neighbour nodes,
+					//so we try to detect this, fail quickly and re-send our FLOOD message, instead of
+					//waiting for the full timeout
+					if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && (reply_msg.nwk_ctrl.delivery && DELIVERY_FLOOD) ) {
+						oneFloodACK = oneFloodACK || ( reply_msg.nwk_ctrl.delivery & ACK ) &&
+													 ( reply_port == port && reply_msg.nwk_ctrl.seq == seq );
+						MW_LOG_DEBUG(LOG_NETWORKV1, "At least one FLOOD ACK received: %d", oneFloodACK);
+					}
+#endif
+					
 					if ( reply_port != port || reply_msg.nwk_ctrl.seq != seq || !(reply_msg.nwk_ctrl.delivery & ACK)
 								|| ((reply_msg.nwk_ctrl.delivery & DELIVERY_DIRECT ) && reply_src != dest)
 #ifdef SUPPORT_DELIVERY_ROUTED
@@ -141,6 +159,15 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 							MW_LOG_NOTICE(LOG_NETWORKV1, "\t\tPort=%d, seq=%d, deliv=%d, reply src=%d", reply_port, reply_msg.nwk_ctrl.seq, reply_msg.nwk_ctrl.delivery, reply_src);
 						}
 				}
+#ifdef SUPPORT_DELIVERY_FLOOD
+				if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && (RTC::since(start) > TIMEOUT_ACK_RECEIVE) && (!oneFloodACK) ) {
+					MW_LOG_NOTICE(LOG_NETWORKV1, "Noone received our FLOOD ACK. Resend...", NULL);
+					//noone heard our FLOOD. re-send
+					result = FLOOD_NOT_RECEIVED_BY_NEIGHBOURS;
+					ignored = false;
+					break;
+				}
+#endif							
 				MW_LOG_DEBUG(LOG_NETWORKV1, "Reply code=%d", reply_result);
 			} while ( !m_sendAbort &&
 						(reply_result < 0 || ignored) &&
@@ -455,19 +482,19 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 
 
 //receive a new message and call ackProvider to provide ACK payload. ACKs are ignored, since they are handled within send
-int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
+int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 		void* newData, size_t& newDataLenMax,
 		uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider) {
 	MW_LOG_INFO(LOG_NETWORKV1, "Recv: timeout(ms)=%l, newDataLenMax=%d, ackProvider=%d", ms, newDataLenMax, ackProvider);
-//	MW_LOG_DEBUG(LOG_NETWORKV1, "src=%d, port=%d, newData=%d, newDataLenMax=%d, ackProvider=%d", srcA, portA, newData, newDataLenMax, ackProvider);
+	MW_LOG_DEBUG(LOG_NETWORKV1, "&src=%d, &port=%d, newData=%d, newDataLenMax=%d, ackProvider=%d", &src, &port, newData, newDataLenMax, ackProvider);
 
 	uint8_t data[ACK_PAYLOAD_MAX];
-	uint8_t src, port;//use local vars to reduce code size
+//	uint8_t src, port;//use local vars to reduce code size
 
 	int dataLen = m_driver->recv(src, port, &data, PAYLOAD_MAX, ms);
 	int result = dataLen;
-	srcA = src;
-	portA = port;
+//	srcA = src;
+//	portA = port;
 	
 	if (result > 0) { //not timeouted, no crc error
 		MW_LOG_INFO(LOG_NETWORKV1, "Received data, len: %d", result);
@@ -560,9 +587,15 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& srcA, uint8_t& portA,
 #ifdef SUPPORT_DELIVERY_ROUTED
 #ifdef SUPPORT_DELIVERY_FLOOD
 			else if (recv_msg.nwk_ctrl.delivery & DELIVERY_FLOOD) {
-				uint8_t devaddr = m_driver->get_device_address();
 				uint8_t routeHops = recv_msg.msg_flood.flood_info.route.hopCount;
-				MW_LOG_INFO(LOG_NETWORKV1, "Received BROADCAST FLOOD from addr=%d, hopCount=%d", devaddr, routeHops);
+				MW_LOG_INFO(LOG_NETWORKV1, "Received BROADCAST FLOOD from addr=%d, hopCount=%d", src, routeHops);
+				
+				//Send FLOOD ACK to allow for early fail at the sender
+				MW_LOG_INFO(LOG_NETWORKV1, "Sending FLOOD ACK", NULL);
+				uint8_t floodACKMsg[2] = {recv_msg.msg_flood.nwk_ctrl.seq, DELIVERY_FLOOD | ACK};
+				sendWithoutACK(src, port, floodACKMsg, sizeof(floodACKMsg), m_retry+1);
+				
+				uint8_t devaddr = m_driver->get_device_address();
 				if (devaddr == recv_msg.msg_flood.flood_info.route.dst) {//we are the ultimate receiver, ask for payload and generate a routed ACK
 					//we could have optimized to check if hopCount == 0 and send direct ack
 					//but that would have increased the code at both sender and receiver side
