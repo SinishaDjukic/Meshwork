@@ -34,14 +34,14 @@ using namespace Meshwork::L3::NetworkV1;
 
 //Define the used cache variant. Uncomment your combination
 #if !defined(EXAMPLE_ROUTECACHE)
-#define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_NONE
-//#define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_RAM
+//#define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_NONE
+#define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_RAM
 //#define EXAMPLE_ROUTECACHE EXAMPLE_ROUTECACHE_PERSISTENT
 #endif
 
 //Define network capabilities. Uncomment your combination or define another one
 //#define EXAMPLE_NWKCAPS NetworkV1::NWKCAPS_SLEEPING
-#define EXAMPLE_NWKCAPS NetworkV1::NWKCAPS_ROUTER | NetworkV1::NWKCAPS_GATEWAY | NetworkV1::NWKCAPS_CONTROLLER
+#define EXAMPLE_NWKCAPS NetworkV1::NWKCAPS_ROUTER
 
 //////////////////////////////////////////////////////////////////////////////
 ////////////////////////   END: CONFIGURATION SECTION ////////////////////////

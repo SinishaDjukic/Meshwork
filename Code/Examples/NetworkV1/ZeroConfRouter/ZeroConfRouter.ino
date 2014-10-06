@@ -59,9 +59,9 @@ char sernum[16 + 1];
 	static IOBuffer<UART::BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
-	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, mesh->getNetworkKey(), sernum, NULL);
+	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, mesh.getNetworkKey(), sernum, NULL);
 #else
-	ZeroConfSerial zeroConfSerial(&mesh, &uart, mesh->getNetworkKey(), sernum, NULL);
+	ZeroConfSerial zeroConfSerial(&mesh, &uart, mesh.getNetworkKey(), sernum, NULL);
 	IOStream::Device null_device;
 #endif
 
@@ -81,23 +81,27 @@ void setup()
 
   Watchdog::begin();
   RTC::begin();
-  
-  networkSerial.initSerial();
 }
 
-NetworkSerial::serialmsg_t msg;
+ZeroConfSerial::serialmsg_t msg;
 bool processed;
 uint32_t last_message_timestamp = 0;
 
+//TODO:
+//1) write all configured data in EEPROM
+//2) read EEPROM config upon startup
+//3) enter the ZC mode via an external trigger/interrupt and notify via LED
+//4) timeout from the ZC mode and notify via LED
+//5) autoinit RF only if ZC'd
 void loop()
 {
-	processed = networkSerial.processOneMessage(&msg);
+	processed = zeroConfSerial.processOneMessage(&msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 	if ( processed )
 		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > 5000 ) {
+	else if ( RTC::since(last_message_timestamp) > SERIAL_NEXT_MSG_TIMEOUT ) {
 		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING(LOG_ZEROCONFROUTER, "No serial messages processed for 5000 ms", NULL);
+		MW_LOG_WARNING(LOG_ZEROCONFROUTER, "No serial messages processed for %d ms", SERIAL_NEXT_MSG_TIMEOUT);
 	}
 #endif
 }
