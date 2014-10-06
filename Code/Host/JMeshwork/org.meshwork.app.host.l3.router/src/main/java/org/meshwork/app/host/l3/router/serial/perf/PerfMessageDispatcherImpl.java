@@ -79,8 +79,8 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                 //normalize values
                 time = time < 1 ? Long.MAX_VALUE : time;
                 iterations = iterations < 1 ? Integer.MAX_VALUE : iterations;
-                writer.println("[testSendImpl] Max Time: "+time);
-                writer.println("[testSendImpl] Max Iterations: "+iterations);
+                writer.println("[testSendImpl] Max time: "+time);
+                writer.println("[testSendImpl] Max iterations: "+iterations);
                 int iter = iterations;
                 long start = System.currentTimeMillis();
                 AbstractMessage resp = null;
@@ -88,6 +88,11 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                 byte[] senddata = new byte[4];
                 byte dstnode;
                 do {
+                    writer.println();
+                    long timeDelta = System.currentTimeMillis() - start;
+                    writer.println("[testSendImpl] Test run ["+(iterations-iter)+" of "+iterations+"="+((int)((100*(iterations-iter))/iterations))+"%], seconds ["
+                                                              +timeDelta+" of "+time+"="+((int)((100*timeDelta)/time))+"%]");
+                    writer.println();
                     int dataSeq = iterations - iter;
                     senddata[0] = (byte) (( dataSeq >> 24 ) & 0xFF);
                     senddata[1] = (byte) (( dataSeq >> 16 ) & 0xFF);
