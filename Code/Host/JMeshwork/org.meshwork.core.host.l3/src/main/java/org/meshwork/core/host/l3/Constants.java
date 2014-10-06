@@ -97,6 +97,8 @@ public interface Constants {
     public static final byte ERROR_ACK_NOT_RECEIVED = -30;
     /** Sending an ACK has failed. */
     public static final byte ERROR_ACK_SEND_FAILED = -31;
+    /** Flood message not received by neighbours. */
+    public static final byte FLOOD_NOT_RECEIVED_BY_NEIGHBOURS = -32;
 
     //Routing errors code group
     /** No known routes to the destination. */
