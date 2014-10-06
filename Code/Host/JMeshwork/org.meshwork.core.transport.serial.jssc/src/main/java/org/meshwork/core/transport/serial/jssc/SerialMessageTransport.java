@@ -47,14 +47,14 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         } finally {
             port.removeEventListener();
         }
-        purgeBuffers();
+        purgeBuffers(true, true);
     }
 
     //port assumed to be closed by the caller after this method returns
     public void deinitPort() throws Exception {
         if ( port == null )
             throw new IllegalArgumentException("SerialPort not yet initialized!");
-        purgeBuffers();
+        purgeBuffers(true, true);
         try {
             port.removeEventListener();
         } catch (SerialPortException e) {
@@ -64,10 +64,11 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         }
     }
 
-    protected boolean purgeBuffers() {
+    protected boolean purgeBuffers(boolean read, boolean write) {
         boolean result = false;
         try {
-            result = port.purgePort(SerialPort.PURGE_RXABORT | SerialPort.PURGE_RXCLEAR | SerialPort.PURGE_TXABORT | SerialPort.PURGE_TXCLEAR);
+            result = port.purgePort( (read ? (SerialPort.PURGE_RXABORT | SerialPort.PURGE_RXCLEAR) : 0 )
+                                   | (write ? (SerialPort.PURGE_TXABORT | SerialPort.PURGE_TXCLEAR) : 0 ) );
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -80,7 +81,7 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         try {
             result = _readOneMessage(timeout);
         } finally {
-            //purgeBuffers();
+            purgeBuffers(true, true);
         }
         return result;
     }
@@ -89,12 +90,14 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         MessageData result = new MessageData();
         byte[] header = null;
 
+
         try {
+            System.out.println("<<<<<<<<<< ENTER SerialMessageTransport._readOneMessage with timeout: "+timeout+" <<<<<<<<<<");
             header = port.readBytes(3, timeout);
         } catch (SerialPortTimeoutException e) {
-            throw new TransportTimeoutException(e);
+            throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
         } catch (Exception e) {
-            throw new IOException(e);
+            throw new IOException("Exception while reading the message header: "+e.getMessage(), e);
         }
         result.seq = header[0];
         result.len = header[1];
@@ -103,11 +106,12 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
             try {
                 result.data = port.readBytes(result.len-1, timeout);
             } catch (SerialPortTimeoutException e) {
-                throw new TransportTimeoutException(e);
+                throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
             } catch (Exception e) {
-                throw new IOException(e);
+                throw new IOException("Exception while reading the message header: "+e.getMessage(), e);
             }
         }
+        System.out.println("<<<<<<<<<< EXIT  SerialMessageTransport._readOneMessage data: "+result+" <<<<<<<<<<");
         return result;
     }
 
@@ -119,12 +123,13 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         } catch (Exception e) {
             throw new IOException(e);
         } finally {
-            //purgeBuffers();
+            purgeBuffers(true, false);
         }
         return result;
     }
 
     protected int _sendOneMessage(MessageData message) throws SerialPortException {
+        System.out.println(">>>>>>>>>> ENTER SerialMessageTransport._sendOneMessage: "+message+" >>>>>>>>>>");
 //        port.writeByte(message.seq);
 //        port.writeByte(message.len);
 //        port.writeByte(message.code);
@@ -137,7 +142,7 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         if ( message.len > 1 )
             System.arraycopy(message.data, 0, temp, 3, message.len-1);
         port.writeBytes(temp);
-//        purgeBuffers();
+        System.out.println(">>>>>>>>>> EXIT SerialMessageTransport._sendOneMessage >>>>>>>>>>");
         return SEND_OK;
     }
 
