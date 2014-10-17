@@ -83,6 +83,7 @@ namespace Meshwork {
 				static const uint8_t MSGCODE_RFGETROUTECOUNTRES	= 32;//0x20 //response to MSGCODE_RFGETROUTECOUNT
 				static const uint8_t MSGCODE_RFGETROUTE			= 33;//0x21 //called from MSGCODE_RFSEND
 				static const uint8_t MSGCODE_RFGETROUTERES		= 34;//0x22 //response to MSGCODE_RFGETROUTE
+				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
 				
 				//0-63
 				static const uint8_t ERROR_GENERAL 				= 0;
