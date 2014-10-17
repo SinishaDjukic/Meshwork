@@ -191,7 +191,7 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 				switch ( calculate ) {
 					case Network::QOS_CALCULATE_BEST: result = result < tmp ? tmp : result; break;
 					case Network::QOS_CALCULATE_WORST: result = result > tmp ? tmp : result; break;
-					case Network::QOS_CALCULATE_AVERAGE: (result + tmp) >> 1; break;
+					case Network::QOS_CALCULATE_AVERAGE: result = ((result + tmp) >> 1); break;
 					default:
 						MW_LOG_DEBUG(LOG_ROUTECACHE, "Unknown method: %d", calculate);
 						break;
@@ -304,8 +304,7 @@ void RouteCache::print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs) 
   
   outs << PSTR(", hops: { ") << endl;
   printTabs(outs, ++tabs);
-  uint8_t count = route.hopCount < 0 ? 0 : route.hopCount;
-  count = count > NetworkV1::MAX_ROUTING_HOPS ? NetworkV1::MAX_ROUTING_HOPS : count;
+  uint8_t count = route.hopCount > NetworkV1::MAX_ROUTING_HOPS ? NetworkV1::MAX_ROUTING_HOPS : route.hopCount;
   for ( int i = 0; i < count; i ++ )
     outs << route.hops[i] << PSTR(", ");
   outs << endl;
