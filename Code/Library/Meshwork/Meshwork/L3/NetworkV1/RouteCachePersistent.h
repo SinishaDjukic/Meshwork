@@ -25,6 +25,7 @@
 #include "Cosa/EEPROM.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
+#include "Utils/EEPROMInit.h"
 
 #ifndef LOG_ROUTECACHEPERSISTENT
 #define LOG_ROUTECACHEPERSISTENT  true
@@ -78,25 +79,8 @@ namespace Meshwork {
 					read_routes();
 				};
 				
-				void format_eeprom() {
-					MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "Formatting EEPROM...", NULL);
-					//start backwards to optimize the loop check
-					uint16_t data_start = m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1;
-					uint8_t marker = ROUTE_VALUE_TABLE_MARKER;
-					do {
-						m_eeprom->write((void*) &data_start, (void*) &marker, 1);
-					} while (--data_start >= m_eeprom_offset);
-					MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "Done", NULL);
-				}
-				
 				void init_eeprom() {
-					uint16_t index = m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER;
-					uint8_t formatted = m_eeprom->read((void*) &formatted, (void*) &index, 1);
-					if ( formatted != ROUTE_VALUE_TABLE_MARKER ) {
-						format_eeprom();
-					} else {
-						MW_LOG_DEBUG(LOG_ROUTECACHEPERSISTENT, "EEPROM already formatted", NULL);
-					}
+					EEPROMInit::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER);
 				}
 				
 				void read_routes() {
