@@ -24,9 +24,12 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
         writer.print("MConfigNetwork: Channel=");writer.print(channel);
-        writer.print(", NodeID=");writer.print(nodeid);
         writer.print(", NwkID=");writer.print(nwkid);
+        writer.print(", NodeID=");writer.print(nodeid);
         writer.print(", KeyLen=");writer.print(keylen);
+        if ( key != null ) {
+            writer.print(", Key=");writer.print(new String(key));
+        }
     }
 
     @Override
@@ -37,8 +40,8 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
                                 ( msg.data[2] << 0 ) & 0xFF);
         result.nodeid = msg.data[3];
         result.keylen = msg.data[4];
-        result.key = keylen < 1 ? null : new byte[keylen];
-        System.arraycopy(msg.data, 5, result.key, 0, keylen);
+        result.key = result.keylen < 1 ? null : new byte[result.keylen];
+        System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
         return result;
     }
 
