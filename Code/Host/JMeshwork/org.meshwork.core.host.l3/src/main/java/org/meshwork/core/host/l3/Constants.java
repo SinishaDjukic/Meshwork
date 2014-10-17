@@ -41,7 +41,7 @@ public interface Constants {
     public static final byte ERROR_KEY_TOO_LONG 		= 7;
     public static final byte ERROR_SEQUENCE_MISMATCH	= 8;
 
-    public static final short TIMEOUT_RESPONSE 			= 3000;
+    public static final short TIMEOUT_RESPONSE 			= 5000;
 
     // Define node roles.
     public static final byte ROLE_ROUTER_NODE = 0x00;
