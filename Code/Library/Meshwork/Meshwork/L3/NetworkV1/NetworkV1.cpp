@@ -136,8 +136,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 					//so we try to detect this, fail quickly and re-send our FLOOD message, instead of
 					//waiting for the full timeout
 					if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && (reply_msg.nwk_ctrl.delivery && DELIVERY_FLOOD) ) {
-						oneFloodACK = oneFloodACK || ( reply_msg.nwk_ctrl.delivery & ACK ) &&
-													 ( reply_port == port && reply_msg.nwk_ctrl.seq == seq );
+						oneFloodACK = oneFloodACK || (( reply_msg.nwk_ctrl.delivery & ACK ) &&
+													  ( reply_port == port && reply_msg.nwk_ctrl.seq == seq ));
 						MW_LOG_DEBUG(LOG_NETWORKV1, "At least one FLOOD ACK received: %d", oneFloodACK);
 					}
 #endif
@@ -610,7 +610,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 					//empty payload means internal flood discovery message, which the user should not care about
 					result = result > 0 ? (len == 0 ? OK_MESSAGE_INTERNAL : OK ) : ERROR_ACK_SEND_FAILED;
 #ifdef SUPPORT_REROUTING
-				} else if (routeHops >= 0 && routeHops < m_maxHops) {//rebroadcast the message
+				} else if (routeHops < m_maxHops) {//rebroadcast the message
 					uint8_t myHop = 1 + get_msg_routed_hop_index(&recv_msg, m_driver->get_device_address());
 					if (myHop == 0) {//not in the hop list, add us
 						MW_LOG_INFO(LOG_NETWORKV1, "Will REBROADCAST", NULL);
@@ -651,6 +651,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 }
 
 bool Meshwork::L3::NetworkV1::NetworkV1::begin(const void* config) {
+	UNUSED(config);
 	if ( m_advisor != NULL && m_driver != NULL ) {
 		m_advisor->set_address(m_driver->get_device_address());
 	}
