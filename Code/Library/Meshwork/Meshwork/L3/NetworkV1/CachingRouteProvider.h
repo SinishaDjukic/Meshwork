@@ -41,9 +41,9 @@ namespace Meshwork {
 			class CachingRouteProvider: public Meshwork::L3::NetworkV1::NetworkV1::RouteProvider {
 
 			protected:
+				RouteCache* m_route_cache;
 				uint8_t m_update_policy;
 				bool m_route_update_enabled;
-				RouteCache* m_route_cache;
 
 			public:
 
@@ -60,6 +60,7 @@ namespace Meshwork {
 				};
 
 				  void set_address(uint8_t src) {
+					UNUSED(src);
 					//nothing to do currently
 				  }
 				  

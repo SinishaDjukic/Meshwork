@@ -274,6 +274,7 @@ namespace Meshwork {
 			}
 			
 			virtual bool begin(const void* config = NULL) {
+				UNUSED(config);
 				return m_driver == NULL ? false : m_driver->begin();
 			}
 
