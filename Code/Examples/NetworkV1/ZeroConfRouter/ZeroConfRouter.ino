@@ -28,6 +28,7 @@
 #else
 	#define LOG_ZEROCONFROUTER	false
 #endif
+
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
@@ -48,8 +49,12 @@
 #include "Meshwork/L3/NetworkV1/ZeroConfSerial.h"
 #include "Meshwork/L3/NetworkV1/ZeroConfSerial.cpp"
 
-//TODO read/write from/to EEPROM
-char sernum[16 + 1];
+#include "ZCTypes.h"
+zctype_configuration_t configuration;
+
+#include "ZeroConfListenerImpl.h"
+EEPROM eepromConf;
+ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
 
 //Setup extra UART on Mega
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
@@ -59,51 +64,122 @@ char sernum[16 + 1];
 	static IOBuffer<UART::BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
-	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, mesh.getNetworkKey(), sernum, NULL);
+	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &zeroConfListener);
 #else
-	ZeroConfSerial zeroConfSerial(&mesh, &uart, mesh.getNetworkKey(), sernum, NULL);
+	ZeroConfSerial zeroConfSerial(&mesh, &uart, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &zeroConfListener);
 	IOStream::Device null_device;
 #endif
 
+#define EXAMPLE_LED		Board::LED
 
-void setup()
-{
-  uart.begin(115200);
-
-//Trace debugs only supported on Mega, since it has extra UARTs
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-  trace.begin(&uart, NULL);
-  trace << PSTR("ZeroConf Router: started") << endl;
-  uartHC.begin(115200);
+#if defined(EXAMPLE_LED)
+	OutputPin ledPin(EXAMPLE_LED);
+	#define LED(state)	ledPin.set(state)
+	#define LED_BLINK(state, x)	\
+		LED(state); \
+		Watchdog::delay(x); \
+		LED(!state);
 #else
-  trace.begin(&null_device, NULL);
+	#define LED(state)	(void) (state)
+	#define LED_BLINK(state, x)	(void) (state)
 #endif
-
-  Watchdog::begin();
-  RTC::begin();
-}
 
 ZeroConfSerial::serialmsg_t msg;
 bool processed;
 uint32_t last_message_timestamp = 0;
 
-//TODO:
-//1) write all configured data in EEPROM
-//2) read EEPROM config upon startup
-//3) enter the ZC mode via an external trigger/interrupt and notify via LED
-//4) timeout from the ZC mode and notify via LED
-//5) autoinit RF only if ZC'd
-void loop()
+bool processOneMessage(ZeroConfSerial::serialmsg_t* msg, uint32_t timeout)
 {
-	processed = zeroConfSerial.processOneMessage(&msg);
+	bool result = zeroConfSerial.processOneMessage(msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-	if ( processed )
+	if ( result )
 		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > SERIAL_NEXT_MSG_TIMEOUT ) {
+	else if ( RTC::since(last_message_timestamp) > timeout ) {
 		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING(LOG_ZEROCONFROUTER, "No serial messages processed for %d ms", SERIAL_NEXT_MSG_TIMEOUT);
+		MW_LOG_WARNING(LOG_ZEROCONFROUTER, "No serial messages processed for %d ms", timeout);
 	}
 #endif
+	return result;
+}
+
+bool processConfigSequence()
+{
+	uint32_t start = RTC::millis();
+	uint8_t state = 0;
+	while ( RTC::since(start) < STARTUP_AUTOCONFIG_TIMEOUT ) {
+		//the state flow must be 0 -> MSGCODE_ZCINIT -> MSGCODE_ZCDEINIT
+		if ( processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT) ) {
+			if ( msg.code == ZeroConfSerial::MSGCODE_ZCINIT ) {
+				state = ZeroConfSerial::MSGCODE_ZCINIT;
+			} else if ( msg.code == ZeroConfSerial::MSGCODE_ZCDEINIT ) {
+				state = ZeroConfSerial::MSGCODE_ZCDEINIT;
+				break;
+			}
+		}
+	}
+	return state == ZeroConfSerial::MSGCODE_ZCDEINIT;
+}
+
+void setup()
+{
+	//Basic setup
+	Watchdog::begin();
+	RTC::begin();
+	
+	//TODO read EEPROM config
+	
+	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
+	LED_BLINK(true, 500);
+	LED(true);
+	uart.begin(115200);
+	
+	//Trace debugs only supported on Mega, since it has extra UARTs
+#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+	trace.begin(&uart, NULL);
+	trace << PSTR("ZeroConf Router: started") << endl;
+	uartHC.begin(115200);
+#else
+	trace.begin(&null_device, NULL);
+#endif
+	
+	//Allow some time for initial configuration
+	bool reconfigured = processConfigSequence();
+	UNUSED(reconfigured);
+	
+	//Disable UART when reconfigured. Blink differently if reconfigured
+	uart.end();
+	LED_BLINK(false, reconfigured ? 2000 : 500);
+	LED(false);
+	
+	mesh.begin();
+}
+
+void run_recv() {
+	uint32_t duration = (uint32_t) 60 * 1000L;
+	uint8_t src, port;
+	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
+	uint8_t data[dataLenMax];
+	MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
+	
+	uint32_t start = RTC::millis();
+	while (true) {
+		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
+		if ( result != -1 ) {
+			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
+			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
+			MW_LOG_DEBUG_ARRAY(LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << endl;
+		}
+		if ( RTC::since(start) >= duration )
+			break;
+	} 
+	
+	MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
+}
+
+void loop()
+{
+	run_recv();
 }
 
 #endif
