@@ -313,7 +313,7 @@ namespace Meshwork {
 						return msg->msg_flood.dataLen;
 			#endif
 			#endif
-					return NULL;
+					return 0;
 				}
 				
 			protected:
