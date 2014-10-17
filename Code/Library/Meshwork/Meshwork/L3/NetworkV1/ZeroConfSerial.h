@@ -33,15 +33,26 @@
 	SEQ | LEN | MSG
 	MSG = MSGCODE | MSGDATA
 	ERRORCODE  = <list of possible errors TBD>
-	ZCIDRES    = NKWCAPS | DELIVERY | SERNUMLEN | SERNUM
-	ZCNWKIDRES = CHANNEL ID | NWK ID | NODE ID
-	ZCCFGNWK   = CHANNEL ID | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
+	
+	Incoming
+	========
+	ZCINIT     = <empty>
+	ZCDEINIT   = <empty>
+	ZCID       = <empty>
+	ZCNWKID    = <empty>
+	ZCCFGNWK   = CHANNEL | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
 	ZCCFGREP   = TARGET NODE ID | REPFLAGS
 	REPFLAGS   = <list of reporting flags TBD>
 		b0: Report after add/remove to/from the network
 		b1: Report values upon discrete change
 		b2: Report values upon threshold change
 		b3-b7: Reserved
+	
+	Outgoing
+	========
+	ZCIDRES    = NKWCAPS | DELIVERY | SERNUMLEN | SERNUM
+	ZCNWKIDRES = CHANNEL | NWK ID | NODE ID
+	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_INSUFFICIENT_DATA, MSGCODE_UNKNOWN
 */
 namespace Meshwork {
 
@@ -53,43 +64,42 @@ namespace Meshwork {
 
 			public:
 			
-				struct reporting_t {
-					uint8_t targetnodeid;
-					uint8_t repflags;
-				};
-			
 				class ZeroConfListener {
 					public:
-						//called after Meshwork object has been updated
-						//the listener must decide if/when to call Meshwork::end/begin expicitly!
+						//called after the network configuration has been updated
 						virtual void network_updated() = 0;
-						//called to deliver the new reporting flags
-						virtual void reporting_updated(reporting_t* reporting) = 0;
+						//called after the new reporting flags have been updated
+						virtual void reporting_updated() = 0;
 				};
+				
+				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+				static const uint8_t MAX_SERIAL_LEN 			= 16;
 				
 				struct serialmsg_t {
 					uint8_t seq;
 					uint8_t len;
 					uint8_t code;
-					uint8_t* data;
 				};
 
-				struct data_zcnwkidres_t {
-					uint8_t channel;
-					uint16_t nwkid;
-					uint8_t nodeid;
+				struct zctype_sernum_t {
+					uint8_t sernumlen;
+					char sernum[MAX_SERIAL_LEN];
 				};
 
-				struct data_zccfgnwk_t {
+				struct zctype_reporting_t {
+					uint8_t targetnodeid;
+					uint8_t repflags;
+				};
+			
+				struct zctype_nwkconfig_t {
 					uint8_t channel;
 					uint16_t nwkid;
 					uint8_t nodeid;
 					uint8_t nwkkeylen;
-					uint8_t* nwkkey;
+					uint8_t nwkkey[Network::MAX_NETWORK_KEY_LEN];
 				};
 
 			public:
-				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
 				
 				static const uint8_t MSGCODE_OK 				= 0;
 				static const uint8_t MSGCODE_NOK 				= 1;
@@ -103,6 +113,7 @@ namespace Meshwork {
 				static const uint8_t MSGCODE_ZCNWKIDRES 		= 53;
 				static const uint8_t MSGCODE_ZCCFGNWK 			= 54;
 				static const uint8_t MSGCODE_ZCCFGREP 			= 55;
+				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
 				
 				//0-63
 				static const uint8_t ERROR_GENERAL 				= 0;
@@ -122,9 +133,11 @@ namespace Meshwork {
 			protected:
 				Meshwork::L3::Network* m_network;
 				UART* m_serial;
-				char* m_networkKey;//Meshwork::L3::Network::MAX_NETWORK_KEY_LEN + 1
-				char* m_sernum;
-				uint8_t m_sernumlen;
+				
+				zctype_sernum_t* m_sernum;
+				zctype_reporting_t* m_reporting;
+				zctype_nwkconfig_t* m_nwkconfig;
+				
 				ZeroConfListener* m_listener;
 				uint16_t m_timeout;
 				bool m_initmode;
@@ -147,13 +160,13 @@ namespace Meshwork {
 
 			public:
 				ZeroConfSerial(Meshwork::L3::Network* network, UART* serial,
-								char* networkKey, char* sernum,
-									ZeroConfListener* listener, uint16_t timeout = TIMEOUT_RESPONSE):
+								zctype_sernum_t* sernum, zctype_reporting_t* reporting, zctype_nwkconfig_t* nwkconfig,
+										ZeroConfListener* listener, uint16_t timeout = TIMEOUT_RESPONSE):
 					m_network(network),
 					m_serial(serial),
-					m_networkKey(networkKey),
 					m_sernum(sernum),
-					m_sernumlen(0),
+					m_reporting(reporting),
+					m_nwkconfig(nwkconfig),
 					m_listener(listener),
 					m_timeout(timeout),
 					m_initmode(false)
@@ -164,6 +177,19 @@ namespace Meshwork {
 				
 				bool processOneMessage(serialmsg_t* msg);
 				bool processOneMessageEx(serialmsg_t* msg);
+				
+				zctype_sernum_t* getSernum() {
+					return m_sernum;
+				}
+				
+				zctype_reporting_t* getReporting() {
+					return m_reporting;
+				}
+				
+				zctype_nwkconfig_t* getNwkconfig() {
+					return m_nwkconfig;
+				}
+				
 			  };
 		};
 	};

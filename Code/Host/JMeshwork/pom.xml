@@ -11,9 +11,11 @@
     <modules>
         <module>org.meshwork.core.api</module>
         <module>org.meshwork.core.host.l3</module>
+        <module>org.meshwork.core.zeroconf.l3</module>
         <module>org.meshwork.core.sniffer.l3</module>
         <module>org.meshwork.core.transport.serial.jssc</module>
         <module>org.meshwork.app.host.l3.router</module>
+        <module>org.meshwork.app.zeroconf.l3.node</module>
         <module>org.meshwork.assembly</module>
     </modules>
 
