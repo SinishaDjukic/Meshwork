@@ -1,7 +1,7 @@
 package org.meshwork.app.zeroconf.l3.node;
 
 import org.meshwork.core.AbstractMessageTransport;
-import org.meshwork.core.host.l3.MessageAdapter;
+import org.meshwork.core.zeroconf.l3.MessageAdapter;
 
 import java.io.PrintWriter;
 
