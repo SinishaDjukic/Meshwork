@@ -22,7 +22,7 @@ public class MessageAdapter implements AbstractMessageAdapter {
                                                 new MZCCfgRep((byte)0), new MZCDeinit((byte)0),
                                                 new MZCID((byte)0), new MZCIDRes((byte)0),
                                                 new MZCInit((byte)0), new MZCNwkID((byte)0),
-                                                new MZCNwkIDRes((byte)0)
+                                                new MZCNwkIDRes((byte)0), new MZCCfgSerial((byte)0)
         };
         hash = new HashMap<Byte, AbstractMessage>();
         for (AbstractMessage messageType : messageTypes) {
