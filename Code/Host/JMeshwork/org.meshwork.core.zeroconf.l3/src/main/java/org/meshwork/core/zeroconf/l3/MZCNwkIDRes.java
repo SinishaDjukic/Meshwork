@@ -16,7 +16,7 @@ public class MZCNwkIDRes extends AbstractMessage implements Constants {
     public byte nodeid;
 
     public MZCNwkIDRes(byte seq) {
-        super(MSGCODE_ZCIDRES, seq);
+        super(MSGCODE_ZCNWKIDRES, seq);
     }
 
     @Override
