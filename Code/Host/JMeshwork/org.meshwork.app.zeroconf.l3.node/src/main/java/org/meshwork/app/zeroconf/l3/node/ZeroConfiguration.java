@@ -14,36 +14,25 @@ public class ZeroConfiguration {
     //all values are decimal numbers
     public static final String CONFIG_KEY_NWKKEY                = "zeroconf.nwkkey";
     public static final String CONFIG_KEY_NWKID                 = "zeroconf.nwkid";
-    public static final String CONFIG_KEY_NODEID                = "zeroconf.reportNodeid";
+    public static final String CONFIG_KEY_NODEID                = "zeroconf.nodeid";
     public static final String CONFIG_KEY_CHANNEL               = "zeroconf.channel";
     public static final String CONFIG_KEY_CONSOLE_READ_TIMEOUT  = "zeroconf.console.read.timeout";
     public static final String CONFIG_KEY_REPORT_NODEID         = "zeroconf.report.reportNodeid";
     public static final String CONFIG_KEY_REPORT_FLAGS          = "zeroconf.report.flags";
+    public static final String CONFIG_KEY_READONLY          	= "zeroconf.readonly";
 
     //MZCCfgNetwork
     protected byte channel;
     protected short nwkid;
     protected byte nodeid;
     protected String nwkkey;
-
-    public byte getReportNodeid() {
-        return reportNodeid;
-    }
-
-    public void setReportNodeid(byte reportNodeid) {
-        this.reportNodeid = reportNodeid;
-    }
-
-    public byte getReportFlags() {
-        return reportFlags;
-    }
-
-    public void setReportFlags(byte reportFlags) {
-        this.reportFlags = reportFlags;
-    }
-
+	
+	//MZCCfgRep
     protected byte reportNodeid;
     protected byte reportFlags;
+
+	//Only read the device configuration, don't change
+    protected boolean readonly;
 
     //Serial
     protected int consoleReadTimeout;
@@ -69,6 +58,7 @@ public class ZeroConfiguration {
         reportNodeid = Converter.toByte(CONFIG_KEY_REPORT_NODEID, p.getProperty(CONFIG_KEY_REPORT_NODEID));
         reportFlags = Converter.toByte(CONFIG_KEY_REPORT_FLAGS, p.getProperty(CONFIG_KEY_REPORT_FLAGS));
         consoleReadTimeout = Converter.toInt(CONFIG_KEY_CONSOLE_READ_TIMEOUT, p.getProperty(CONFIG_KEY_CONSOLE_READ_TIMEOUT));
+        readonly = Converter.toBoolean(CONFIG_KEY_READONLY, p.getProperty(CONFIG_KEY_READONLY));
     }
 
     public byte getChannel() {
@@ -107,6 +97,30 @@ public class ZeroConfiguration {
 
     public void setConsoleReadTimeout(int consoleReadTimeout) {
         this.consoleReadTimeout = consoleReadTimeout;
+    }
+
+    public byte getReportNodeid() {
+        return reportNodeid;
+    }
+
+    public void setReportNodeid(byte reportNodeid) {
+        this.reportNodeid = reportNodeid;
+    }
+
+    public byte getReportFlags() {
+        return reportFlags;
+    }
+
+    public void setReportFlags(byte reportFlags) {
+        this.reportFlags = reportFlags;
+    }
+
+    public boolean getReadonly() {
+        return readonly;
+    }
+
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
     }
 
 }
