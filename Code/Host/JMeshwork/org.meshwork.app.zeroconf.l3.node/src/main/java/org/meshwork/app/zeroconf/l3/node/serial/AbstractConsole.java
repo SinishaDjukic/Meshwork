@@ -4,7 +4,7 @@ import org.meshwork.app.zeroconf.l3.node.MessageDispatcherImpl;
 import org.meshwork.app.zeroconf.l3.node.ZeroConfNode;
 import org.meshwork.app.zeroconf.l3.node.ZeroConfiguration;
 import org.meshwork.core.AbstractMessageTransport;
-import org.meshwork.core.host.l3.MessageAdapter;
+import org.meshwork.core.zeroconf.l3.MessageAdapter;
 import org.meshwork.core.transport.serial.jssc.SerialConfiguration;
 import org.meshwork.core.transport.serial.jssc.SerialMessageTransport;
 
