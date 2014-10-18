@@ -20,6 +20,7 @@ public interface Constants {
     public static final byte MSGCODE_ZCNWKIDRES 		= 53;
     public static final byte MSGCODE_ZCCFGNWK 			= 54;
     public static final byte MSGCODE_ZCCFGREP 			= 55;
+    public static final byte MSGCODE_ZCCFGSERIAL		= 56;
 
     //0-63
     public static final byte ERROR_GENERAL 				= 0;
@@ -28,6 +29,7 @@ public interface Constants {
     public static final byte ERROR_ILLEGAL_STATE 		= 3;
     public static final byte ERROR_KEY_TOO_LONG 		= 7;
     public static final byte ERROR_SEQUENCE_MISMATCH	= 8;
+    public static final byte ERROR_SERIAL_TOO_LONG 		= 9;
 
     public static final short TIMEOUT_RESPONSE 			= 5000;
 
