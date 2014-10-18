@@ -15,7 +15,7 @@ public class MZCCfgRep extends AbstractMessage implements Constants {
     public byte reportFlags;
 
     public MZCCfgRep(byte seq) {
-        super(MSGCODE_ZCCFGNWK, seq);
+        super(MSGCODE_ZCCFGREP, seq);
     }
 
     @Override
