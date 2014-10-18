@@ -37,7 +37,8 @@ public class MZCIDRes extends AbstractMessage implements Constants {
         result.delivery = msg.data[1];
         result.sernumlen = msg.data[2];
         result.sernum = result.sernumlen < 1 ? null : new byte[result.sernumlen];
-        System.arraycopy(msg.data, 3, result.sernum, 0, result.sernumlen);
+		if ( result.sernumlen > 0 )
+			System.arraycopy(msg.data, 3, result.sernum, 0, result.sernumlen);
         return result;
     }
 
