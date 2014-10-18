@@ -4,8 +4,6 @@ import org.meshwork.core.AbstractMessage;
 import org.meshwork.core.AbstractMessageTransport;
 import org.meshwork.core.MessageData;
 import org.meshwork.core.TransportTimeoutException;
-import org.meshwork.core.host.l3.MOK;
-import org.meshwork.core.host.l3.MessageAdapter;
 import org.meshwork.core.zeroconf.l3.*;
 
 import java.io.PrintWriter;
@@ -26,7 +24,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     protected SimpleDateFormat dateFormatter;
     protected byte seq;
     protected int consoleReadTimeout;
-
+	protected MZCIDRes lastMZCIDRes;
+	protected MZCNwkIDRes lastMZCNwkIDRes;
 
     public MessageDispatcherImpl(MessageAdapter adapter, AbstractMessageTransport transport,
                                  ZeroConfiguration config, PrintWriter writer) {
@@ -56,10 +55,25 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 doMZCInit();
                 doMZCID();
                 doMZCNwkID();
-                doMZCCfgNwk();
-                doMZCCfgRep();
+				if ( config.readonly ) {
+					writer.println("[MessageDispatcher] Read-only mode. Will NOT configure the device!");
+				} else {
+					doMZCCfgNwk();
+					doMZCNwkID();//read after write
+					doMZCCfgRep();//TODO add an ID message to read current rep config
+				}
                 doMZCDeinit();
                 writer.println("[MessageDispatcher] Device configured!");
+                writer.print("\n----------- ");
+                writer.println();
+				if ( lastMZCIDRes != null ) {
+					lastMZCIDRes.toString(writer, "\t\t", null, null);
+					writer.println();
+				}
+				if ( lastMZCNwkIDRes != null ) {
+					lastMZCNwkIDRes.toString(writer, "\t\t", null, null);
+					writer.println();
+				}
                 writer.print("\n----------- ");
             } catch (Throwable t) {
                 writer.println("[MessageDispatcher] Error: " + t.getMessage());
@@ -80,6 +94,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     @Override
     public void deinit() throws Exception {
         running = false;
+		lastMZCIDRes = null;
+		lastMZCNwkIDRes = null;
     }
 
     protected void doMZCInit() throws Exception {
@@ -105,8 +121,10 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         MZCID msg = new MZCID(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doMZCID] Response: ");
-        if ( result != null )
+        if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
+			lastMZCIDRes = (MZCIDRes) result;
+		}
         if ( result == null || !(result instanceof MZCIDRes) )
             throw new Exception("Error sending MZCID");
     }
@@ -115,8 +133,10 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         MZCNwkID msg = new MZCNwkID(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doMZCNwkID] Response: ");
-        if ( result != null )
+        if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
+			lastMZCNwkIDRes = (MZCNwkIDRes) result;
+		}
         if ( result == null || !(result instanceof MZCNwkIDRes) )
             throw new Exception("Error sending MZCNwkID");
     }
