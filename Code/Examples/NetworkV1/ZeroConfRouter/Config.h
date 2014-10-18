@@ -74,5 +74,8 @@
 
 #define STARTUP_AUTOCONFIG_TIMEOUT	5000
 
+//allows us to change the serial number at any time, opposed to only once
+#define ZEROCONF_SERIAL_CHANGE_ENABLE	1
+
 #endif
 
