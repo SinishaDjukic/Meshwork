@@ -52,7 +52,7 @@
 	========
 	ZCIDRES    = NKWCAPS | DELIVERY | SERNUMLEN | SERNUM
 	ZCNWKIDRES = CHANNEL | NWK ID | NODE ID
-	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_INSUFFICIENT_DATA, MSGCODE_UNKNOWN
+	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_SERIAL_TOO_LONG, ERROR_INSUFFICIENT_DATA, MSGCODE_UNKNOWN
 */
 namespace Meshwork {
 
@@ -66,6 +66,8 @@ namespace Meshwork {
 			
 				class ZeroConfListener {
 					public:
+						//called after the serial number has been updated
+						virtual void serial_updated() = 0;
 						//called after the network configuration has been updated
 						virtual void network_updated() = 0;
 						//called after the new reporting flags have been updated
@@ -113,6 +115,7 @@ namespace Meshwork {
 				static const uint8_t MSGCODE_ZCNWKIDRES 		= 53;
 				static const uint8_t MSGCODE_ZCCFGNWK 			= 54;
 				static const uint8_t MSGCODE_ZCCFGREP 			= 55;
+				static const uint8_t MSGCODE_ZCCFGSERIAL		= 56;
 				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
 				
 				//0-63
@@ -122,6 +125,7 @@ namespace Meshwork {
 				static const uint8_t ERROR_ILLEGAL_STATE 		= 3;
 				static const uint8_t ERROR_KEY_TOO_LONG 		= 7;
 				static const uint8_t ERROR_SEQUENCE_MISMATCH	= 8;
+				static const uint8_t ERROR_SERIAL_TOO_LONG 		= 7;
 				
 				static const uint16_t TIMEOUT_RESPONSE 			= 5000;
 				
@@ -156,6 +160,7 @@ namespace Meshwork {
 				bool processZCID(serialmsg_t* msg);
 				bool processZCNwkID(serialmsg_t* msg);
 				bool processZCCfgNwk(serialmsg_t* msg);
+				bool processZCCfgSerial(serialmsg_t* msg);
 				bool processZCCfgRep(serialmsg_t* msg);
 
 			public:
