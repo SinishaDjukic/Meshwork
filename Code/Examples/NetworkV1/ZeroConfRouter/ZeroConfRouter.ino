@@ -142,10 +142,20 @@ void setup()
 	trace.begin(&null_device, NULL);
 #endif
 	
+	zeroConfListener.init();
+	
+	trace << PSTR("Waiting for configuration...") << endl;
 	//Allow some time for initial configuration
 	bool reconfigured = processConfigSequence();
 	UNUSED(reconfigured);
 	
+	mesh.setChannel(configuration.nwkconfig.channel);
+	mesh.setNetworkID(configuration.nwkconfig.nwkid);
+	mesh.setNodeID(configuration.nwkconfig.nodeid);
+
+	trace << PSTR("Configuration done.") << endl;
+	//Flush all chars before disabling UART
+	uart.flush();
 	//Disable UART when reconfigured. Blink differently if reconfigured
 	uart.end();
 	LED_BLINK(false, reconfigured ? 2000 : 500);
