@@ -43,9 +43,17 @@ public:
 		m_eeprom(eeprom),
 		m_configuration(configuration)
 			{
-				EEPROMInit::init(eeprom, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
 			};
-
+	
+	void init() {
+		EEPROMInit::init(m_eeprom, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
+	}
+	
+	void serial_updated() {
+		m_eeprom->write((void*) &EXAMPLE_ZC_SERNUM_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
+		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Serial updated", NULL);
+	}
+	
 	void network_updated() {
 		m_eeprom->write((void*) &EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET, (void*) &m_configuration->nwkconfig, sizeof(m_configuration->nwkconfig));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Network updated", NULL);
