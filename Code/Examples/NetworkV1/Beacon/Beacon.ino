@@ -46,9 +46,6 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
-
-#endif
-
 static const uint16_t 	BEACON_NWK_ID 		= 1;
 static const uint8_t 	BEACON_CHANNEL_ID 	= 0;
 static const uint8_t 	BEACON_NODE_ID 		= 100;
@@ -82,6 +79,6 @@ void loop()
 {
 	MW_LOG_DEBUG_TRACE(LOG_BEACON) << PSTR("Broadcasting...") << endl;
 	mesh.broadcast(BEACON_BCAST_PORT, BEACON_BCAST_MSG, BEACON_BCAST_MSG_LEN);
-	SLEEP(1);
+	Watchdog::delay(1000);
 }
 #endif

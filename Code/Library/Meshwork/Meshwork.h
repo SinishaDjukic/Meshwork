@@ -21,8 +21,11 @@
 #ifndef __MESHWORK_MESHWORK_H__
 #define __MESHWORK_MESHWORK_H__
 
-#include "Cosa/Trace.hh"
+#include "Cosa/Types.h"
 #include "Cosa/Memory.h"
+#include "Cosa/RTC.hh"
+#include "Cosa/Trace.hh"
+#include "Cosa/Watchdog.hh"
 
 namespace Meshwork {
 	class Debug {
@@ -32,6 +35,28 @@ namespace Meshwork {
 			}
 			static void printFreeMemory() {
 				trace << PSTR("Free mem: ") << free_memory() << endl;
+			}
+	};
+
+//Multiplier factor for all delays in Meshwork
+//Useful for slowing down the responses for
+//debugging and demonstration purposes
+#ifndef MW_DELAY_FACTOR
+#define MW_DELAY_FACTOR 1
+#endif
+
+	class Time {
+		public:
+			static void delay(uint32_t ms)
+		    	__attribute__((always_inline))
+			{
+				Watchdog::delay((uint32_t) (ms * MW_DELAY_FACTOR));
+			}
+
+			static bool passed(uint32_t duration, uint32_t passed)
+		    	__attribute__((always_inline))
+			{
+				return duration >= (uint32_t) (passed * MW_DELAY_FACTOR);
 			}
 	};
 };
