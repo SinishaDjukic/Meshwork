@@ -18,9 +18,13 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L3_NETWORKV1_ROUTECACHE_CPP__
+#define __MESHWORK_L3_NETWORKV1_ROUTECACHE_CPP__
+
 #include "Cosa/Wireless.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
+#include "Meshwork/L3/NetworkV1/RouteCache.h"
 
 #ifndef LOG_ROUTECACHE
 #define LOG_ROUTECACHE  true
@@ -361,3 +365,4 @@ void RouteCache::print(IOStream& outs) {
   printTabs(outs, --tabs);
   outs << PSTR("}") << endl;
 }
+#endif

@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L4_NODEBASE_CPP__
+#define __MESHWORK_L4_NODEBASE_CPP__
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -58,3 +61,4 @@ int Meshwork::L4::NodeBase::setModeRequest(uint8_t mode, uint32_t timeout) {
 		return ERROR_ILLEGAL_MODE;
 	return setModeRequestImpl(mode, timeout);
 }
+#endif

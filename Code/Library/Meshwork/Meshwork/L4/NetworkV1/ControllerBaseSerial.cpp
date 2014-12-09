@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L4_CONTROLLERBASESERIAL_CPP__
+#define __MESHWORK_L4_CONTROLLERBASESERIAL_CPP__
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -27,7 +30,7 @@
 #include "Cosa/Trace.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Meshwork/L4/ControllerBase.h"
 #include "Meshwork/L4/ControllerBaseSerial.h"
@@ -123,3 +126,4 @@ bool Meshwork::L4::ControllerBaseSerial::processOneMessageEx(serialmsg_t* msg) {
 	}
 	return result;
 }
+#endif

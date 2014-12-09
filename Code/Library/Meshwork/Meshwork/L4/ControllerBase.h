@@ -26,6 +26,7 @@
 #include "Cosa/Power.hh"
 #include "Cosa/BitSet.hh"
 #include "Meshwork/L3/Network.h"
+#include "Meshwork/L4/NodeBase.h"
 
 namespace Meshwork {
 

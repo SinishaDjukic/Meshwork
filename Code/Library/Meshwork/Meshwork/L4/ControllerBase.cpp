@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L4_CONTROLLERBASE_CPP__
+#define __MESHWORK_L4_CONTROLLERBASE_CPP__
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -97,3 +100,4 @@ int Meshwork::L4::ControllerBase::setModeAnnounce(uint8_t mode, uint32_t timeout
 	//TODO implement
 	return -1;
 }
+#endif

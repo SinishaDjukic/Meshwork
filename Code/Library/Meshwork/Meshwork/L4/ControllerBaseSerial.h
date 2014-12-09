@@ -21,7 +21,7 @@
 #ifndef __MESHWORK_L4_CONTROLLERBASESERIAL_H__
 #define __MESHWORK_L4_CONTROLLERBASESERIAL_H__
 
-#include "Cosa/Pins.hh"
+#include "Cosa/Pin.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"

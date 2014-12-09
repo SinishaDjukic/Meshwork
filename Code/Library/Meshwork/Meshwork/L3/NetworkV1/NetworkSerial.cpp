@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_CPP__
+#define __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_CPP__
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -52,10 +55,10 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::waitForBytes(uint8_t count, uint16_
 	uint32_t start = RTC::millis();
 	while (true) {
 		if ( m_serial->available() < count )//minimum response size
-			Watchdog::delay(16);
+			Meshwork::Time::delay(16);
 		else
 			result = true;
-		if ( result || RTC::since(start) >= millis )
+		if ( result || Meshwork::Time::passed(RTC::since(start), millis) )
 			break;
 	}
 	return result;
@@ -455,3 +458,4 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 	}
 	return result;
 }
+#endif

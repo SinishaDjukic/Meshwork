@@ -26,6 +26,8 @@
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 
+#include "Meshwork.h"
+
 //#define SUPPORT_DELIVERY_ROUTED_DISABLE
 //#define SUPPORT_DELIVERY_FLOOD_DISABLE
 //#define SUPPORT_REROUTING_DISABLE

@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __MESHWORK_L3_NETWORK_NETWORKV1_CPP__
+#define __MESHWORK_L3_NETWORK_NETWORKV1_CPP__
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -42,7 +45,7 @@ bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t ho
 			if ( m_sendAbort )
 				break;
 			if ( i < attempts - 1 )//don't sleep after last send
-				Watchdog::delay(RETRY_WAIT_DIRECT);
+				Meshwork::Time::delay(RETRY_WAIT_DIRECT);
 		}
 	}
 	if ( sendCode >= 0 ) {
@@ -62,7 +65,7 @@ bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t ho
 			if ( m_sendAbort )
 				break;
 			if ( i < attempts - 1 )//don't sleep after last send
-				Watchdog::delay(RETRY_WAIT_DIRECT);
+				Meshwork::Time::delay(RETRY_WAIT_DIRECT);
 		}
 	}
 	if ( sendCode >= 0 ) {
@@ -160,7 +163,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 						}
 				}
 #ifdef SUPPORT_DELIVERY_FLOOD
-				if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && (RTC::since(start) > TIMEOUT_ACK_RECEIVE) && (!oneFloodACK) ) {
+				if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && Meshwork::Time::passed(RTC::since(start), TIMEOUT_ACK_RECEIVE) && (!oneFloodACK) ) {
 					MW_LOG_NOTICE(LOG_NETWORKV1, "Noone received our FLOOD ACK. Resend...", NULL);
 					//noone heard our FLOOD. re-send
 					result = FLOOD_NOT_RECEIVED_BY_NEIGHBOURS;
@@ -171,7 +174,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 				MW_LOG_DEBUG(LOG_NETWORKV1, "Reply code=%d", reply_result);
 			} while ( !m_sendAbort &&
 						(reply_result < 0 || ignored) &&
-							(RTC::since(start) < ackTimeout) );
+							(!Meshwork::Time::passed(RTC::since(start), ackTimeout)) );
 			MW_LOG_DEBUG(LOG_NETWORKV1, "Out of loop w code: %d, reply len: %d, sendAbort: %d", reply_result, reply_len, m_sendAbort);
 			
 			if ( m_sendAbort ) { //user aborted; break the loop
@@ -661,3 +664,4 @@ bool Meshwork::L3::NetworkV1::NetworkV1::begin(const void* config) {
 bool Meshwork::L3::NetworkV1::NetworkV1::end() {
 	return m_driver == NULL ? false : m_driver->end();
 }
+#endif
