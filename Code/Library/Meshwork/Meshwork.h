@@ -86,14 +86,14 @@ namespace Meshwork {
 #define MW_LOG_DEBUG_TRACE(file_enable) 			if (file_enable && MW_LOG_DEBUG_ENABLE) trace
 
 
-# define MW_LOG_ARRAY_BYTES(file_enable, array, len)							\
+#define MW_LOG_ARRAY_BYTES(file_enable, array, len)							\
   if (file_enable && MW_LOG_DEBUG_ENABLE) do {									\
 	trace.print((const void*) array, len, IOStream::hex, len+1); \
 	trace << PSTR(" "); \
   } while (0)
   
   
-# define MW_LOG_DEBUG_ARRAY(file_enable, msg, array, len)							\
+#define MW_LOG_DEBUG_ARRAY(file_enable, msg, array, len)							\
   if (file_enable && MW_LOG_DEBUG_ENABLE) do {									\
     trace.print_P(msg);					\
     MW_LOG_ARRAY_BYTES(file_enable, array, len); \
