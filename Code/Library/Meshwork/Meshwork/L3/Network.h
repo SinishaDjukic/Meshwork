@@ -179,7 +179,6 @@ namespace Meshwork {
 			uint8_t m_nwkcaps;
 			uint8_t m_delivery;
 			uint8_t m_retry;
-			uint8_t m_channel;
 			char* m_networkKey;
 			uint8_t m_networkKeyLen;
 			bool m_sendAbort;
@@ -195,7 +194,8 @@ namespace Meshwork {
 			  m_nwkcaps(nwkcaps),
 			  m_delivery(delivery),
 			  m_retry(retry),
-			  m_channel(0),
+			  m_networkKey(NULL),
+			  m_networkKeyLen(0),
 			  m_sendAbort(false)
 			  {}
 
@@ -204,12 +204,11 @@ namespace Meshwork {
 			}
 
 			uint8_t getChannel() {
-				return m_channel;//TODO update Cosa and change to m_driver->get_channel();
+				return m_driver->get_channel();
 			}
 			
 			void setChannel(uint8_t channel) {
-				m_channel = channel;//TODO update Cosa and remove the field entirely
-//				m_driver->set_channel(channel);
+				m_driver->set_channel(channel);
 			}
 			
 			uint8_t getNetworkCaps() {
