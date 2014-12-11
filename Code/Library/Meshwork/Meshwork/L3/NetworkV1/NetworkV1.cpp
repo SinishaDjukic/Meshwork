@@ -98,6 +98,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	iovec_t toSend[MAX_IOVEC_MSG_SIZE];
 	iovec_t* vp = toSend;
 	vp = get_iovec_msg(vp, msg);
+	univmsg_t reply_msg;
 	
 	MW_LOG_DEBUG_VP_BYTES(LOG_NETWORKV1, PSTR("L2 DATA TO SEND: "), toSend);
 	
@@ -106,22 +107,26 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			bool oneFloodACK = false;
 		#endif
 
+		IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, port, msg);
+
 		//Currently, we don't differentiate between regular fail and m_sendAbort within sendWithoutACK
 		bool sent = sendWithoutACK(dest, port, vp, attempts);
+
+		IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, port, msg, sent);
+
 		if ( !sent ) {
 			result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DRIVER_SEND_FAILED;
-//			break;
-		} else
-		//wait for ACK (covers the FLOOD case as well)
-		if (ack != 0) { //need nwk ack
+		} else if (ack != 0) {//wait for ACK (covers the FLOOD case as well)
 			MW_LOG_INFO(LOG_NETWORKV1, "Wait ACK", NULL);
 			uint8_t reply_src, reply_port, reply_len;
 			int reply_result;
 			//the next recv may come with an irrelevant message/data, so recv some more until timeout is reached
 			uint32_t start = RTC::millis();
 			uint8_t dataACK[ACK_PAYLOAD_MAX];
-			univmsg_t reply_msg;
 			bool ignored = false;
+
+			IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_ACK_BEGIN();
+
 			do {
 				ignored = false;
 				
@@ -231,10 +236,15 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 				result = ERROR_ACK_NOT_RECEIVED;
 				ignored = true;
 			}
-		} else {//no need to wait for ACK, so we are OK
+		} else {//message sent, no need to wait for ACK, so we are OK
 			result = OK;
+			break;
 		}
 	}
+	if ( ack !=0 ) {
+		IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_ACK_END(&reply_msg, result);
+	}
+
 #ifdef SUPPORT_DELIVERY_ROUTED
 	//notify RouteProvider about a failed route
 	if ( result == ERROR_ACK_NOT_RECEIVED && m_advisor != NULL && (msg->nwk_ctrl.delivery & DELIVERY_ROUTED) ) {
@@ -278,7 +288,12 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACK
 	
 	MW_LOG_DEBUG_VP_BYTES(LOG_NETWORKV1, PSTR("L2 DATA SEND DIRECT ACK: "), toSend);
 	
+	IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, hopPort, &reply_msg);
+
 	bool sent = sendWithoutACK(dest, hopPort, vp, m_retry+1);
+
+	IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, hopPort, &reply_msg, sent);
+
 	result = sent ? OK : Meshwork::L3::NetworkV1::NetworkV1::ERROR_ACK_SEND_FAILED;
 	
 	MW_LOG_DEBUG(LOG_NETWORKV1, "Result: %d", result);
@@ -339,7 +354,12 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendRoutedACK(Meshwork::L3::Network::ACK
 	
 	MW_LOG_DEBUG_VP_BYTES(LOG_NETWORKV1, PSTR("L2 DATA SEND ROUTED ACK: "), toSend);
 	
+	IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, hopPort, &reply_msg);
+
 	bool sent = sendWithoutACK(dest, hopPort, vp, m_retry+1);
+
+	IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, hopPort, &reply_msg, sent);
+
 	result = sent ? OK : Meshwork::L3::NetworkV1::NetworkV1::ERROR_ACK_SEND_FAILED;
 	
 	MW_LOG_DEBUG(LOG_NETWORKV1, "Result: %d", result);
@@ -494,7 +514,10 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 	uint8_t data[ACK_PAYLOAD_MAX];
 //	uint8_t src, port;//use local vars to reduce code size
 
+	IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_BEGIN();
+
 	int dataLen = m_driver->recv(src, port, &data, PAYLOAD_MAX, ms);
+
 	int result = dataLen;
 //	srcA = src;
 //	portA = port;
@@ -506,6 +529,9 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 
 		univmsg_t recv_msg;
 		get_msg(&recv_msg, data, result);//fill in the msg structure
+
+		IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_END(m_driver->is_broadcast(), src, port, &recv_msg);
+
 		if ( !m_driver->is_broadcast() ) {//send to a specific destination
 			if (recv_msg.nwk_ctrl.delivery & DELIVERY_DIRECT) { //Direct Send
 				//here we assume the driver does not let us receive messages that are not for us!
@@ -560,8 +586,20 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 							//we don't send with ACK here, since we assume the RF driver takes care of RF-level ACK
 							//we only care about NWK ACK end-to-end, which is handled within the orignator's sendWithACK
 							MW_LOG_DEBUG_ARRAY(LOG_NETWORKV1, PSTR("L2 DATA SEND REROUTE: "), data, dataLen);
+
+//so annoying that we have to create the message object here just to notify the listener...
+#ifdef SUPPORT_RADIO_LISTENER
+							univmsg_t msg;
+							get_msg(&msg, data, dataLen);
+							IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(src, dest, port, &msg);
+#endif
 							
 							bool sent = sendWithoutACK(dest, port, data, dataLen, m_retry+1);
+
+#ifdef SUPPORT_RADIO_LISTENER
+							IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(src, dest, port, &msg);
+#endif
+
 							result = sent ? OK_MESSAGE_IGNORED : Meshwork::L3::NetworkV1::NetworkV1::ERROR_REROUTE_FAILED;
 							if ( !sent )
 								MW_LOG_NOTICE(LOG_NETWORKV1, "REROUTE driver send failed to: dest=%d", dest, port);
@@ -596,8 +634,20 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 				//Send FLOOD ACK to allow for early fail at the sender
 				MW_LOG_INFO(LOG_NETWORKV1, "Sending FLOOD ACK", NULL);
 				uint8_t floodACKMsg[2] = {recv_msg.msg_flood.nwk_ctrl.seq, DELIVERY_FLOOD | ACK};
-				sendWithoutACK(src, port, floodACKMsg, sizeof(floodACKMsg), m_retry+1);
 				
+//so annoying that we have to create the message object here just to notify the listener...
+#ifdef SUPPORT_RADIO_LISTENER
+				univmsg_t msg;
+				get_msg(&msg, floodACKMsg, sizeof(floodACKMsg));
+				IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), src, port, &msg);
+#endif
+
+				bool sent = sendWithoutACK(src, port, floodACKMsg, sizeof(floodACKMsg), m_retry+1);
+
+#ifdef SUPPORT_RADIO_LISTENER
+				IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), src, port, &msg, sent);
+#endif
+
 				uint8_t devaddr = m_driver->get_device_address();
 				if (devaddr == recv_msg.msg_flood.flood_info.route.dst) {//we are the ultimate receiver, ask for payload and generate a routed ACK
 					//we could have optimized to check if hopCount == 0 and send direct ack
@@ -626,7 +676,12 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 						
 						MW_LOG_DEBUG_ARRAY(LOG_NETWORKV1, PSTR("L2 DATA SEND REBROADCAST: "), newMsg, dataLen);
 						
+						IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(src, Wireless::Driver::BROADCAST, port, &recv_msg);
+
 						bool sent = sendWithoutACK(Wireless::Driver::BROADCAST, port, newMsg, dataLen, m_retry+1);
+
+						IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(src, Wireless::Driver::BROADCAST, port, &recv_msg, sent);
+
 						result = sent ? OK_MESSAGE_IGNORED : Meshwork::L3::NetworkV1::NetworkV1::ERROR_REROUTE_FAILED;
 						if ( !sent )
 								MW_LOG_NOTICE(LOG_NETWORKV1, "REBROADCAST driver send failed to: dest=%d", Wireless::Driver::BROADCAST, port);

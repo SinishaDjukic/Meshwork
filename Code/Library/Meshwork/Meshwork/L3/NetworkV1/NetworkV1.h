@@ -72,6 +72,10 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| <Empty>
 */
 
+#ifndef SUPPORT_RADIO_LISTENER_DISABLE
+#define SUPPORT_RADIO_LISTENER
+#endif
+
 namespace Meshwork {
 
 	namespace L3 {
@@ -154,6 +158,73 @@ namespace Meshwork {
 					  virtual void route_found(route_t* route) = 0;
 					  virtual void route_failed(route_t* route) = 0;
 				  };
+			#endif
+
+			#ifdef SUPPORT_RADIO_LISTENER
+				  class RadioListener {
+				  public:
+					  virtual void notify_send_begin(uint8_t origin, uint8_t next, uint8_t port, univmsg_t* msg) = 0;
+					  virtual void notify_send_end(uint8_t origin, uint8_t next, uint8_t port, univmsg_t* msg, bool sent) = 0;
+					  virtual void notify_recv_ack_begin() = 0;
+					  virtual void notify_recv_ack_end(univmsg_t* msg, int result) = 0;
+					  virtual void notify_recv_begin() = 0;
+					  virtual void notify_recv_end(bool broadcast, uint8_t src, uint8_t port, univmsg_t* msg) = 0;
+				  };
+
+			#define IF_SUPPORT_RADIO_LISTENER
+
+			#define NOTIFY_SEND_BEGIN(origin, next, port, msg) \
+				  do { if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_send_begin(origin, next, port, msg); \
+					  }; } while (0)
+
+			#define NOTIFY_SEND_END(origin, next, port, msg, sent) \
+				  do { if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_send_end(origin, next, port, msg, sent); \
+					  }; } while (0)
+
+			#define NOTIFY_RECV_ACK_BEGIN() \
+				  do { if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_recv_ack_begin(); \
+					  }; } while (0)
+
+			#define NOTIFY_RECV_ACK_END(msg, result) \
+				  do { if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_recv_ack_end(msg, result); \
+					  }; } while (0)
+
+			#define NOTIFY_RECV_BEGIN() \
+				  do {  if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_recv_begin(); \
+					  }; } while (0)
+
+			#define NOTIFY_RECV_END(broadcast, src, port, msg) \
+				  do { if ( m_radio_listener != NULL ) { \
+						  m_radio_listener->notify_recv_end(broadcast, src, port, msg); \
+					  }; } while (0)
+
+			#else
+
+			#define IF_SUPPORT_RADIO_LISTENER if (false);
+
+			#define NOTIFY_SEND_BEGIN(origin, next, port, msg) \
+				  do { } while (0)
+
+			#define NOTIFY_SEND_END(origin, next, port, msg, sent) \
+				  do { } while (0)
+
+			#define NOTIFY_RECV_ACK_BEGIN() \
+				  do { } while (0)
+
+			#define NOTIFY_RECV_ACK_END(msg, result) \
+				  do { } while (0)
+
+			#define NOTIFY_RECV_BEGIN() \
+				  do { } while (0)
+
+			#define NOTIFY_RECV_END(broadcast, src, port, msg) \
+				  do { } while (0)
+
 			#endif
 
 			protected:
@@ -317,9 +388,14 @@ namespace Meshwork {
 				}
 				
 			protected:
+
 			#ifdef SUPPORT_DELIVERY_ROUTED
 				RouteProvider* m_advisor;
 				uint8_t m_maxHops;
+			#endif
+
+			#ifdef SUPPORT_RADIO_LISTENER
+				RadioListener* m_radio_listener;
 			#endif
 
 				bool sendWithoutACK(uint8_t dest, uint8_t hopPort, iovec_t* vp, uint8_t attempts);
@@ -404,7 +480,16 @@ namespace Meshwork {
 				}
 			#endif
 				
-				bool begin(const void* config = NULL);
+			#ifdef SUPPORT_RADIO_LISTENER
+				RadioListener* get_radio_listener() {
+					return m_radio_listener;
+				}
+				void set_radio_listener(RadioListener* radio_listener) {
+					m_radio_listener = radio_listener;
+				}
+			#endif
+
+			bool begin(const void* config = NULL);
 				bool end();
 				int send(uint8_t delivery, uint8_t retry,
 									uint8_t dest, uint8_t port,
