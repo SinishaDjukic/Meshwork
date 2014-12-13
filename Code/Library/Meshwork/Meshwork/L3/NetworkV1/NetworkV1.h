@@ -72,9 +72,10 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| <Empty>
 */
 
-#ifndef SUPPORT_RADIO_LISTENER_DISABLE
-#define SUPPORT_RADIO_LISTENER
-#endif
+//Note: SUPPORT_RADIO_LISTENER not defined, by default
+//#ifndef SUPPORT_RADIO_LISTENER_DISABLE
+//#define SUPPORT_RADIO_LISTENER
+//#endif
 
 namespace Meshwork {
 

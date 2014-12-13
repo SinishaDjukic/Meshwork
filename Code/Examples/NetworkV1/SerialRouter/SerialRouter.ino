@@ -21,6 +21,16 @@
 #ifndef __EXAMPLES_SERIALROUTER_H__
 #define __EXAMPLES_SERIALROUTER_H__
 
+//Note: comment this out to disable LED tracing
+#define LED_TRACING
+
+#ifdef LED_TRACING
+	//Note: increase the delay factory multiplier to give more blink time for LEDs
+	#define MW_DELAY_FACTOR	5
+	//Enable NetworkV1::RadioListener in the code
+	#define SUPPORT_RADIO_LISTENER
+#endif
+
 #include "Config.h"
 
 #if FULL_DEBUG != false
@@ -45,6 +55,14 @@
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
 #include "NetworkInit.h"
 //END: Include set for initializing the network
+
+#ifdef LED_TRACING
+	OutputPin pin_send(Board::D4);
+	OutputPin pin_recv(Board::D5);
+	OutputPin pin_ack(Board::D6);
+	#include "Utils/LEDTracing.h"
+	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
+#endif
 
 #include "Meshwork/L3/NetworkV1/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
@@ -75,6 +93,10 @@ void setup()
   uartHC.begin(115200);
 #else
   trace.begin(&null_device, NULL);
+#endif
+
+#ifdef LED_TRACING
+  mesh.set_radio_listener(&ledTracing);
 #endif
 
   Watchdog::begin();

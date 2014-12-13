@@ -21,6 +21,16 @@
 #ifndef __EXAMPLES_ROUTER_H__
 #define __EXAMPLES_ROUTER_H__
 
+//Note: comment this out to disable LED tracing
+#define LED_TRACING
+
+#ifdef LED_TRACING
+	//Note: increase the delay factory multiplier to give more blink time for LEDs
+	#define MW_DELAY_FACTOR	5
+	//Enable NetworkV1::RadioListener in the code
+	#define SUPPORT_RADIO_LISTENER
+#endif
+
 #include "Config.h"
 
 #if FULL_DEBUG != false
@@ -46,6 +56,13 @@
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
+#ifdef LED_TRACING
+	OutputPin pin_send(Board::D4);
+	OutputPin pin_recv(Board::D5);
+	OutputPin pin_ack(Board::D6);
+	#include "Utils/LEDTracing.h"
+	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
+#endif
 
 static const uint16_t 	ROUTER_NWK_ID 		= 1;
 static const uint8_t 	ROUTER_CHANNEL_ID 	= 0;
@@ -60,6 +77,10 @@ void setup()
   MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("Channel ID: ") << ROUTER_CHANNEL_ID << endl;
   MW_LOG_DEBUG_TRACE(LOG_ROUTER) << PSTR("Node ID: ") << ROUTER_NODE_ID << endl;
   
+#ifdef LED_TRACING
+  mesh.set_radio_listener(&ledTracing);
+#endif
+
   mesh.setNetworkID(ROUTER_NWK_ID);
   mesh.setChannel(ROUTER_CHANNEL_ID);
   mesh.setNodeID(ROUTER_NODE_ID);
