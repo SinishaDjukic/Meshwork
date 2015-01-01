@@ -27,8 +27,8 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
     }
 
     public void deinit() throws Exception {
-        port.removeEventListener();
         port.closePort();
+        port.removeEventListener();
         port = null;
         portName = null;
     }
