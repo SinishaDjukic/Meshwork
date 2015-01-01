@@ -44,6 +44,30 @@ public class SerialConfiguration {
         return setDTR;
     }
 
+    public void setBaudRate(int baudRate) {
+        this.baudRate = baudRate;
+    }
+
+    public void setDataBits(int dataBits) {
+        this.dataBits = dataBits;
+    }
+
+    public void setStopBits(int stopBits) {
+        this.stopBits = stopBits;
+    }
+
+    public void setParity(int parity) {
+        this.parity = parity;
+    }
+
+    public void setSetRTS(boolean setRTS) {
+        this.setRTS = setRTS;
+    }
+
+    public void setSetDTR(boolean setDTR) {
+        this.setDTR = setDTR;
+    }
+
     protected int dataBits;
     protected int stopBits;
     protected int parity;
