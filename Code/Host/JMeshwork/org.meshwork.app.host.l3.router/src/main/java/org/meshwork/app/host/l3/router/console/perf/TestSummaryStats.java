@@ -1,4 +1,4 @@
-package org.meshwork.app.host.l3.router.serial.perf;
+package org.meshwork.app.host.l3.router.console.perf;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;

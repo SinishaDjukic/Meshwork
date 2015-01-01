@@ -1,8 +1,8 @@
-package org.meshwork.app.host.l3.router.serial;
+package org.meshwork.app.host.l3.router.console;
 
 import org.meshwork.app.host.l3.router.MessageDispatcherImpl;
 import org.meshwork.app.host.l3.router.RouterConfiguration;
-import org.meshwork.app.host.l3.router.serial.perf.*;
+import org.meshwork.app.host.l3.router.console.perf.*;
 import org.meshwork.core.AbstractMessageTransport;
 import org.meshwork.core.host.l3.MessageAdapter;
 import org.meshwork.core.transport.serial.jssc.SerialConfiguration;

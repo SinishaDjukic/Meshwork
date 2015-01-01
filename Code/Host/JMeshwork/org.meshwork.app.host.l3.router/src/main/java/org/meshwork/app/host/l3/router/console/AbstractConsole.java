@@ -1,4 +1,4 @@
-package org.meshwork.app.host.l3.router.serial;
+package org.meshwork.app.host.l3.router.console;
 
 import org.meshwork.app.host.l3.router.MessageDispatcherImpl;
 import org.meshwork.app.host.l3.router.Router;
