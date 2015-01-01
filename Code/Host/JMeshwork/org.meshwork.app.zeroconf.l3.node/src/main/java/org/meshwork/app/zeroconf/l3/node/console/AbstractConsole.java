@@ -1,4 +1,4 @@
-package org.meshwork.app.zeroconf.l3.node.serial;
+package org.meshwork.app.zeroconf.l3.node.console;
 
 import org.meshwork.app.zeroconf.l3.node.MessageDispatcherImpl;
 import org.meshwork.app.zeroconf.l3.node.ZeroConfNode;
