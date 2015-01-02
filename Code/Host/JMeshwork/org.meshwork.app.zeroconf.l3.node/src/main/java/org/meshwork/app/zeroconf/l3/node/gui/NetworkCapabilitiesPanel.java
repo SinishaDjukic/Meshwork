@@ -20,6 +20,7 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
     public static final String INI_CAPABILITIES_KEY = "Capabilities";
 
     protected PTextField maskField;
+    protected ButtonGroup wakeupGroup;
     protected PRadioButton checkAlwaysListening;
     protected PRadioButton checkPeriodicWakeup;
     protected PRadioButton checkAlwaysSleeping;
@@ -52,10 +53,10 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
         containerPanel.add(checkRouter = new PCheckBox("Router (0x" + Integer.toHexString(Constants.NWKCAPS_ROUTER) + ")"));
         containerPanel.add(checkEdge = new PCheckBox("Edge (0x" + Integer.toHexString(Constants.NWKCAPS_EDGE) + ")"));
 
-        ButtonGroup bg = new ButtonGroup();
-        bg.add(checkAlwaysListening);
-        bg.add(checkPeriodicWakeup);
-        bg.add(checkAlwaysSleeping);
+        wakeupGroup = new ButtonGroup();
+        wakeupGroup.add(checkAlwaysListening);
+        wakeupGroup.add(checkPeriodicWakeup);
+        wakeupGroup.add(checkAlwaysSleeping);
 
         checkAlwaysListening.addActionListener(this);
         checkPeriodicWakeup.addActionListener(this);
@@ -122,9 +123,10 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
 
     public void setMask(byte mask) {
         ignoreActionEvents = true;
-        checkAlwaysListening.setSelected((mask & Constants.NWKCAPS_ALWAYS_LISTENING) != 0);
-        checkPeriodicWakeup.setSelected((mask & Constants.NWKCAPS_PERIODIC_WAKEUP) != 0);
-        checkAlwaysSleeping.setSelected((mask & Constants.NWKCAPS_ALWAYS_SLEEPING) != 0);
+        wakeupGroup.setSelected(wakeupGroup.getSelection(), false);
+        checkAlwaysListening.setSelected((mask & 0x03) == Constants.NWKCAPS_ALWAYS_LISTENING);
+        checkPeriodicWakeup.setSelected((mask & 0x03) == Constants.NWKCAPS_PERIODIC_WAKEUP);
+        checkAlwaysSleeping.setSelected((mask & 0x03) == Constants.NWKCAPS_ALWAYS_SLEEPING);
         checkRouter.setSelected((mask & Constants.NWKCAPS_ROUTER) != 0);
         checkEdge.setSelected((mask & Constants.NWKCAPS_EDGE) != 0);
         ignoreActionEvents = false;

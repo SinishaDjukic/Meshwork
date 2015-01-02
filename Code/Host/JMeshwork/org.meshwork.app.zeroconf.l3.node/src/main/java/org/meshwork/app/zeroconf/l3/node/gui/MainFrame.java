@@ -1,8 +1,11 @@
 package org.meshwork.app.zeroconf.l3.node.gui;
 
 import com.prosyst.pgui.*;
+import com.prosyst.pgui.border.EmptyBorder;
 import com.prosyst.pgui.io.IniFile;
 import com.prosyst.pgui.layout.VerticalFlowLayout;
+import com.prosyst.pgui.utils.filechooser.FileFilter;
+import com.prosyst.pgui.utils.filechooser.PFileChooser;
 import org.meshwork.core.transport.serial.jssc.SerialMessageTransport;
 
 import java.awt.*;
@@ -10,6 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Sinisha Djukic on 31.12.2014.
@@ -23,10 +29,10 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
     protected SerialConnectionPanel serialConnectionPanel;
     protected SerialNumberPanel serialNumberPanel;
 
-    public final ImageIcon IMG_OPEN = new ImageIcon(getClass().getResourceAsStream("res/open.png"));
-    public final ImageIcon IMG_SAVE = new ImageIcon(getClass().getResourceAsStream("res/save.png"));
-    public final ImageIcon IMG_EXIT = new ImageIcon(getClass().getResourceAsStream("res/exit.png"));
-    public final ImageIcon IMG_ABOUT = new ImageIcon(getClass().getResourceAsStream("res/about.png"));
+    public final ImageIcon IMG_OPEN = new ImageIcon(getClass().getResourceAsStream("res/open_16.png"));
+    public final ImageIcon IMG_SAVE = new ImageIcon(getClass().getResourceAsStream("res/save_16.png"));
+    public final ImageIcon IMG_EXIT = new ImageIcon(getClass().getResourceAsStream("res/exit_16.png"));
+    public final ImageIcon IMG_ABOUT = new ImageIcon(getClass().getResourceAsStream("res/about_16.png"));
 
     public static final String CMD_OPEN = "Open...";
     public static final String CMD_SAVE = "Save...";
@@ -34,23 +40,43 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
     public static final String CMD_ABOUT = "About...";
 
     protected PMenuBar menuBar;
+    protected AboutDialog aboutDialog;
+    protected boolean aboutDialogLoaded;
+
+    protected ArrayList<AbstractElement> elements;
+    private FileFilter[] fileFilter;
 
     public MainFrame() {
     }
 
     @Override
     public void init(Object context) {
+        elements = new ArrayList<AbstractElement>(10);
+
+        fileFilter = new FileFilter[] {new FileFilter("L3 ZeroConf Files (*.zc3)", "zc3")};
+
         deliveryPanel = new DeliveryPanel();
+        elements.add(deliveryPanel);
         deliveryPanel.init(this);
+
         networkCapabilitiesPanel = new NetworkCapabilitiesPanel();
+        elements.add(networkCapabilitiesPanel);
         networkCapabilitiesPanel.init(this);
+
         networkConfigurationPanel = new NetworkConfigurationPanel();
+        elements.add(networkConfigurationPanel);
         networkConfigurationPanel.init(this);
+
         reportingPanel = new ReportingPanel();
+        elements.add(reportingPanel);
         reportingPanel.init(this);
+
         serialConnectionPanel = new SerialConnectionPanel();
+        elements.add(serialConnectionPanel);
         serialConnectionPanel.init(this);
+
         serialNumberPanel = new SerialNumberPanel();
+        elements.add(serialNumberPanel);
         serialNumberPanel.init(this);
 
         PComponent content = (PComponent) getRootPane().getContentPane();
@@ -67,6 +93,7 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         pright.add(reportingPanel);
 
         PPanel pmain = new PPanel();
+        pmain.setBorder(new EmptyBorder(0, 2, 0, 2));
         pmain.add(pleft, BorderLayout.WEST);
         pmain.add(pright, BorderLayout.CENTER);
 
@@ -113,6 +140,8 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         Dimension size = getSize();
         setLocation((screen.width - size.width)/2, (screen.height - size.height)/2);
 
+        ImageIcon logoIcon = new ImageIcon(getClass().getResource("res/meshwork_16.png"));
+        setIconImage(logoIcon.getImage());
         //show
         setVisible(true);
     }
@@ -137,6 +166,7 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         reportingPanel.deinit(this);
         serialConnectionPanel.deinit(this);
         serialNumberPanel.deinit(this);
+        elements.clear();
     }
 
     @Override
@@ -172,7 +202,7 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         if ( src == serialConnectionPanel ) {
             switch (id) {
                 case SerialConnectionPanel.ACTION_APPLY:
-                    writeDeviceConfiguration(serialConnectionPanel.getTransport());
+                    applyDeviceConfiguration(serialConnectionPanel.getTransport());
                     break;
                 case SerialConnectionPanel.ACTION_DISCONNECTED:
                     updateTitle(false, null);
@@ -194,27 +224,80 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
     }
 
     protected void updateTitle(boolean connected, SerialConnectionPanelData data) {
-        setTitle("L3 ZeroConf" + (connected ? (" @ "+data.port) : ""));
+        setTitle("L3 ZeroConf" + (connected ? (" @ " + data.port) : ""));
     }
 
     protected void open() {
-        //TODO implement open
-        System.out.println("[TODO] open");
+        PFileChooser fc = PFileChooser.getInstance(this);
+        fc.setFileFilters(fileFilter);
+        String [] browseFile = fc.showFileDialog("Open configuration", false, true);
+        String file = browseFile != null && browseFile.length > 0 ? browseFile[0] : null;
+        if ( file != null ) {
+            try {
+                File f = new File(file);
+                if (f.exists()) {
+                    openConfiguration(f);
+                }
+            } catch (Throwable t) {
+                System.err.println("[ERROR] Opening configuration file failed: "+t);
+            }
+        }
     }
 
     protected void save() {
-        //TODO implement save
-        System.out.println("[TODO] save");
+        PFileChooser fc = PFileChooser.getInstance(this);
+        String[] browseFile = fc.showFileDialog("Save configuration", false);
+        fc.setFileFilters(fileFilter);
+        String file = browseFile != null && browseFile.length > 0 ? browseFile[0] : null;
+        if (file != null) {
+            try {
+                File f = new File(file);
+                if (f.exists()) {
+                    int answer = POptionPane.showConfirmDialog(this, "Overwrite file?\n"+f.getCanonicalPath(), "File exists", POptionPane.YES_NO_OPTION);
+                    if (answer == 0) {//yes
+                        //fall through
+                    } else {//no
+                        return;
+                    }
+                }
+                saveConfiguration(f);
+            } catch (Throwable t) {
+                System.err.println("[ERROR] Saving configuration file failed: " + t);
+            }
+        }
     }
 
     protected void about() {
-        //TODO implement about
-        System.out.println("[TODO] about");
+        if (!aboutDialogLoaded) {
+            aboutDialog = new AboutDialog(this);
+            aboutDialogLoaded = true;
+        }
+        if (aboutDialog.initFlag)
+            aboutDialog.init(this);
+        aboutDialog.setLocationRelativeTo(this);
+        aboutDialog.setVisible(true);
     }
 
-    protected void writeDeviceConfiguration(SerialMessageTransport transport) {
+    protected void openConfiguration(File f) throws IOException {
+        IniFile ini = new IniFile();
+        ini.load(f);
+
+        for (AbstractElement element:elements) {
+            element.read(ini);
+        }
+    }
+
+    protected void saveConfiguration(File f) throws IOException {
+        IniFile ini = new IniFile();
+        for (AbstractElement element:elements) {
+            element.write(ini);
+        }
+        ini.save(f);
+    }
+
+    protected void applyDeviceConfiguration(SerialMessageTransport transport) {
         //TODO implement writing current device configuration
-        System.out.println("[TODO] writeDeviceConfiguration");
+        System.out.println("[TODO] applyDeviceConfiguration");
     }
 
     protected void readDeviceConfiguration(SerialMessageTransport transport) {
