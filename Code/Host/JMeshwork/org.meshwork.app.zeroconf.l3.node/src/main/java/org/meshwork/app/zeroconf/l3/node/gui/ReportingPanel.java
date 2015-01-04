@@ -66,7 +66,7 @@ public class ReportingPanel extends PTitledPanel implements AbstractElement, Act
 
     @Override
     public Object getData() {
-        ReportingPanelData data = new ReportingPanelData();
+        ReportingData data = new ReportingData();
         data.reportingFlags = getMask();
         data.reportingNodeID = getNodeID();
         return data;
@@ -85,9 +85,9 @@ public class ReportingPanel extends PTitledPanel implements AbstractElement, Act
         if ( data == null ) {
             setMask((byte)0);
             setNodeID((byte) 0);
-        } else if ( data instanceof ReportingPanelData ) {
-            setMask(((ReportingPanelData) data).reportingFlags);
-            setNodeID(((ReportingPanelData) data).reportingNodeID);
+        } else if ( data instanceof ReportingData) {
+            setMask(((ReportingData) data).reportingFlags);
+            setNodeID(((ReportingData) data).reportingNodeID);
         }
     }
 

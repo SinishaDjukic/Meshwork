@@ -74,7 +74,7 @@ public class NetworkConfigurationPanel extends PTitledPanel implements AbstractE
 
     @Override
     public Object getData() {
-        NetworkConfigurationPanelData data = new NetworkConfigurationPanelData();
+        NetworkConfigurationData data = new NetworkConfigurationData();
         data.channelID = (byte) channelField.getValue();
         data.networkID = (byte) networkIDField.getValue();
         data.nodeID = (byte) nodeIDField.getValue();
@@ -84,8 +84,8 @@ public class NetworkConfigurationPanel extends PTitledPanel implements AbstractE
 
     @Override
     public void setData(Object data) {
-        if ( data instanceof NetworkConfigurationPanelData ) {
-            NetworkConfigurationPanelData d = (NetworkConfigurationPanelData) data;
+        if ( data instanceof NetworkConfigurationData) {
+            NetworkConfigurationData d = (NetworkConfigurationData) data;
             channelField.setValue(d.channelID);
             networkIDField.setValue(d.networkID);
             nodeIDField.setValue(d.nodeID);

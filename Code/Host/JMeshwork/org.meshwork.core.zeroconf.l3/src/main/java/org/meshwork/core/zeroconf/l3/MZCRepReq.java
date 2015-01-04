@@ -9,20 +9,20 @@ import java.io.PrintWriter;
 /**
  * Created by Sinisha Djukic on 14-2-10.
  */
-public class MZCNwkID extends AbstractMessage implements Constants {
+public class MZCRepReq extends AbstractMessage implements Constants {
 
-    public MZCNwkID(byte seq) {
-        super(MSGCODE_ZCNWKID, seq);
+    public MZCRepReq(byte seq) {
+        super(MSGCODE_ZCREPREQ, seq);
     }
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MZCNwkID");
+        writer.print("MZCRepReq");
     }
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCNwkID result = new MZCNwkID(seq);
+        MZCRepReq result = new MZCRepReq(seq);
         return result;
     }
 

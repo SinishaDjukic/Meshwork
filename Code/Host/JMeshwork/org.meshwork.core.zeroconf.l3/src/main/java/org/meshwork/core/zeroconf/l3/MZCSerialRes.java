@@ -9,27 +9,30 @@ import java.io.PrintWriter;
 /**
  * Created by Sinisha Djukic on 14-2-10.
  */
-public class MZCCfgSerial extends AbstractMessage implements Constants {
+public class MZCSerialRes extends AbstractMessage implements Constants {
 
     public byte sernumlen;
     public byte[] sernum;
 
-    public MZCCfgSerial(byte seq) {
-        super(MSGCODE_ZCCFGSERIAL, seq);
+    public MZCSerialRes(byte seq) {
+        super(MSGCODE_ZCSERIALRES, seq);
     }
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MZCCfgSerial: SerNumLen=");writer.print(sernumlen);
-        writer.print(", SerNum=");writer.print(sernum);
+        writer.print("MZCSerialRes: SerNumLen=");writer.print(sernumlen);
+        if ( sernum != null ) {
+            writer.print(", SerNum=");writer.print(new String(sernum));
+        }
     }
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCCfgSerial result = new MZCCfgSerial(msg.seq);
+        MZCSerialRes result = new MZCSerialRes(seq);
         result.sernumlen = msg.data[0];
         result.sernum = result.sernumlen < 1 ? null : new byte[result.sernumlen];
-        System.arraycopy(msg.data, 1, result.sernum, 0, result.sernumlen);
+		if ( result.sernumlen > 0 )
+			System.arraycopy(msg.data, 1, result.sernum, 0, result.sernumlen);
         return result;
     }
 

@@ -14,13 +14,18 @@ public interface Constants {
 
     public static final byte MSGCODE_ZCINIT 			= 48;
     public static final byte MSGCODE_ZCDEINIT 			= 49;
-    public static final byte MSGCODE_ZCID 				= 50;
-    public static final byte MSGCODE_ZCIDRES 			= 51;
-    public static final byte MSGCODE_ZCNWKID 			= 52;
-    public static final byte MSGCODE_ZCNWKIDRES 		= 53;
-    public static final byte MSGCODE_ZCCFGNWK 			= 54;
-    public static final byte MSGCODE_ZCCFGREP 			= 55;
-    public static final byte MSGCODE_ZCCFGSERIAL		= 56;
+    public static final byte MSGCODE_ZCDEVREQ           = 50;
+    public static final byte MSGCODE_ZCDEVRES           = 51;
+    public static final byte MSGCODE_ZCDEVCFG           = 52;
+    public static final byte MSGCODE_ZCNWKREQ           = 53;
+    public static final byte MSGCODE_ZCNWKRES           = 54;
+    public static final byte MSGCODE_ZCNWKCFG           = 55;
+    public static final byte MSGCODE_ZCREPREQ           = 56;
+    public static final byte MSGCODE_ZCREPRES 			= 57;
+    public static final byte MSGCODE_ZCREPCFG 			= 58;
+    public static final byte MSGCODE_ZCSERIALREQ        = 59;
+    public static final byte MSGCODE_ZCSERIALRES		= 60;
+    public static final byte MSGCODE_ZCSERIALCFG		= 61;
 
     //0-63
     public static final byte ERROR_GENERAL 				= 0;

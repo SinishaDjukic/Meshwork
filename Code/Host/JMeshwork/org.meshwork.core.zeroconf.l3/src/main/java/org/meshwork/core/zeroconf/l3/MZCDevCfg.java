@@ -9,26 +9,26 @@ import java.io.PrintWriter;
 /**
  * Created by Sinisha Djukic on 14-2-10.
  */
-public class MZCCfgRep extends AbstractMessage implements Constants {
+public class MZCDevCfg extends AbstractMessage implements Constants {
 
-    public byte reportNodeid;
-    public byte reportFlags;
+    public byte nwkcaps;
+    public byte delivery;
 
-    public MZCCfgRep(byte seq) {
-        super(MSGCODE_ZCCFGREP, seq);
+    public MZCDevCfg(byte seq) {
+        super(MSGCODE_ZCDEVCFG, seq);
     }
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MZCCfgRep: ReportNodeID=");writer.print(reportNodeid);
-        writer.print(", RepFlags=");writer.print(reportFlags);
+        writer.print("MZCDevCfg: NwkCaps=");writer.print(nwkcaps);
+        writer.print(", Delivery=");writer.print(delivery);
     }
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCCfgRep result = new MZCCfgRep(msg.seq);
-        result.reportNodeid = msg.data[0];
-        result.reportFlags = msg.data[1];
+        MZCDevCfg result = new MZCDevCfg(seq);
+        result.nwkcaps = msg.data[0];
+        result.delivery = msg.data[1];
         return result;
     }
 
@@ -37,8 +37,8 @@ public class MZCCfgRep extends AbstractMessage implements Constants {
         msg.seq = seq;
         msg.code = getCode();
         msg.data = new byte[2];
-        msg.data[0] = reportNodeid;
-        msg.data[1] = reportFlags;
+        msg.data[0] = nwkcaps;
+        msg.data[1] = delivery;
         msg.len = (byte) (msg.data.length + 1);
     }
 }

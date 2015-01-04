@@ -24,8 +24,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     protected SimpleDateFormat dateFormatter;
     protected byte seq;
     protected int consoleReadTimeout;
-	protected MZCIDRes lastMZCIDRes;
-	protected MZCNwkIDRes lastMZCNwkIDRes;
+	protected MZCDevRes lastMZCDevRes;
+	protected MZCNwkRes lastMZCNwkRes;
 
     public MessageDispatcherImpl(MessageAdapter adapter, AbstractMessageTransport transport,
                                  ZeroConfiguration config, PrintWriter writer) {
@@ -66,12 +66,12 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 writer.println("[MessageDispatcher] Device configured!");
                 writer.print("\n----------- ");
                 writer.println();
-				if ( lastMZCIDRes != null ) {
-					lastMZCIDRes.toString(writer, "\t\t", null, null);
+				if ( lastMZCDevRes != null ) {
+					lastMZCDevRes.toString(writer, "\t\t", null, null);
 					writer.println();
 				}
-				if ( lastMZCNwkIDRes != null ) {
-					lastMZCNwkIDRes.toString(writer, "\t\t", null, null);
+				if ( lastMZCNwkRes != null ) {
+					lastMZCNwkRes.toString(writer, "\t\t", null, null);
 					writer.println();
 				}
                 writer.print("\n----------- ");
@@ -94,8 +94,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     @Override
     public void deinit() throws Exception {
         running = false;
-		lastMZCIDRes = null;
-		lastMZCNwkIDRes = null;
+		lastMZCDevRes = null;
+		lastMZCNwkRes = null;
     }
 
     protected void doMZCInit() throws Exception {
@@ -118,31 +118,31 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     }
 
     protected void doMZCID() throws Exception {
-        MZCID msg = new MZCID(nextSeq());
+        MZCDevReq msg = new MZCDevReq(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doMZCID] Response: ");
         if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
-			lastMZCIDRes = (MZCIDRes) result;
+			lastMZCDevRes = (MZCDevRes) result;
 		}
-        if ( result == null || !(result instanceof MZCIDRes) )
-            throw new Exception("Error sending MZCID");
+        if ( result == null || !(result instanceof MZCDevRes) )
+            throw new Exception("Error sending MZCDevReq");
     }
 
     protected void doMZCNwkID() throws Exception {
-        MZCNwkID msg = new MZCNwkID(nextSeq());
+        MZCNwkReq msg = new MZCNwkReq(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doMZCNwkID] Response: ");
         if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
-			lastMZCNwkIDRes = (MZCNwkIDRes) result;
+			lastMZCNwkRes = (MZCNwkRes) result;
 		}
-        if ( result == null || !(result instanceof MZCNwkIDRes) )
-            throw new Exception("Error sending MZCNwkID");
+        if ( result == null || !(result instanceof MZCNwkRes) )
+            throw new Exception("Error sending MZCNwkReq");
     }
 
     protected void doMZCCfgNwk() throws Exception {
-        MZCCfgNwk msg = new MZCCfgNwk(nextSeq());
+        MZCNwkCfg msg = new MZCNwkCfg(nextSeq());
         msg.channel = config.getChannel();
         msg.nodeid = config.getNodeid();
         msg.nwkid = config.getNwkid();
@@ -156,11 +156,11 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         if ( result != null )
             result.toString(writer, "\t\t", null, null);
         if ( result == null || !(result instanceof MOK) )
-            throw new Exception("Error sending MZCCfgNwk");
+            throw new Exception("Error sending MZCNwkCfg");
     }
 
     protected void doMZCCfgRep() throws Exception {
-        MZCCfgRep msg = new MZCCfgRep(nextSeq());
+        MZCRepRes msg = new MZCRepRes(nextSeq());
         msg.reportNodeid = config.getReportNodeid();
         msg.reportFlags = config.getReportFlags();
         writer.print("[doMZCCfgNwk] Configuring reporting: ");
@@ -170,7 +170,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         if ( result != null )
             result.toString(writer, "\t\t", null, null);
         if ( result == null || !(result instanceof MOK) )
-            throw new Exception("Error sending MZCCfgRep");
+            throw new Exception("Error sending MZCRepRes");
     }
 
     protected void readMessagesAndDiscardAll() {

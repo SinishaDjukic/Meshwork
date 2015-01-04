@@ -6,6 +6,7 @@ import com.prosyst.pgui.io.IniFile;
 import jssc.SerialPortList;
 import org.meshwork.core.transport.serial.jssc.SerialConfiguration;
 import org.meshwork.core.transport.serial.jssc.SerialMessageTransport;
+import org.meshwork.core.zeroconf.l3.MessageAdapter;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -41,6 +42,7 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
     protected  Vector<ActionListener> listeners;
     protected SerialMessageTransport transport;
     protected MainFrame mainFrame;
+    protected MessageAdapter adapter;
 
     public SerialConnectionPanel() {
         super();//new HorizontalFlowLayout());
@@ -120,6 +122,8 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
         applyButton.removeActionListener(this);
         removeAll();
         mainFrame = null;
+        adapter = null;
+        transport = null;
     }
     
     public void addActionListener(ActionListener al) {
@@ -148,6 +152,7 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
             return;
         if ( b ) {
             transport = new SerialMessageTransport();
+            adapter = new MessageAdapter();
             String portName = (String) portCombo.getEditorValue();
             SerialConfiguration config = createConfiguration();
             if ( config == null ) {
@@ -171,6 +176,10 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
 
     public SerialMessageTransport getTransport() {
         return transport;
+    }
+
+    public MessageAdapter getAdapter() {
+        return adapter;
     }
 
     protected SerialConfiguration createConfiguration() {
@@ -199,7 +208,7 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
 
     @Override
     public Object getData() {
-        SerialConnectionPanelData data = new SerialConnectionPanelData();
+        SerialConnectionData data = new SerialConnectionData();
         data.port = String.valueOf(portCombo.getEditorValue());
         data.speed = Integer.valueOf((String)speedCombo.getEditorValue());
         data.connected = connected;
@@ -208,8 +217,8 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
 
     @Override
     public void setData(Object data) {
-        if ( data instanceof SerialConnectionPanelData ) {
-            SerialConnectionPanelData d = (SerialConnectionPanelData) data;
+        if ( data instanceof SerialConnectionData) {
+            SerialConnectionData d = (SerialConnectionData) data;
             portCombo.setEditorValue(d.port);
             speedCombo.setEditorValue(d.speed);
             setConnectState(d.connected);

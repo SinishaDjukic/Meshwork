@@ -36,12 +36,16 @@
 	
 	Incoming
 	========
-	ZCINIT     = <empty>
-	ZCDEINIT   = <empty>
-	ZCID       = <empty>
-	ZCNWKID    = <empty>
-	ZCCFGNWK   = CHANNEL | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
-	ZCCFGREP   = TARGET NODE ID | REPFLAGS
+	ZCINIT      = <empty>
+	ZCDEINIT    = <empty>
+	ZCDEVREQ    = <empty>
+	ZCDEVCFG    = NKWCAPS | DELIVERY
+	ZCNWKREQ    = <empty>
+	ZCNWKCFG    = CHANNEL | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
+	ZCREPREQ    = <empty>
+	ZCREPCFG    = REPORTING NODE ID | REPFLAGS
+	ZCSERIALREQ = <empty>
+	ZCSERIALCFG = SERNUMLEN | SERNUM
 	REPFLAGS   = <list of reporting flags TBD>
 		b0: Report after add/remove to/from the network
 		b1: Report values upon discrete change
@@ -50,8 +54,10 @@
 	
 	Outgoing
 	========
-	ZCIDRES    = NKWCAPS | DELIVERY | SERNUMLEN | SERNUM
-	ZCNWKIDRES = CHANNEL | NWK ID | NODE ID
+	ZCDEVRES    = NKWCAPS | DELIVERY
+	ZCNWKRES    = CHANNEL | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
+	ZCREPRES    = REPORTING NODE ID | REPFLAGS
+	ZCSERIALRES = SERNUMLEN | SERNUM
 	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_SERIAL_TOO_LONG, ERROR_INSUFFICIENT_DATA, MSGCODE_UNKNOWN
 */
 namespace Meshwork {
@@ -66,10 +72,12 @@ namespace Meshwork {
 			
 				class ZeroConfListener {
 					public:
-						//called after the serial number has been updated
-						virtual void serial_updated() = 0;
+						//called after device configuration flags have been updated
+						virtual void devconfig_updated() = 0;
 						//called after the network configuration has been updated
 						virtual void network_updated() = 0;
+						//called after the serial number has been updated
+						virtual void serial_updated() = 0;
 						//called after the new reporting flags have been updated
 						virtual void reporting_updated() = 0;
 				};
@@ -98,7 +106,7 @@ namespace Meshwork {
 					uint16_t nwkid;
 					uint8_t nodeid;
 					uint8_t nwkkeylen;
-					uint8_t nwkkey[Network::MAX_NETWORK_KEY_LEN];
+					char nwkkey[Network::MAX_NETWORK_KEY_LEN];
 				};
 
 			public:
@@ -109,13 +117,18 @@ namespace Meshwork {
 				
 				static const uint8_t MSGCODE_ZCINIT 			= 48;
 				static const uint8_t MSGCODE_ZCDEINIT 			= 49;
-				static const uint8_t MSGCODE_ZCID 				= 50;
-				static const uint8_t MSGCODE_ZCIDRES 			= 51;
-				static const uint8_t MSGCODE_ZCNWKID 			= 52;
-				static const uint8_t MSGCODE_ZCNWKIDRES 		= 53;
-				static const uint8_t MSGCODE_ZCCFGNWK 			= 54;
-				static const uint8_t MSGCODE_ZCCFGREP 			= 55;
-				static const uint8_t MSGCODE_ZCCFGSERIAL		= 56;
+				static const uint8_t MSGCODE_ZCDEVREQ           = 50;
+				static const uint8_t MSGCODE_ZCDEVRES           = 51;
+				static const uint8_t MSGCODE_ZCDEVCFG           = 52;
+				static const uint8_t MSGCODE_ZCNWKREQ           = 53;
+				static const uint8_t MSGCODE_ZCNWKRES           = 54;
+				static const uint8_t MSGCODE_ZCNWKCFG           = 55;
+				static const uint8_t MSGCODE_ZCREPREQ           = 56;
+				static const uint8_t MSGCODE_ZCREPRES 			= 57;
+				static const uint8_t MSGCODE_ZCREPCFG 			= 58;
+				static const uint8_t MSGCODE_ZCSERIALREQ        = 59;
+				static const uint8_t MSGCODE_ZCSERIALRES		= 60;
+				static const uint8_t MSGCODE_ZCSERIALCFG		= 61;
 				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
 				
 				//0-63
@@ -157,11 +170,18 @@ namespace Meshwork {
 				
 				bool processZCInit(serialmsg_t* msg);
 				bool processZCDeinit(serialmsg_t* msg);
-				bool processZCID(serialmsg_t* msg);
-				bool processZCNwkID(serialmsg_t* msg);
-				bool processZCCfgNwk(serialmsg_t* msg);
-				bool processZCCfgSerial(serialmsg_t* msg);
-				bool processZCCfgRep(serialmsg_t* msg);
+
+				bool processZCDevReq(serialmsg_t* msg);
+				bool processZCDevCfg(serialmsg_t* msg);
+
+				bool processZCNwkReq(serialmsg_t* msg);
+				bool processZCNwkCfg(serialmsg_t* msg);
+
+				bool processZCSerialReq(serialmsg_t* msg);
+				bool processZCSerialCfg(serialmsg_t* msg);
+
+				bool processZCRepReq(serialmsg_t* msg);
+				bool processZCRepCfg(serialmsg_t* msg);
 
 			public:
 				ZeroConfSerial(Meshwork::L3::Network* network, UART* serial,

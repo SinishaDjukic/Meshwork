@@ -27,7 +27,7 @@ public class ZeroConfiguration {
     protected byte nodeid;
     protected String nwkkey;
 	
-	//MZCCfgRep
+	//MZCRepRes
     protected byte reportNodeid;
     protected byte reportFlags;
 

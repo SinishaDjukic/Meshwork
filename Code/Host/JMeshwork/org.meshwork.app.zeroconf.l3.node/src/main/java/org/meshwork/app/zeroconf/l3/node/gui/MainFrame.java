@@ -7,6 +7,7 @@ import com.prosyst.pgui.layout.VerticalFlowLayout;
 import com.prosyst.pgui.utils.filechooser.FileFilter;
 import com.prosyst.pgui.utils.filechooser.PFileChooser;
 import org.meshwork.core.transport.serial.jssc.SerialMessageTransport;
+import org.meshwork.core.zeroconf.l3.MessageAdapter;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -44,7 +45,9 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
     protected boolean aboutDialogLoaded;
 
     protected ArrayList<AbstractElement> elements;
-    private FileFilter[] fileFilter;
+    protected FileFilter[] fileFilter;
+
+    protected PTextArea console;
 
     public MainFrame() {
     }
@@ -128,6 +131,15 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
         getRootPane().setPMenuBar(menuBar);
 
+        console = new PTextArea(false, 80);
+        Font consoleFont = console.getFont();
+        consoleFont = new Font(Font.MONOSPACED, Font.PLAIN, consoleFont.getSize());
+        console.setFont(consoleFont);
+        PScrollPane consoleScroll = new PScrollPane(console);
+        content.add(consoleScroll, BorderLayout.EAST);
+
+        GUILogger.setInstance(new GUILogger(console));
+
         updateTitle(false, null);
         setResizable(false);
 
@@ -202,18 +214,19 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         if ( src == serialConnectionPanel ) {
             switch (id) {
                 case SerialConnectionPanel.ACTION_APPLY:
-                    applyDeviceConfiguration(serialConnectionPanel.getTransport());
+                    applyDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
                     break;
                 case SerialConnectionPanel.ACTION_DISCONNECTED:
                     updateTitle(false, null);
                     break;
                 case SerialConnectionPanel.ACTION_CONNECTED:
-                    updateTitle(true, ((SerialConnectionPanelData)serialConnectionPanel.getData()));
-                    readDeviceConfiguration(serialConnectionPanel.getTransport());
+                    updateTitle(true, ((SerialConnectionData)serialConnectionPanel.getData()));
+                    readDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
                     break;
             }
         } else if (CMD_EXIT.equals(action)) {
-            exit();
+            readDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
+//            exit();
         } else if (CMD_OPEN.equals(action)) {
             open();
         } else if (CMD_SAVE.equals(action)) {
@@ -223,8 +236,12 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         }
     }
 
-    protected void updateTitle(boolean connected, SerialConnectionPanelData data) {
+    protected void updateTitle(boolean connected, SerialConnectionData data) {
         setTitle("L3 ZeroConf" + (connected ? (" @ " + data.port) : ""));
+    }
+
+    protected void clearConsole() {
+        console.setText(null);
     }
 
     protected void open() {
@@ -295,14 +312,41 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         ini.save(f);
     }
 
-    protected void applyDeviceConfiguration(SerialMessageTransport transport) {
-        //TODO implement writing current device configuration
-        System.out.println("[TODO] applyDeviceConfiguration");
+    protected void applyDeviceConfiguration(MessageAdapter adapter, SerialMessageTransport transport) {
+        WriteDeviceTask writeDeviceTask = new WriteDeviceTask(adapter, transport);
+        UpdatePanelsTask updatePanelsTask = new UpdatePanelsTask(this);
+        ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
+        tasks.add(writeDeviceTask);
+        tasks.add(updatePanelsTask);
+        TaskMonitor taskMonitor = new TaskMonitor(tasks);
+        taskMonitor.start();
     }
 
-    protected void readDeviceConfiguration(SerialMessageTransport transport) {
-        //TODO implement reading current device configuration
-        System.out.println("[TODO] readDeviceConfiguration");
+    protected void readDeviceConfiguration(MessageAdapter adapter, SerialMessageTransport transport) {
+        ReadDeviceTask readDeviceTask = new ReadDeviceTask(adapter, transport);
+        UpdatePanelsTask updatePanelsTask = new UpdatePanelsTask(this);
+        ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
+        tasks.add(readDeviceTask);
+        tasks.add(updatePanelsTask);
+        TaskMonitor taskMonitor = new TaskMonitor(tasks);
+        taskMonitor.start();
     }
 
+    public void updatePanels(ArrayList<AbstractData> input) {
+        if ( input != null ) {
+            for (AbstractData data : input) {
+                if ( data instanceof DeliveryData ) {
+                    deliveryPanel.setData((DeliveryData)data);
+                } else if ( data instanceof NetworkCapabilitiesData ) {
+                    networkCapabilitiesPanel.setData((NetworkCapabilitiesData)data);
+                } else if ( data instanceof NetworkConfigurationData ) {
+                    networkConfigurationPanel.setData((NetworkConfigurationData)data);
+                } else if ( data instanceof ReportingData ) {
+                    reportingPanel.setData((ReportingData )data);
+                } else if ( data instanceof SerialNumberData ) {
+                    serialNumberPanel.setData((SerialNumberData)data);
+                }
+            }
+        }
+    }
 }

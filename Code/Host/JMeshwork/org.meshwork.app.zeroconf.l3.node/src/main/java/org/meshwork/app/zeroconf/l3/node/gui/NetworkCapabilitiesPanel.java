@@ -79,7 +79,7 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
 
     @Override
     public Object getData() {
-        DeliveryPanelData data = new DeliveryPanelData();
+        DeliveryData data = new DeliveryData();
         data.delivery = getMask();
         return data;
     }
@@ -88,8 +88,8 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
     public void setData(Object data) {
         if ( data == null ) {
             setMask((byte)0);
-        } else if ( data instanceof NetworkCapabilitiesPanelData ) {
-            setMask(((NetworkCapabilitiesPanelData) data).capabilities);
+        } else if ( data instanceof NetworkCapabilitiesData) {
+            setMask(((NetworkCapabilitiesData) data).capabilities);
         } else if ( data instanceof Byte ) {
             setMask((Byte) data);
         }

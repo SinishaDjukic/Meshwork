@@ -72,7 +72,7 @@ public class SerialNumberPanel extends PTitledPanel implements AbstractElement, 
 
     @Override
     public Object getData() {
-        SerialNumberPanelData data = new SerialNumberPanelData();
+        SerialNumberData data = new SerialNumberData();
         data.value = getValue();
         return data;
     }
@@ -81,8 +81,8 @@ public class SerialNumberPanel extends PTitledPanel implements AbstractElement, 
     public void setData(Object data) {
         if ( data == null ) {
             setValue("");
-        } else if ( data instanceof SerialNumberPanelData ) {
-            setValue(((SerialNumberPanelData) data).value);
+        } else if ( data instanceof SerialNumberData) {
+            setValue(((SerialNumberData) data).value);
         } else if ( data instanceof String ) {
             setValue((String) data);
         }

@@ -18,11 +18,11 @@ public class MessageAdapter implements AbstractMessageAdapter {
     public MessageAdapter() {
         //TODO use reflection to enumerate and instantiate
         messageTypes = new AbstractMessage[] {new MNOK((byte)0), new MOK((byte)0),
-                                                new MUnknown((byte)0), new MZCCfgNwk((byte)0),
-                                                new MZCCfgRep((byte)0), new MZCDeinit((byte)0),
-                                                new MZCID((byte)0), new MZCIDRes((byte)0),
-                                                new MZCInit((byte)0), new MZCNwkID((byte)0),
-                                                new MZCNwkIDRes((byte)0), new MZCCfgSerial((byte)0)
+                                                new MUnknown((byte)0), new MZCNwkCfg((byte)0),
+                                                new MZCRepRes((byte)0), new MZCDeinit((byte)0),
+                                                new MZCDevReq((byte)0), new MZCDevRes((byte)0),
+                                                new MZCInit((byte)0), new MZCNwkReq((byte)0),
+                                                new MZCNwkRes((byte)0), new MZCSerialCfg((byte)0)
         };
         hash = new HashMap<Byte, AbstractMessage>();
         for (AbstractMessage messageType : messageTypes) {

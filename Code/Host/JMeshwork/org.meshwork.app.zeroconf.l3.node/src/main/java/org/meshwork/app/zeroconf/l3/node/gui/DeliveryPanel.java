@@ -65,7 +65,7 @@ public class DeliveryPanel extends PTitledPanel implements AbstractElement, Acti
 
     @Override
     public Object getData() {
-        DeliveryPanelData data = new DeliveryPanelData();
+        DeliveryData data = new DeliveryData();
         data.delivery = getMask();
         return data;
     }
@@ -74,8 +74,8 @@ public class DeliveryPanel extends PTitledPanel implements AbstractElement, Acti
     public void setData(Object data) {
         if ( data == null ) {
             setMask((byte)0);
-        } else if ( data instanceof DeliveryPanelData ) {
-            setMask(((DeliveryPanelData) data).delivery);
+        } else if ( data instanceof DeliveryData) {
+            setMask(((DeliveryData) data).delivery);
         } else if ( data instanceof Byte ) {
             setMask((Byte) data);
         }

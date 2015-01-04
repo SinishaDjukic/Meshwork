@@ -138,13 +138,27 @@ bool processConfigSequence()
 	return state == ZeroConfSerial::MSGCODE_ZCDEINIT;
 }
 
+void readConfig() {
+	//TODO read and apply EEPROM config
+	eepromConf.read((void*) &configuration, (void*) &EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_SERNUM_EEPROM_OFFSET - EXAMPLE_ZC_CONFIGURATION_EEPROM_END + 1));
+
+	mesh.setNetworkID(configuration.nwkconfig.nwkid);
+	mesh.setNodeID(configuration.nwkconfig.nodeid);
+	mesh.setNetworkKeyLen(configuration.nwkconfig.nwkkeylen);
+	mesh.setNetworkKey((char*)(&configuration.nwkconfig.nwkkey));
+	mesh.setChannel(configuration.nwkconfig.channel);
+
+	mesh.setNetworkCaps(configuration.m_nwkcaps);
+	mesh.setDelivery(configuration.m_delivery);
+}
+
 void setup()
 {
 	//Basic setup
 	Watchdog::begin();
 	RTC::begin();
 	
-	//TODO read EEPROM config
+	readConfig();
 	
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);

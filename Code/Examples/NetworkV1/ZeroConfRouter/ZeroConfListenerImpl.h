@@ -49,6 +49,11 @@ public:
 		EEPROMInit::init(m_eeprom, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
 	}
 	
+	void devconfig_updated() {
+		m_eeprom->write((void*) &EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
+		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Serial updated", NULL);
+	}
+
 	void serial_updated() {
 		m_eeprom->write((void*) &EXAMPLE_ZC_SERNUM_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Serial updated", NULL);

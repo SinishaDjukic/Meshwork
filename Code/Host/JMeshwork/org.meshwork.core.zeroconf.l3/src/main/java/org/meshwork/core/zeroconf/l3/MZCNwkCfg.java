@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 /**
  * Created by Sinisha Djukic on 14-2-10.
  */
-public class MZCCfgNwk extends AbstractMessage implements Constants {
+public class MZCNwkCfg extends AbstractMessage implements Constants {
 
     public byte channel;
     public short nwkid;
@@ -17,13 +17,13 @@ public class MZCCfgNwk extends AbstractMessage implements Constants {
     public byte keylen;
     public byte[] key;
 
-    public MZCCfgNwk(byte seq) {
-        super(MSGCODE_ZCCFGNWK, seq);
+    public MZCNwkCfg(byte seq) {
+        super(MSGCODE_ZCNWKCFG, seq);
     }
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MZCCfgNwk: Channel=");writer.print(channel);
+        writer.print("MZCNwkCfg: Channel=");writer.print(channel);
         writer.print(", NwkID=");writer.print(nwkid);
         writer.print(", NodeID=");writer.print(nodeid);
         writer.print(", KeyLen=");writer.print(keylen);
@@ -31,14 +31,15 @@ public class MZCCfgNwk extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCCfgNwk result = new MZCCfgNwk(msg.seq);
+        MZCNwkCfg result = new MZCNwkCfg(msg.seq);
         result.channel = msg.data[0];
         result.nwkid = (short) (( msg.data[1] << 8 ) & 0xFF |
                                 ( msg.data[2] << 0 ) & 0xFF);
         result.nodeid = msg.data[3];
         result.keylen = msg.data[4];
         result.key = result.keylen < 1 ? null : new byte[result.keylen];
-        System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
+        if ( keylen >= 1 )
+            System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
         return result;
     }
 

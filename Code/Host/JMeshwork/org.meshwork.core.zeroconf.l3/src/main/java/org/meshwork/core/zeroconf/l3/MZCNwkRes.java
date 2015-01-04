@@ -9,30 +9,36 @@ import java.io.PrintWriter;
 /**
  * Created by Sinisha Djukic on 14-2-10.
  */
-public class MZCNwkIDRes extends AbstractMessage implements Constants {
+public class MZCNwkRes extends AbstractMessage implements Constants {
 
     public byte channel;
     public short nwkid;
     public byte nodeid;
+    public byte keylen;
+    public byte[] key;
 
-    public MZCNwkIDRes(byte seq) {
-        super(MSGCODE_ZCNWKIDRES, seq);
+    public MZCNwkRes(byte seq) {
+        super(MSGCODE_ZCNWKRES, seq);
     }
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("MZCNwkIDRes: Channel=");writer.print(channel);
+        writer.print("MZCNwkRes: Channel=");writer.print(channel);
         writer.print(", NwkID=");writer.print(nwkid);
         writer.print(", NodeID=");writer.print(nodeid);
+        writer.print(", KeyLen=");writer.print(keylen);
     }
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCNwkIDRes result = new MZCNwkIDRes(seq);
+        MZCNwkCfg result = new MZCNwkCfg(msg.seq);
         result.channel = msg.data[0];
         result.nwkid = (short) (( msg.data[1] << 8 ) & 0xFF |
-                                ( msg.data[2] << 0 ) & 0xFF);
+                ( msg.data[2] << 0 ) & 0xFF);
         result.nodeid = msg.data[3];
+        result.keylen = msg.data[4];
+        result.key = result.keylen < 1 ? null : new byte[result.keylen];
+        System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
         return result;
     }
 
@@ -40,11 +46,14 @@ public class MZCNwkIDRes extends AbstractMessage implements Constants {
     public void serialize(MessageData msg) {
         msg.seq = seq;
         msg.code = getCode();
-        msg.data = new byte[4];
+        msg.data = new byte[5 + keylen];
         msg.data[0] = channel;
         msg.data[1] = (byte) (( nwkid >> 8 ) & 0xFF);
         msg.data[2] = (byte) (( nwkid >> 0 ) & 0xFF);
-        msg.data[4] = nodeid;
+        msg.data[3] = nodeid;
+        msg.data[4] = keylen;
+        if ( keylen >= 1 )
+            System.arraycopy(key, 0, msg.data, 5, keylen);
         msg.len = (byte) (msg.data.length + 1);
     }
 }

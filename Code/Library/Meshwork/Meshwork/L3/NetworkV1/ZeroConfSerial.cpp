@@ -70,6 +70,8 @@ void Meshwork::L3::NetworkV1::ZeroConfSerial::respondNOK(serialmsg_t* msg, uint8
 	writeMessage(sizeof(data), data, true);
 }
 
+
+
 bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCInit(serialmsg_t* msg) {
 	m_initmode = true;
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
@@ -86,22 +88,55 @@ bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDeinit(serialmsg_t* msg) 
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCID(serialmsg_t* msg) {
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d, SerNumLen=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery(), m_sernum->sernumlen);
-	uint8_t data[] = {m_currentMsg->seq, 4, MSGCODE_ZCIDRES, m_network->getNetworkCaps(), m_network->getDelivery(), m_sernum->sernumlen};
-	writeMessage(sizeof(data), data, false);
-	writeMessage(m_sernum->sernumlen, (uint8_t*) m_sernum->sernum, true);
-	return true;
-}
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCNwkID(serialmsg_t* msg) {
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Channel=%d, NwkID=%d, NodeID=%d", msg->seq, m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid);
-	uint8_t data[] = {m_currentMsg->seq, 5, MSGCODE_ZCNWKIDRES, m_nwkconfig->channel, ( m_nwkconfig->nwkid >> 8 ) && 0xFF, m_nwkconfig->nwkid && 0xFF, m_nwkconfig->nodeid};
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDevReq(serialmsg_t* msg) {
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
+	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_ZCDEVRES, m_network->getNetworkCaps(), m_network->getDelivery()};
 	writeMessage(sizeof(data), data, true);
 	return true;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgNwk(serialmsg_t* msg) {
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDevCfg(serialmsg_t* msg) {
+	if ( !m_initmode ) {
+		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
+		respondNOK(msg, ERROR_ILLEGAL_STATE);
+		return false;
+	}
+	bool result = false;
+	if ( m_serial->available() >= 2 ) {
+		m_network->setNetworkCaps(m_serial->getchar());
+		m_network->setDelivery(m_serial->getchar());
+		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
+
+		if ( m_listener != NULL )
+			m_listener->devconfig_updated();
+
+		respondWCode(msg, MSGCODE_OK);
+	} else {
+		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Not enough data in ZCDevCfg, ERROR_INSUFFICIENT_DATA", NULL);
+		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
+	}
+	return true;
+}
+
+
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCNwkReq(serialmsg_t* msg) {
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Channel=%d, NwkID=%d, NodeID=%d", msg->seq, m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid);
+	uint8_t data[] = {m_currentMsg->seq, 6, MSGCODE_ZCNWKRES, m_nwkconfig->channel, ( m_nwkconfig->nwkid >> 8 ) && 0xFF, m_nwkconfig->nwkid && 0xFF, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen};
+#ifndef ZEROCONF_NWKKEY_REPORT_ENABLE
+	writeMessage(sizeof(data), data, false);
+	writeMessage(m_nwkconfig->nwkkeylen, (uint8_t*) m_nwkconfig->nwkkey, true);
+#else
+	//forbid reporting the network key for security reasons
+	data[7] = 0;
+	writeMessage(sizeof(data), data, true);
+#endif
+	return true;
+}
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCNwkCfg(serialmsg_t* msg) {
 	if ( !m_initmode ) {
 		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
 		respondNOK(msg, ERROR_ILLEGAL_STATE);
@@ -143,7 +178,17 @@ bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgNwk(serialmsg_t* msg) 
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgSerial(serialmsg_t* msg) {
+
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCSerialReq(serialmsg_t* msg) {
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, SerNumLen=%d", msg->seq, m_sernum->sernumlen);
+	uint8_t data[] = {m_currentMsg->seq, 2, MSGCODE_ZCSERIALRES, m_sernum->sernumlen};
+	writeMessage(sizeof(data), data, false);
+	writeMessage(m_sernum->sernumlen, (uint8_t*) m_sernum->sernum, true);
+	return true;
+}
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCSerialCfg(serialmsg_t* msg) {
 	if ( !m_initmode ) {
 		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
 		respondNOK(msg, ERROR_ILLEGAL_STATE);
@@ -161,7 +206,6 @@ bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgSerial(serialmsg_t* ms
 	if ( m_serial->available() >= 1 ) {
 		m_sernum->sernumlen = m_serial->getchar();
 		m_sernum->sernum[0] = 0;
-		
 		
 		if ( m_sernum->sernumlen <= MAX_SERIAL_LEN ) {
 			for (size_t i = 0; i < m_sernum->sernumlen; i ++ )
@@ -184,7 +228,16 @@ bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgSerial(serialmsg_t* ms
 	return result;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCCfgRep(serialmsg_t* msg) {
+
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCRepReq(serialmsg_t* msg) {
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
+	uint8_t data[] = {m_currentMsg->seq, 3, MSGCODE_ZCREPRES, m_reporting->targetnodeid, m_reporting->repflags};
+	writeMessage(sizeof(data), data, true);
+	return true;
+}
+
+bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCRepCfg(serialmsg_t* msg) {
 	if ( !m_initmode ) {
 		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
 		respondNOK(msg, ERROR_ILLEGAL_STATE);
@@ -229,11 +282,19 @@ bool Meshwork::L3::NetworkV1::ZeroConfSerial::processOneMessage(serialmsg_t* msg
 				switch ( msgcode ) {
 					case MSGCODE_ZCINIT: processZCInit(msg); break;
 					case MSGCODE_ZCDEINIT: processZCDeinit(msg); break;
-					case MSGCODE_ZCID: processZCID(msg); break;
-					case MSGCODE_ZCNWKID: processZCNwkID(msg); break;
-					case MSGCODE_ZCCFGNWK: processZCCfgNwk(msg); break;
-					case MSGCODE_ZCCFGREP: processZCCfgRep(msg); break;
-					case MSGCODE_ZCCFGSERIAL: processZCCfgSerial(msg); break;
+
+					case MSGCODE_ZCDEVREQ: processZCDevReq(msg); break;
+					case MSGCODE_ZCDEVCFG: processZCDevCfg(msg); break;
+
+					case MSGCODE_ZCNWKREQ: processZCNwkReq(msg); break;
+					case MSGCODE_ZCNWKCFG: processZCNwkCfg(msg); break;
+
+					case MSGCODE_ZCREPREQ: processZCRepReq(msg); break;
+					case MSGCODE_ZCREPCFG: processZCRepCfg(msg); break;
+
+					case MSGCODE_ZCSERIALREQ: processZCSerialReq(msg); break;
+					case MSGCODE_ZCSERIALCFG: processZCSerialCfg(msg); break;
+
 					default:
 						result = processOneMessageEx(msg);
 						if (!result)
