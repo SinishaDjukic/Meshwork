@@ -18,7 +18,7 @@ public class MRFReceive extends AbstractMessage implements Constants {
     public byte[] data;
 
     public MRFReceive(byte seq) {
-        super(MSGCODE_RFRECV, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFRECV);
     }
 
     @Override
@@ -48,14 +48,11 @@ public class MRFReceive extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[3+datalen];
         msg.data[0] = src;
         msg.data[1] = port;
         msg.data[2] = datalen;
         System.arraycopy(data, 0, msg.data, 3, datalen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

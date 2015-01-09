@@ -66,5 +66,5 @@ public class Route implements Printable {
         return true;
     }
 
-    //TODO pull serialization code from all related messages to here
+    //TODO pull serialization subCode from all related messages to here
 }

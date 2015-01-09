@@ -17,7 +17,7 @@ public class MRFBroadcast extends AbstractMessage implements Constants {
     public byte[] data;
 
     public MRFBroadcast(byte seq) {
-        super(MSGCODE_RFBCAST, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFBCAST);
     }
 
     @Override
@@ -45,14 +45,11 @@ public class MRFBroadcast extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[2 + datalen];
         msg.data[0] = port;
         msg.data[1] = datalen;
         if ( datalen > 0)
             System.arraycopy(data, 0, msg.data, 2, datalen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

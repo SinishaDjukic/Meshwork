@@ -16,7 +16,7 @@ public class MConfigBasic extends AbstractMessage implements Constants {
     public byte retry;
 
     public MConfigBasic(byte seq) {
-        super(MSGCODE_CFGBASIC, seq);
+        super(seq, NS_CODE, NS_SUBCODE_CFGBASIC);
     }
 
     @Override
@@ -36,13 +36,10 @@ public class MConfigBasic extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[3];
         msg.data[0] = nwkcaps;
         msg.data[1] = delivery;
         msg.data[2] = retry;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

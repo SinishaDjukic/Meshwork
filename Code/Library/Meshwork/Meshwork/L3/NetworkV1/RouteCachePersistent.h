@@ -90,7 +90,7 @@ namespace Meshwork {
 													i * MAX_DST_NODES * ROUTE_SIZE_SINGLE +
 														j * ROUTE_SIZE_SINGLE;
 							
-							//TODO check if all the pointer converstions are ok
+							//TODO ??? check if all the pointer converstions are ok
 							
 							uint8_t tmp = 0;
 							m_eeprom->read((void*) &tmp, (void*) &data_start, 1);
@@ -123,7 +123,7 @@ namespace Meshwork {
 										const uint8_t change) {
 					uint8_t node_index, route_index;
 					
-					//TODO check if all the pointer converstions are ok
+					//TODO ??? check if all the pointer converstions are ok
 					
 					if ( get_route_entry_index(entry, node_index, route_index) ) {
 						uint16_t data_start = m_eeprom_offset +

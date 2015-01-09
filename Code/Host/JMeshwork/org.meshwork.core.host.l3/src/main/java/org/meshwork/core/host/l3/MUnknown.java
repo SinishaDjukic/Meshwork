@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MUnknown extends AbstractMessage implements Constants {
 
     public MUnknown(byte seq) {
-        super(MSGCODE_UNKNOWN, seq);
+        super(seq, NS_CODE, NS_SUBCODE_UNKNOWN);
     }
 
     @Override
@@ -23,15 +23,11 @@ public class MUnknown extends AbstractMessage implements Constants {
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
         MUnknown result = new MUnknown(msg.seq);
-        result.seq = msg.seq;
         return result;
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
-        msg.data = null;
-        msg.len = 1;
+    public void serializeImpl(MessageData msg) {
     }
+
 }

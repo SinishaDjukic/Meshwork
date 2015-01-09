@@ -18,7 +18,7 @@ public class MZCNwkCfg extends AbstractMessage implements Constants {
     public byte[] key;
 
     public MZCNwkCfg(byte seq) {
-        super(MSGCODE_ZCNWKCFG, seq);
+        super(seq, ZC_CODE, ZC_SUBCODE_ZCNWKCFG);
     }
 
     @Override
@@ -44,9 +44,7 @@ public class MZCNwkCfg extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[5 + keylen];
         msg.data[0] = channel;
         msg.data[1] = (byte) (( nwkid >> 8 ) & 0xFF);
@@ -55,6 +53,5 @@ public class MZCNwkCfg extends AbstractMessage implements Constants {
         msg.data[4] = keylen;
         if ( keylen >= 1 )
             System.arraycopy(key, 0, msg.data, 5, keylen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

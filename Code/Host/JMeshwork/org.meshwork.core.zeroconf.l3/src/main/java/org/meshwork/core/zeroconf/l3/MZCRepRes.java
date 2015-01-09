@@ -15,7 +15,7 @@ public class MZCRepRes extends AbstractMessage implements Constants {
     public byte reportFlags;
 
     public MZCRepRes(byte seq) {
-        super(MSGCODE_ZCREPRES, seq);
+        super(seq, ZC_CODE, ZC_SUBCODE_ZCREPRES);
     }
 
     @Override
@@ -33,12 +33,9 @@ public class MZCRepRes extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[2];
         msg.data[0] = reportNodeid;
         msg.data[1] = reportFlags;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

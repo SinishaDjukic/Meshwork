@@ -51,10 +51,10 @@ public class AboutDialog extends PActionDialog implements ActionListener, Abstra
 
 
     /**
-     * A standard method for the <code>ActionListener</code> interface.
+     * A standard method for the <subCode>ActionListener</subCode> interface.
      * It closes the frame after clicking "OK" button.
      *
-     * @param e an <code>ActionEvent</code> fired on a button click.
+     * @param e an <subCode>ActionEvent</subCode> fired on a button click.
      */
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();

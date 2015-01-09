@@ -123,7 +123,7 @@ public abstract class AbstractDeviceTask extends AbstractTask {
     /**
      * Last session message: deinitialize the ZeroConf serial protocol sequence.
      * After this message the device is not required to respond to any other.
-     * After this message the device may respond to <code>MZCInit</code>
+     * After this message the device may respond to <subCode>MZCInit</subCode>
      * upon its own consent, or may require a special button/reboot sequence
      * before it does.
      *

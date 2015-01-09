@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MInternal extends AbstractMessage implements Constants {
 
     public MInternal(byte seq) {
-        super(MSGCODE_INTERNAL, seq);
+        super(seq, NS_CODE, NS_SUBCODE_INTERNAL);
     }
 
     @Override
@@ -27,10 +27,6 @@ public class MInternal extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.len = 1;
-        msg.code = getCode();
-        msg.data = null;
+    public void serializeImpl(MessageData msg) {
     }
 }

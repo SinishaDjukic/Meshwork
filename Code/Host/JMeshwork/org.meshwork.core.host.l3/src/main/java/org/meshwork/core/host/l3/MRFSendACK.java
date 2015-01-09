@@ -16,7 +16,7 @@ public class MRFSendACK extends AbstractMessage implements Constants {
     public byte[] data;
 
     public MRFSendACK(byte seq) {
-        super(MSGCODE_RFSENDACK, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFSENDACK);
     }
 
     @Override
@@ -35,7 +35,6 @@ public class MRFSendACK extends AbstractMessage implements Constants {
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
         MRFSendACK result = new MRFSendACK(msg.seq);
-        result.seq = msg.seq;
         result.datalen = msg.data[0];
         result.data = new byte[result.datalen];
         System.arraycopy(msg.data, 1, result.data, 0, result.datalen);
@@ -43,12 +42,9 @@ public class MRFSendACK extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
-        msg.data = new byte[1 + datalen];
+    public void serializeImpl(MessageData msg) {
+        msg.data = new byte[datalen];
         msg.data[0] = datalen;
         System.arraycopy(data, 0, msg.data, 1, datalen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

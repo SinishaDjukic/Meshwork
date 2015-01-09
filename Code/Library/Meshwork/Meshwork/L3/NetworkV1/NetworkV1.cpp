@@ -374,130 +374,123 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 	MW_LOG_INFO(LOG_NETWORKV1, "Send: %d:%d, len=%d", dest, port, len);
 	MW_LOG_DEBUG(LOG_NETWORKV1, "deliv=%d, retry=%d, buf=%d, bufACK=%d, lenACK=%d", delivery, retry, buf, bufACK, lenACK);
 	
-	//TODO implement proper delivery strategy for BROADCAST: either Direct or Flood or both
-	
 	int result = -1;
-//	if (retry >= -1) {
-		if (len <= PAYLOAD_MAX) {
-			seq++;
-			MW_LOG_INFO(LOG_NETWORKV1, "New SEQ=%d", seq);
-			size_t none = 0;
-			uint8_t count = 1 + (retry == 255 ? m_retry : retry);
-			uint8_t deliv = delivery == 0 ? m_delivery : delivery;
-			
-			univmsg_t send_msg;
-			send_msg.nwk_ctrl.seq = seq;
+	if (len <= PAYLOAD_MAX) {
+		seq++;
+		MW_LOG_INFO(LOG_NETWORKV1, "New SEQ=%d", seq);
+		size_t none = 0;
+		uint8_t count = 1 + (retry == 255 ? m_retry : retry);
+		uint8_t deliv = delivery == 0 ? m_delivery : delivery;
 
-			//try all set delivery methods, starting from LSB
-			if (deliv & DELIVERY_DIRECT) {
-				MW_LOG_INFO(LOG_NETWORKV1, "Send DIRECT", NULL);
-				send_msg.nwk_ctrl.delivery = DELIVERY_DIRECT;
-				send_msg.msg_direct.dataLen = len;
-				send_msg.msg_direct.data = (uint8_t*) buf;
-				result = sendWithACK(count, RETRY_WAIT_DIRECT, dest == Wireless::Driver::BROADCAST ? 0 : ACK, TIMEOUT_ACK_DIRECT,
-										dest, port,	&send_msg, bufACK, lenACK
+		univmsg_t send_msg;
+		send_msg.nwk_ctrl.seq = seq;
+
+		//try all set delivery methods, starting from LSB
+		if (deliv & DELIVERY_DIRECT) {
+			MW_LOG_INFO(LOG_NETWORKV1, "Send DIRECT", NULL);
+			send_msg.nwk_ctrl.delivery = DELIVERY_DIRECT;
+			send_msg.msg_direct.dataLen = len;
+			send_msg.msg_direct.data = (uint8_t*) buf;
+			result = sendWithACK(count, RETRY_WAIT_DIRECT, dest == Wireless::Driver::BROADCAST ? 0 : ACK, TIMEOUT_ACK_DIRECT,
+									dest, port,	&send_msg, bufACK, lenACK
 #ifdef SUPPORT_DELIVERY_ROUTED
-										, NULL, none
+									, NULL, none
 #endif
-										);
-				result = result > 0 ? OK : result;
-			}
-			if ( result != Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED ) {
+									);
+			result = result > 0 ? OK : result;
+		}
+		if ( result != Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED ) {
 #ifdef SUPPORT_DELIVERY_ROUTED
-				if ( (result <= 0) && (deliv & DELIVERY_ROUTED) ) {
-					MW_LOG_INFO(LOG_NETWORKV1, "Send ROUTED", NULL);
-					if ( dest == Wireless::Driver::BROADCAST ) {
-						result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DELIVERY_METHOD_INVALID;
-					} else {
-						result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_NO_KNOWN_ROUTES;
-						uint8_t routeCount = m_advisor != NULL ? m_advisor->get_routeCount(dest) : 0;
-						bool triedOnce = false;
-						if ( routeCount > 0 ) {
-							for ( int i = 0; i < routeCount; i ++ ) {
-								route_t* route = m_advisor->get_route(dest, i);
-								if (route != NULL) {
-									if (route->hopCount > m_maxHops) {
-										MW_LOG_NOTICE(LOG_NETWORKV1, "Max hops reached, ignoring", NULL);
-										continue;
-		//								return (Meshwork::L3::NetworkV1::NetworkV1::ERROR_MESSAGE_IGNORED_MAX_HOPS_REACHED);
-									}
-									triedOnce = true;
-									send_msg.nwk_ctrl.delivery = DELIVERY_ROUTED;
-									send_msg.msg_routed.route_info.route = *route;
-									send_msg.msg_routed.route_info.breadcrumbs = 0;
-									send_msg.msg_routed.dataLen = len;
-									send_msg.msg_routed.data = (uint8_t*) buf;
-									
-									uint8_t hop = route->hopCount == 0 ? dest : ((uint8_t*)route->hops)[0];
-
-									result = sendWithACK(count, RETRY_WAIT_ROUTED, ACK, TIMEOUT_ACK_ROUTED,
-														hop, port,	&send_msg, bufACK, lenACK, NULL, none);
-									result = result > 0 ? OK : result;
-									if ( result == OK ||
-										 result == Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED )
-										break;
+			if ( (result <= 0) && (deliv & DELIVERY_ROUTED) ) {
+				MW_LOG_INFO(LOG_NETWORKV1, "Send ROUTED", NULL);
+				if ( dest == Wireless::Driver::BROADCAST ) {
+					result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DELIVERY_METHOD_INVALID;
+				} else {
+					result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_NO_KNOWN_ROUTES;
+					uint8_t routeCount = m_advisor != NULL ? m_advisor->get_routeCount(dest) : 0;
+					bool triedOnce = false;
+					if ( routeCount > 0 ) {
+						for ( int i = 0; i < routeCount; i ++ ) {
+							route_t* route = m_advisor->get_route(dest, i);
+							if (route != NULL) {
+								if (route->hopCount > m_maxHops) {
+									MW_LOG_NOTICE(LOG_NETWORKV1, "Route exceeds max hops, ignoring", NULL);
+									continue;
 								}
+								triedOnce = true;
+								send_msg.nwk_ctrl.delivery = DELIVERY_ROUTED;
+								send_msg.msg_routed.route_info.route = *route;
+								send_msg.msg_routed.route_info.breadcrumbs = 0;
+								send_msg.msg_routed.dataLen = len;
+								send_msg.msg_routed.data = (uint8_t*) buf;
+
+								uint8_t hop = route->hopCount == 0 ? dest : ((uint8_t*)route->hops)[0];
+
+								result = sendWithACK(count, RETRY_WAIT_ROUTED, ACK, TIMEOUT_ACK_ROUTED,
+													hop, port,	&send_msg, bufACK, lenACK, NULL, none);
+								result = result > 0 ? OK : result;
+								if ( result == OK ||
+									 result == Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED )
+									break;
 							}
 						}
-						if ( !triedOnce) {
-							MW_LOG_NOTICE(LOG_NETWORKV1, "No routes to: %d", dest);
-						}
 					}
-				}
-#ifdef SUPPORT_DELIVERY_FLOOD
-				if ( (result <= 0) && (deliv & DELIVERY_FLOOD) ) {
-					MW_LOG_INFO(LOG_NETWORKV1, "Send FLOOD", NULL);
-					//Optimized two-step process
-					//Step 1: find the route by sending an empty payload and wait for the ACK
-					//node count is initially 0, since we don't have to count Src and Dst
-					send_msg.nwk_ctrl.delivery = DELIVERY_FLOOD;
-					send_msg.msg_flood.flood_info.route.hopCount = 0;
-					send_msg.msg_flood.flood_info.route.src = m_driver->get_device_address();
-					send_msg.msg_flood.flood_info.route.dst = dest;
-					send_msg.msg_flood.dataLen = 0;
-					send_msg.msg_flood.data = NULL;
-					size_t hopCount = MAX_ROUTING_HOPS;
-					route_t returnRoute;
-					uint8_t hops[MAX_ROUTING_HOPS];
-					returnRoute.hops = hops;
-					result = sendWithACK(count, RETRY_WAIT_FLOOD, ACK, TIMEOUT_ACK_FLOOD, Wireless::Driver::BROADCAST, port,
-											&send_msg, NULL, none, &returnRoute, hopCount);
-
-					//Step 2: send the real message using DELIVERY_ROUTED
-					if ( result > 0 ) {
-						MW_LOG_INFO(LOG_NETWORKV1, "Route found, hops=%d", hopCount);
-						//call the impl method, which will increment the seq as well
-						if ( hopCount == 0 ) {//no hops inbetween, use direct
-							send_msg.nwk_ctrl.delivery = DELIVERY_DIRECT;
-							send_msg.msg_direct.dataLen = len;
-							send_msg.msg_direct.data = (uint8_t*) buf;
-							result = sendWithACK(count, RETRY_WAIT_ROUTED, dest == Wireless::Driver::BROADCAST ? 0 : ACK, TIMEOUT_ACK_DIRECT,
-													dest, port,	&send_msg, bufACK, lenACK, NULL, none);
-							result = result > 0 ? OK : result;
-						} else {//use routed and hops that we discovered
-							send_msg.nwk_ctrl.delivery = DELIVERY_ROUTED;
-							memcpy(&send_msg.msg_routed.route_info.route, &returnRoute, sizeof(returnRoute));
-							send_msg.msg_routed.route_info.breadcrumbs = 0;
-							send_msg.msg_routed.dataLen = len;
-							send_msg.msg_routed.data = (uint8_t*) buf;
-							
-							result = sendWithACK(count, RETRY_WAIT_ROUTED, ACK, TIMEOUT_ACK_ROUTED,
-													send_msg.msg_routed.route_info.route.hops[0], port, &send_msg, bufACK, lenACK, NULL, none);
-							result = result > 0 ? OK : result;
-						}
-					} else {
+					if ( !triedOnce) {
 						MW_LOG_NOTICE(LOG_NETWORKV1, "No routes to: %d", dest);
 					}
 				}
-			}//abort send check
+			}
+#ifdef SUPPORT_DELIVERY_FLOOD
+			if ( (result <= 0) && (deliv & DELIVERY_FLOOD) ) {
+				MW_LOG_INFO(LOG_NETWORKV1, "Send FLOOD", NULL);
+				//Optimized two-step process
+				//Step 1: find the route by sending an empty payload and wait for the ACK
+				//node count is initially 0, since we don't have to count Src and Dst
+				send_msg.nwk_ctrl.delivery = DELIVERY_FLOOD;
+				send_msg.msg_flood.flood_info.route.hopCount = 0;
+				send_msg.msg_flood.flood_info.route.src = m_driver->get_device_address();
+				send_msg.msg_flood.flood_info.route.dst = dest;
+				send_msg.msg_flood.dataLen = 0;
+				send_msg.msg_flood.data = NULL;
+				size_t hopCount = MAX_ROUTING_HOPS;
+				route_t returnRoute;
+				uint8_t hops[MAX_ROUTING_HOPS];
+				returnRoute.hops = hops;
+				result = sendWithACK(count, RETRY_WAIT_FLOOD, ACK, TIMEOUT_ACK_FLOOD, Wireless::Driver::BROADCAST, port,
+										&send_msg, NULL, none, &returnRoute, hopCount);
+
+				//Step 2: send the real message using DELIVERY_ROUTED
+				if ( result > 0 ) {
+					MW_LOG_INFO(LOG_NETWORKV1, "Route found, hops=%d", hopCount);
+					//call the impl method, which will increment the seq as well
+					if ( hopCount == 0 ) {//no hops inbetween, use direct
+						send_msg.nwk_ctrl.delivery = DELIVERY_DIRECT;
+						send_msg.msg_direct.dataLen = len;
+						send_msg.msg_direct.data = (uint8_t*) buf;
+						result = sendWithACK(count, RETRY_WAIT_ROUTED, dest == Wireless::Driver::BROADCAST ? 0 : ACK, TIMEOUT_ACK_DIRECT,
+												dest, port,	&send_msg, bufACK, lenACK, NULL, none);
+						result = result > 0 ? OK : result;
+					} else {//use routed and hops that we discovered
+						send_msg.nwk_ctrl.delivery = DELIVERY_ROUTED;
+						memcpy(&send_msg.msg_routed.route_info.route, &returnRoute, sizeof(returnRoute));
+						send_msg.msg_routed.route_info.breadcrumbs = 0;
+						send_msg.msg_routed.dataLen = len;
+						send_msg.msg_routed.data = (uint8_t*) buf;
+
+						result = sendWithACK(count, RETRY_WAIT_ROUTED, ACK, TIMEOUT_ACK_ROUTED,
+												send_msg.msg_routed.route_info.route.hops[0], port, &send_msg, bufACK, lenACK, NULL, none);
+						result = result > 0 ? OK : result;
+					}
+				} else {
+					MW_LOG_NOTICE(LOG_NETWORKV1, "No routes to: %d", dest);
+				}
+			}
+		}//abort send check
 #endif
 #endif
-		} else {
-			result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_PAYLOAD_TOO_LONG;
-		}
-//	} else {
-//		result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_INVALID_RETRY_COUNT;
-//	}
+	} else {
+		result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_PAYLOAD_TOO_LONG;
+	}
 	MW_LOG_INFO(LOG_NETWORKV1, "Result: %d", result);
 	return result;
 }
@@ -619,7 +612,6 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 				result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DELIVERY_METHOD_INVALID;
 			}
 		} else {//it is broadcast
-			//TODO check why this fails at the receiver?! we get here regularly after some intense traffic?!
 			MW_LOG_INFO(LOG_NETWORKV1, "Received BROADCAST, delivery=%d", recv_msg.nwk_ctrl.delivery);
 			if (recv_msg.nwk_ctrl.delivery & DELIVERY_DIRECT) {
 				MW_LOG_INFO(LOG_NETWORKV1, "Received BROADCAST DIRECT, will not ACK", NULL);

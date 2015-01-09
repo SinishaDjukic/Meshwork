@@ -30,8 +30,8 @@
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
 /*
-	SEQ | LEN | MSG
-	MSG = MSGCODE | MSGDATA
+	LEN | SEQ | MSG
+	MSG = MSGCODE | MSGSUBCODE | MSGDATA
 	ERRORCODE  = <list of possible errors TBD>
 	
 	Incoming
@@ -58,7 +58,7 @@
 	ZCNWKRES    = CHANNEL | NWK ID | NODE ID | NWKKEYLEN | NWKKEY
 	ZCREPRES    = REPORTING NODE ID | REPFLAGS
 	ZCSERIALRES = SERNUMLEN | SERNUM
-	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_SERIAL_TOO_LONG, ERROR_INSUFFICIENT_DATA, MSGCODE_UNKNOWN
+	OK, NOK, ERROR_ILLEGAL_STATE, ERROR_KEY_TOO_LONG, ERROR_SERIAL_TOO_LONG, ERROR_INSUFFICIENT_DATA, ZC_SUBCODE_UNKNOWN
 */
 namespace Meshwork {
 
@@ -82,7 +82,7 @@ namespace Meshwork {
 						virtual void reporting_updated() = 0;
 				};
 				
-				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+				static const uint8_t MAX_SERIALMSG_LEN 			= 32;
 				static const uint8_t MAX_SERIAL_LEN 			= 16;
 				
 				struct serialmsg_t {
@@ -111,25 +111,29 @@ namespace Meshwork {
 
 			public:
 				
-				static const uint8_t MSGCODE_OK 				= 0;
-				static const uint8_t MSGCODE_NOK 				= 1;
-				static const uint8_t MSGCODE_UNKNOWN 			= 2;
+				//ZeroConf Serial Code ID
+				static const uint8_t ZW_CODE 					= 1;
+
+				//ZeroConf Serial SubCode IDs
+				static const uint8_t ZC_SUBCODE_OK 				= 0;
+				static const uint8_t ZC_SUBCODE_NOK 			= 1;
+				static const uint8_t ZC_SUBCODE_UNKNOWN 		= 2;
 				
-				static const uint8_t MSGCODE_ZCINIT 			= 48;
-				static const uint8_t MSGCODE_ZCDEINIT 			= 49;
-				static const uint8_t MSGCODE_ZCDEVREQ           = 50;
-				static const uint8_t MSGCODE_ZCDEVRES           = 51;
-				static const uint8_t MSGCODE_ZCDEVCFG           = 52;
-				static const uint8_t MSGCODE_ZCNWKREQ           = 53;
-				static const uint8_t MSGCODE_ZCNWKRES           = 54;
-				static const uint8_t MSGCODE_ZCNWKCFG           = 55;
-				static const uint8_t MSGCODE_ZCREPREQ           = 56;
-				static const uint8_t MSGCODE_ZCREPRES 			= 57;
-				static const uint8_t MSGCODE_ZCREPCFG 			= 58;
-				static const uint8_t MSGCODE_ZCSERIALREQ        = 59;
-				static const uint8_t MSGCODE_ZCSERIALRES		= 60;
-				static const uint8_t MSGCODE_ZCSERIALCFG		= 61;
-				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
+				static const uint8_t ZC_SUBCODE_ZCINIT 			= 48;
+				static const uint8_t ZC_SUBCODE_ZCDEINIT 		= 49;
+				static const uint8_t ZC_SUBCODE_ZCDEVREQ        = 50;
+				static const uint8_t ZC_SUBCODE_ZCDEVRES        = 51;
+				static const uint8_t ZC_SUBCODE_ZCDEVCFG        = 52;
+				static const uint8_t ZC_SUBCODE_ZCNWKREQ        = 53;
+				static const uint8_t ZC_SUBCODE_ZCNWKRES        = 54;
+				static const uint8_t ZC_SUBCODE_ZCNWKCFG        = 55;
+				static const uint8_t ZC_SUBCODE_ZCREPREQ        = 56;
+				static const uint8_t ZC_SUBCODE_ZCREPRES 		= 57;
+				static const uint8_t ZC_SUBCODE_ZCREPCFG 		= 58;
+				static const uint8_t ZC_SUBCODE_ZCSERIALREQ     = 59;
+				static const uint8_t ZC_SUBCODE_ZCSERIALRES		= 60;
+				static const uint8_t ZC_SUBCODE_ZCSERIALCFG		= 61;
+				//TODO add messages for reading device vendor and model, used RF chip and frequency, extra metadata
 				
 				//0-63
 				static const uint8_t ERROR_GENERAL 				= 0;
@@ -150,6 +154,7 @@ namespace Meshwork {
 			protected:
 				Meshwork::L3::Network* m_network;
 				UART* m_serial;
+				uint8_t m_lastSerialMsgLen;
 				
 				zctype_sernum_t* m_sernum;
 				zctype_reporting_t* m_reporting;
@@ -161,6 +166,9 @@ namespace Meshwork {
 				
 				serialmsg_t* m_currentMsg;
 				
+				int readByte();
+				void readRemainingMessageBytes();
+
 				//this saves us ~500 bytes against repetitive putchar calls
 				void writeMessage(uint8_t len, uint8_t* data, bool flush);
 				
@@ -189,6 +197,7 @@ namespace Meshwork {
 										ZeroConfListener* listener, uint16_t timeout = TIMEOUT_RESPONSE):
 					m_network(network),
 					m_serial(serial),
+					m_lastSerialMsgLen(0),
 					m_sernum(sernum),
 					m_reporting(reporting),
 					m_nwkconfig(nwkconfig),

@@ -92,7 +92,7 @@ void Meshwork::L4::ControllerBase::resetNode() {
 
 int Meshwork::L4::ControllerBase::setModeRequestImpl(uint8_t mode, uint32_t timeout) {
 	//TODO implement
-	//TODO once added to a network make sure we set a bit in the nodeList for our own nodeID
+	//TODO Once added to a network make sure we set a bit in the nodeList for our own nodeID
 	return 0;
 }
 

@@ -125,21 +125,20 @@ bool processConfigSequence()
 	uint32_t start = RTC::millis();
 	uint8_t state = 0;
 	while ( RTC::since(start) < STARTUP_AUTOCONFIG_TIMEOUT ) {
-		//the state flow must be 0 -> MSGCODE_ZCINIT -> MSGCODE_ZCDEINIT
+		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
 		if ( processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT) ) {
-			if ( msg.code == ZeroConfSerial::MSGCODE_ZCINIT ) {
-				state = ZeroConfSerial::MSGCODE_ZCINIT;
-			} else if ( msg.code == ZeroConfSerial::MSGCODE_ZCDEINIT ) {
-				state = ZeroConfSerial::MSGCODE_ZCDEINIT;
+			if ( msg.code == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
+				state = ZeroConfSerial::ZC_SUBCODE_ZCINIT;
+			} else if ( msg.code == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT ) {
+				state = ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 				break;
 			}
 		}
 	}
-	return state == ZeroConfSerial::MSGCODE_ZCDEINIT;
+	return state == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 }
 
 void readConfig() {
-	//TODO read and apply EEPROM config
 	eepromConf.read((void*) &configuration, (void*) &EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_SERNUM_EEPROM_OFFSET - EXAMPLE_ZC_CONFIGURATION_EEPROM_END + 1));
 
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);

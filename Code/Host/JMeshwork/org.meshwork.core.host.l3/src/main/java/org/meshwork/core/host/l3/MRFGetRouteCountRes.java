@@ -14,7 +14,7 @@ public class MRFGetRouteCountRes extends AbstractMessage implements Constants {
     public byte count;
 
     public MRFGetRouteCountRes(byte seq) {
-        super(MSGCODE_RFGETROUTECOUNTRES, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFGETROUTECOUNTRES);
     }
 
     @Override
@@ -30,11 +30,8 @@ public class MRFGetRouteCountRes extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[1];
         msg.data[0] = count;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

@@ -14,7 +14,7 @@ public class MNOK extends AbstractMessage implements Constants {
     public byte error;
 
     public MNOK(byte seq) {
-        super(MSGCODE_NOK, seq);
+        super(seq, NS_CODE, NS_SUBCODE_NOK);
     }
 
     @Override
@@ -48,10 +48,7 @@ public class MNOK extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[] { error };
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

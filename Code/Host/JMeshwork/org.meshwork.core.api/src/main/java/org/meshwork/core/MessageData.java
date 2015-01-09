@@ -9,17 +9,19 @@ import java.io.PrintWriter;
  * Created by Sinisha Djukic on 14-2-10.
  */
 public class MessageData implements Printable {
-    public byte seq;
     public byte len;
+    public byte seq;
     public byte code;
+    public byte subCode;
     public byte data[];
 
     @Override
     public void toString(PrintWriter writer, String rowPrefix, String rowSuffix, String separator) {
-        writer.print("Seq=");writer.print(seq);
-        writer.print(", Len=");writer.print(len);
+        writer.print("Len=");writer.print(len);
+        writer.print(", Seq=");writer.print(seq);
         writer.print(", Code=");writer.print(code);
-        if ( len >= 2 ) {
+        writer.print(", SubCode=");writer.print(subCode);
+        if ( len > 3 ) {
             writer.print(", Data={");
             if ( data != null && data.length == len -1 ) {
                 Printer.printHex(writer, data, -1, 8, rowPrefix, rowSuffix, separator);
@@ -30,7 +32,7 @@ public class MessageData implements Printable {
     }
     public String toString() {
         StringBuffer sb = new StringBuffer(getClass().getName());
-        sb.append(": Seq=").append(seq).append(", Len=").append(len).append(", Code=").append(code);
+        sb.append(", Len=").append(len).append(": Seq=").append(seq).append(", Code=").append(code).append(", SubCode=").append(subCode);
         return sb.toString();
     }
 }

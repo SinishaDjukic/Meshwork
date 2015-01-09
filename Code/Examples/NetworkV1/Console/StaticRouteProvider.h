@@ -104,7 +104,6 @@ public:
 				current ++;
 			}
 		}
-		//TODO
 		trace << PSTR("Get route: dst=") << dst << PSTR(", index=") << index << PSTR(", result=") << result << PSTR("\n");
 		return result;
 	}

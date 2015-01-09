@@ -14,7 +14,7 @@ public class MRFRouteFailed extends AbstractMessage implements Constants {
     public Route route;
 
     public MRFRouteFailed(byte seq) {
-        super(MSGCODE_RFROUTEFAILED, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFROUTEFAILED);
         route = new Route();
     }
 
@@ -35,15 +35,12 @@ public class MRFRouteFailed extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[2 + route.hopCount + 1];
         msg.data[0] = route.hopCount;
         msg.data[1] = route.src;
         if ( route.hopCount > 0 )
             System.arraycopy(route.hops, 0, msg.data, 2, route.hopCount);
         msg.data[2+route.hopCount] = route.dst;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

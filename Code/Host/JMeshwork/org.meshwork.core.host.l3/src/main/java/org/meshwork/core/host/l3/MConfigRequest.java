@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MConfigRequest extends AbstractMessage implements Constants {
 
     public MConfigRequest(byte seq) {
-        super(MSGCODE_CFGREQUEST, seq);
+        super(seq, NS_CODE, NS_SUBCODE_CFGREQUEST);
     }
 
     @Override
@@ -27,10 +27,6 @@ public class MConfigRequest extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.len = 1;
-        msg.code = getCode();
-        msg.data = null;
+    public void serializeImpl(MessageData msg) {
     }
 }

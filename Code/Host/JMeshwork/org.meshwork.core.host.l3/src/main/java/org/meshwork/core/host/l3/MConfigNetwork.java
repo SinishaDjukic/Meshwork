@@ -18,7 +18,7 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
     public byte[] key;
 
     public MConfigNetwork(byte seq) {
-        super(MSGCODE_CFGNWK, seq);
+        super(seq, NS_CODE, NS_SUBCODE_CFGNWK);
     }
 
     @Override
@@ -46,9 +46,7 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[5 + keylen];
         msg.data[0] = channel;
         msg.data[1] = (byte) (( nwkid >> 8 ) & 0xFF);
@@ -57,6 +55,5 @@ public class MConfigNetwork extends AbstractMessage implements Constants {
         msg.data[4] = keylen;
         if ( keylen >= 1 )
             System.arraycopy(key, 0, msg.data, 5, keylen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

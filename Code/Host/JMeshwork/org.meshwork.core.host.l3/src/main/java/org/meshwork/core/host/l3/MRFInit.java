@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MRFInit extends AbstractMessage implements Constants {
 
     public MRFInit(byte seq) {
-        super(MSGCODE_RFINIT, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFINIT);
     }
 
     @Override
@@ -27,10 +27,6 @@ public class MRFInit extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
-        msg.data = null;
-        msg.len = 1;
+    public void serializeImpl(MessageData msg) {
     }
 }

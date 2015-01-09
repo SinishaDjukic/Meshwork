@@ -14,7 +14,7 @@ public class MRFStartReceive extends AbstractMessage implements Constants {
     public long timeout;
 
     public MRFStartReceive(byte seq) {
-        super(MSGCODE_RFSTARTRECV, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFSTARTRECV);
     }
 
     @Override
@@ -33,14 +33,11 @@ public class MRFStartReceive extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[4];
         msg.data[0] = (byte) (( timeout >> 24 ) & 0xFF);
         msg.data[1] = (byte) (( timeout >> 16 ) & 0xFF);
         msg.data[2] = (byte) (( timeout >> 8  ) & 0xFF);
         msg.data[3] = (byte) (( timeout >> 0  ) & 0xFF);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

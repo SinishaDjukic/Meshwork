@@ -5,30 +5,34 @@ package org.meshwork.core.host.l3;
  */
 public interface Constants {
 
-    public static final byte MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size!
+    public static final byte MAX_SERIALMSG_LEN 			    = 32;
 
-    public static final byte MSGCODE_OK 				= 0;
-    public static final byte MSGCODE_NOK 				= 1;
-    public static final byte MSGCODE_UNKNOWN 			= 2;
-    public static final byte MSGCODE_INTERNAL 			= 3;
+    //Network Serial Code ID
+    public static final byte NS_CODE 					    = 0;
 
-    public static final byte MSGCODE_CFGBASIC 			= 10;
-    public static final byte MSGCODE_CFGNWK 			= 11;
-    public static final byte MSGCODE_RFINIT 			= 20;
-    public static final byte MSGCODE_RFDEINIT 			= 21;
-    public static final byte MSGCODE_RFRECV 			= 22;
-    public static final byte MSGCODE_RFRECVACK 			= 23;
-    public static final byte MSGCODE_RFSTARTRECV 		= 24;
-    public static final byte MSGCODE_RFSEND 			= 25;
-    public static final byte MSGCODE_RFSENDACK 			= 26;
-    public static final byte MSGCODE_RFBCAST 			= 27;
-    public static final byte MSGCODE_CFGREQUEST			= 28;
-    public static final byte MSGCODE_RFROUTEFOUND		= 29;//called from MSGCODE_RFRECV
-    public static final byte MSGCODE_RFROUTEFAILED		= 30;//called from MSGCODE_RFSEND
-    public static final byte MSGCODE_RFGETROUTECOUNT	= 31;//called from MSGCODE_RFSEND
-    public static final byte MSGCODE_RFGETROUTECOUNTRES	= 32;// response to MSGCODE_RFGETROUTECOUNT
-    public static final byte MSGCODE_RFGETROUTE			= 33;//called from MSGCODE_RFSEND
-    public static final byte MSGCODE_RFGETROUTERES		= 34;//response to MSGCODE_RFGETROUTE
+    //Network Serial SubCode IDs
+    public static final byte NS_SUBCODE_OK                  = 0;
+    public static final byte NS_SUBCODE_NOK                 = 1;
+    public static final byte NS_SUBCODE_UNKNOWN             = 2;
+    public static final byte NS_SUBCODE_INTERNAL            = 3;
+
+    public static final byte NS_SUBCODE_CFGBASIC 		    = 10;
+    public static final byte NS_SUBCODE_CFGNWK 			    = 11;
+    public static final byte NS_SUBCODE_RFINIT 			    = 20;
+    public static final byte NS_SUBCODE_RFDEINIT 		    = 21;
+    public static final byte NS_SUBCODE_RFRECV 			    = 22;
+    public static final byte NS_SUBCODE_RFRECVACK 		    = 23;
+    public static final byte NS_SUBCODE_RFSTARTRECV 	    = 24;
+    public static final byte NS_SUBCODE_RFSEND 			    = 25;
+    public static final byte NS_SUBCODE_RFSENDACK 		    = 26;
+    public static final byte NS_SUBCODE_RFBCAST 		    = 27;
+    public static final byte NS_SUBCODE_CFGREQUEST		    = 28;
+    public static final byte NS_SUBCODE_RFROUTEFOUND	    = 29;//called from NS_SUBCODE_RFRECV
+    public static final byte NS_SUBCODE_RFROUTEFAILED	    = 30;//called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTECOUNT	    = 31;//called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTECOUNTRES	= 32;// response to NS_SUBCODE_RFGETROUTECOUNT
+    public static final byte NS_SUBCODE_RFGETROUTE			= 33;//called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTERES		= 34;//response to NS_SUBCODE_RFGETROUTE
 
     //0-63
     public static final byte ERROR_GENERAL 				= 0;
@@ -70,7 +74,7 @@ public interface Constants {
     //Negative values define errors
     //Zero value undefined?
 
-    //OK code group
+    //OK subCode group
     /** Message sent/received correctly. */
     public static final byte OK = 1;
     /** Internal message received and can be ignored. */
@@ -80,7 +84,7 @@ public interface Constants {
     /** Warning, ACK message too long. */
     public static final byte OK_WARNING_ACK_TOO_LONG = 4;
 
-    //Wrong parameters code group
+    //Wrong parameters subCode group
     /** Unknown delivery invalid or incompatible with destination. */
     public static final byte ERROR_DELIVERY_METHOD_INVALID = -10;
     /** Payload to long for delivery. */
@@ -88,11 +92,11 @@ public interface Constants {
     /** Retry count is invalid. */
     public static final byte ERROR_INVALID_RETRY_COUNT = -12;
 
-    //Internal network errors code group
+    //Internal network errors subCode group
     /** Message ignored due to max hops reached. */
     public static final byte ERROR_MESSAGE_IGNORED_MAX_HOPS_REACHED = -20;
 
-    //ACK errors code group
+    //ACK errors subCode group
     /** No acknowledge received. */
     public static final byte ERROR_ACK_NOT_RECEIVED = -30;
     /** Sending an ACK has failed. */
@@ -100,7 +104,7 @@ public interface Constants {
     /** Flood message not received by neighbours. */
     public static final byte FLOOD_NOT_RECEIVED_BY_NEIGHBOURS = -32;
 
-    //Routing errors code group
+    //Routing errors subCode group
     /** No known routes to the destination. */
     public static final byte ERROR_NO_KNOWN_ROUTES = -40;
     /** Rerouting a message has failed. */

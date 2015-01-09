@@ -114,7 +114,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                         req.datalen = (byte) (req.data == null ? 0 : req.data.length);
                         try {
                             resp = processMRFSend(req);
-                            if ( resp != null && resp.getCode() == Constants.MSGCODE_RFSENDACK ) {
+                            if ( resp != null && resp.getSubCode() == Constants.NS_SUBCODE_RFSENDACK ) {
                                 stats.successCount ++;
                             } else {
                                 stats.failCount ++;
@@ -147,9 +147,9 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
         boolean sendSeqComplete = false;
         do {
             if ( result != null ) {
-                switch (result.getCode()) {
-                    case Constants.MSGCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) result); sendSeqComplete = true; break;
-                    case Constants.MSGCODE_NOK: sendSeqComplete = true; break;
+                switch (result.getSubCode()) {
+                    case Constants.NS_SUBCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) result); sendSeqComplete = true; break;
+                    case Constants.NS_SUBCODE_NOK: sendSeqComplete = true; break;
                 }
                 if ( !sendSeqComplete ) {
                     MessageData data = readMessageUntil(consoleReadTimeout, req.seq);
@@ -189,7 +189,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkcaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getCode() != Constants.MSGCODE_OK )
+            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
             testSendImpl(stats, ((TestSendDirectConfiguration) stats.config).dstlist, stats.config.iterationDelay);
         } catch (Throwable t) {
@@ -215,7 +215,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkcaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getCode() != Constants.MSGCODE_OK )
+            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
 
             //prepare a dstlist - last element of each route is our dst
@@ -269,7 +269,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkcaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getCode() != Constants.MSGCODE_OK )
+            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
             testSendImpl(stats, ((TestSendFloodConfiguration)stats.config).dstlist, stats.config.iterationDelay);
         } catch (Throwable t) {

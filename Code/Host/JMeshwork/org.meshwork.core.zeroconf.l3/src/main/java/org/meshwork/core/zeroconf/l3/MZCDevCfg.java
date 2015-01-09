@@ -15,7 +15,7 @@ public class MZCDevCfg extends AbstractMessage implements Constants {
     public byte delivery;
 
     public MZCDevCfg(byte seq) {
-        super(MSGCODE_ZCDEVCFG, seq);
+        super(seq, ZC_CODE, ZC_SUBCODE_ZCDEVCFG);
     }
 
     @Override
@@ -33,12 +33,9 @@ public class MZCDevCfg extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[2];
         msg.data[0] = nwkcaps;
         msg.data[1] = delivery;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MZCSerialReq extends AbstractMessage implements Constants {
 
     public MZCSerialReq(byte seq) {
-        super(MSGCODE_ZCSERIALREQ, seq);
+        super(seq, ZC_CODE, ZC_SUBCODE_ZCSERIALREQ);
     }
 
     @Override
@@ -27,10 +27,6 @@ public class MZCSerialReq extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
-        msg.data = null;
-        msg.len = 1;
+    public void serializeImpl(MessageData msg) {
     }
 }

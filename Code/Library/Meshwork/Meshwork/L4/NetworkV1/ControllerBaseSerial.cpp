@@ -35,9 +35,6 @@
 #include "Meshwork/L4/ControllerBase.h"
 #include "Meshwork/L4/ControllerBaseSerial.h"
 
-//TODO remove this
-#define IF_CONTROLLERBASESERIAL_DEBUG
-
 #ifndef IF_CONTROLLERBASESERIAL_DEBUG
 #define IF_CONTROLLERBASESERIAL_DEBUG if(false)
 #endif

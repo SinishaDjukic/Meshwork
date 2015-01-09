@@ -15,7 +15,7 @@ public class MRFGetRoute extends AbstractMessage implements Constants {
     public byte index;
 
     public MRFGetRoute(byte seq) {
-        super(MSGCODE_RFGETROUTE, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFGETROUTE);
     }
 
     @Override
@@ -33,12 +33,9 @@ public class MRFGetRoute extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[2];
         msg.data[0] = dst;
         msg.data[1] = index;
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

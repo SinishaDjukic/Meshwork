@@ -30,8 +30,8 @@
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
 /*
-	SEQ | LEN | MSG
-	MSG = MSGCODE | MSGDATA
+	LEN | SEQ | MSG
+	MSG = MSGCODE | MSGSUBCODE | MSGDATA
 
     ERRORCODE = <list of possible errors TBD>
     CFGBASIC = NKWCAPS | DELIVERY | RETRY
@@ -60,30 +60,33 @@ namespace Meshwork {
 										 Meshwork::L3::NetworkV1::NetworkV1::RouteProvider {
 
 			public:
-				static const uint8_t MAX_SERIALMSG_LEN 			= 64;//TODO calculate the right size! 64 may be too much
+				static const uint8_t MAX_SERIALMSG_LEN 				= 32;
 				
-				static const uint8_t MSGCODE_OK 				= 0;
-				static const uint8_t MSGCODE_NOK 				= 1;
-				static const uint8_t MSGCODE_UNKNOWN 			= 2;
-				static const uint8_t MSGCODE_INTERNAL 			= 3;
-				static const uint8_t MSGCODE_CFGBASIC 			= 10;//0x0A
-				static const uint8_t MSGCODE_CFGNWK 			= 11;//0x0B
-				static const uint8_t MSGCODE_RFINIT 			= 20;//0x14
-				static const uint8_t MSGCODE_RFDEINIT 			= 21;//0x15
-				static const uint8_t MSGCODE_RFRECV 			= 22;//0x16
-				static const uint8_t MSGCODE_RFRECVACK 			= 23;//0x17
-				static const uint8_t MSGCODE_RFSTARTRECV 		= 24;//0x18
-				static const uint8_t MSGCODE_RFSEND 			= 25;//0x19
-				static const uint8_t MSGCODE_RFSENDACK 			= 26;//0x1A
-				static const uint8_t MSGCODE_RFBCAST 			= 27;//0x1B
-				static const uint8_t MSGCODE_CFGREQUEST			= 28;//0x1C
-				static const uint8_t MSGCODE_RFROUTEFOUND		= 29;//0x1D //called from MSGCODE_RFRECV
-				static const uint8_t MSGCODE_RFROUTEFAILED		= 30;//0x1E //called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTECOUNT	= 31;//0x1F //called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTECOUNTRES	= 32;//0x20 //response to MSGCODE_RFGETROUTECOUNT
-				static const uint8_t MSGCODE_RFGETROUTE			= 33;//0x21 //called from MSGCODE_RFSEND
-				static const uint8_t MSGCODE_RFGETROUTERES		= 34;//0x22 //response to MSGCODE_RFGETROUTE
-				//TODO add REQ and RES that identifies the device vendor and model, used RF chip and frequency, extra metadata
+				//Network Serial Code ID
+				static const uint8_t NS_CODE 						= 0;
+
+				//Network Serial SubCode IDs
+				static const uint8_t NS_SUBCODE_OK 					= 0;
+				static const uint8_t NS_SUBCODE_NOK 				= 1;
+				static const uint8_t NS_SUBCODE_UNKNOWN 			= 2;
+				static const uint8_t NS_SUBCODE_INTERNAL 			= 3;
+				static const uint8_t NS_SUBCODE_CFGBASIC 			= 10;//0x0A
+				static const uint8_t NS_SUBCODE_CFGNWK 				= 11;//0x0B
+				static const uint8_t NS_SUBCODE_RFINIT 				= 20;//0x14
+				static const uint8_t NS_SUBCODE_RFDEINIT 			= 21;//0x15
+				static const uint8_t NS_SUBCODE_RFRECV 				= 22;//0x16
+				static const uint8_t NS_SUBCODE_RFRECVACK 			= 23;//0x17
+				static const uint8_t NS_SUBCODE_RFSTARTRECV 		= 24;//0x18
+				static const uint8_t NS_SUBCODE_RFSEND 				= 25;//0x19
+				static const uint8_t NS_SUBCODE_RFSENDACK 			= 26;//0x1A
+				static const uint8_t NS_SUBCODE_RFBCAST 			= 27;//0x1B
+				static const uint8_t NS_SUBCODE_CFGREQUEST			= 28;//0x1C
+				static const uint8_t NS_SUBCODE_RFROUTEFOUND		= 29;//0x1D //called from NS_SUBCODE_RFRECV
+				static const uint8_t NS_SUBCODE_RFROUTEFAILED		= 30;//0x1E //called from NS_SUBCODE_RFSEND
+				static const uint8_t NS_SUBCODE_RFGETROUTECOUNT		= 31;//0x1F //called from NS_SUBCODE_RFSEND
+				static const uint8_t NS_SUBCODE_RFGETROUTECOUNTRES	= 32;//0x20 //response to NS_SUBCODE_RFGETROUTECOUNT
+				static const uint8_t NS_SUBCODE_RFGETROUTE			= 33;//0x21 //called from NS_SUBCODE_RFSEND
+				static const uint8_t NS_SUBCODE_RFGETROUTERES		= 34;//0x22 //response to NS_SUBCODE_RFGETROUTE
 				
 				//0-63
 				static const uint8_t ERROR_GENERAL 				= 0;
@@ -99,59 +102,58 @@ namespace Meshwork {
 				static const uint16_t TIMEOUT_RESPONSE 			= 5000;
 				
 			public:
-			  struct serialmsg_t {
-				uint8_t seq;
-				uint8_t len;
-				uint8_t code;
-				uint8_t data[MAX_SERIALMSG_LEN];
-			  };
-			  
-			  struct data_cfgbasic_t {
-				uint8_t nwkcaps;
-				uint8_t delivery;
-				uint8_t retry;
-			  };
-			  
-			  struct data_cfgnwk_t {
-				uint8_t channel;
-				uint16_t nwkid;
-				uint8_t nodeid;
-			  };
-			  
-			  struct data_rfrecv_t {
-				uint8_t src;
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t data[NetworkV1::PAYLOAD_MAX];
-			  };
-			  
-			  struct data_rfrecvack_t {
-				uint8_t datalen;
-				uint8_t data[NetworkV1::ACK_PAYLOAD_MAX];
-			  };
-			  
-			  struct data_rfstartrecv_t {
-				uint32_t timeout;
-			  };
-			  
-			  struct data_rfsend_t {
-				uint8_t dst;
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t data[NetworkV1::PAYLOAD_MAX];
-			  };
-			  
-			  struct data_rfbcast_t {
-				uint8_t port;
-				uint8_t datalen;
-				uint8_t data[NetworkV1::PAYLOAD_MAX];
-			  };  
-			  
-			  //TODO sync structures with below constants and remove unused ones
-			  
+				struct serialmsg_t {
+					uint8_t seq;
+					uint8_t len;
+					uint8_t code;
+					uint8_t data[MAX_SERIALMSG_LEN];
+				};
+
+				struct data_cfgbasic_t {
+					uint8_t nwkcaps;
+					uint8_t delivery;
+					uint8_t retry;
+				};
+
+				struct data_cfgnwk_t {
+					uint8_t channel;
+					uint16_t nwkid;
+					uint8_t nodeid;
+				};
+
+				struct data_rfrecv_t {
+					uint8_t src;
+					uint8_t port;
+					uint8_t datalen;
+					uint8_t data[NetworkV1::PAYLOAD_MAX];
+				};
+
+				struct data_rfrecvack_t {
+					uint8_t datalen;
+					uint8_t data[NetworkV1::ACK_PAYLOAD_MAX];
+				};
+
+				struct data_rfstartrecv_t {
+					uint32_t timeout;
+				};
+
+				struct data_rfsend_t {
+					uint8_t dst;
+					uint8_t port;
+					uint8_t datalen;
+					uint8_t data[NetworkV1::PAYLOAD_MAX];
+				};
+
+				struct data_rfbcast_t {
+					uint8_t port;
+					uint8_t datalen;
+					uint8_t data[NetworkV1::PAYLOAD_MAX];
+				};
+
 			protected:
 				Meshwork::L3::Network* m_network;
 				UART* m_serial;
+				uint8_t m_lastSerialMsgLen;
 				uint16_t m_timeout;
 				serialmsg_t* m_currentMsg;
 				NetworkV1::route_t m_currentRoute;
@@ -183,16 +185,19 @@ namespace Meshwork {
 				NetworkSerial(Meshwork::L3::Network* network, UART* serial, uint16_t timeout = TIMEOUT_RESPONSE):
 					m_network(network),
 					m_serial(serial),
+					m_lastSerialMsgLen(0),
 					m_timeout(timeout),
 					m_lastMsgLen(NetworkV1::PAYLOAD_MAX)
 				{
 					m_networkKey[0] = 0;
-					//TODO should pull into Network class API
+					//TODO Pull into Network class API
 					((Meshwork::L3::NetworkV1::NetworkV1*)network)->set_route_advisor(this);
 				}
 				
 				bool initSerial();
 				bool waitForBytes(uint8_t count, uint16_t millis);
+				int readByte();
+				void readRemainingMessageBytes();
 				
 				bool processOneMessage(serialmsg_t* msg);
 				bool processOneMessageEx(serialmsg_t* msg);

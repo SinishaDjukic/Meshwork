@@ -15,7 +15,7 @@ public class MZCSerialRes extends AbstractMessage implements Constants {
     public byte[] sernum;
 
     public MZCSerialRes(byte seq) {
-        super(MSGCODE_ZCSERIALRES, seq);
+        super(seq, ZC_CODE, ZC_SUBCODE_ZCSERIALRES);
     }
 
     @Override
@@ -37,13 +37,10 @@ public class MZCSerialRes extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[1 + sernumlen];
         msg.data[0] = sernumlen;
         if ( sernumlen >= 1 )
             System.arraycopy(sernum, 0, msg.data, 1, sernumlen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

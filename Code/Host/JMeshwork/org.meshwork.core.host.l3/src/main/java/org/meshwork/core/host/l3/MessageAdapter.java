@@ -31,7 +31,7 @@ public class MessageAdapter implements AbstractMessageAdapter {
         };
         hash = new HashMap<Byte, AbstractMessage>();
         for (AbstractMessage messageType : messageTypes) {
-            hash.put(messageType.getCode(), messageType);
+            hash.put(messageType.getSubCode(), messageType);
         }
     }
 
@@ -40,7 +40,7 @@ public class MessageAdapter implements AbstractMessageAdapter {
         //TODO the caller must ensure that:
         // 1) data.data != null unless data.len == 1
         // 2) data.len == data.data.length + 1
-        AbstractMessage messageType = hash.get(data.code);
+        AbstractMessage messageType = hash.get(data.subCode);
         AbstractMessage result = messageType != null ? messageType.deserialize(data) : null;
         return result;
     }

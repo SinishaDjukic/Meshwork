@@ -71,16 +71,16 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                     writer.print("<Timeout>");
                 writer.println();
                 if ( message != null ) {
-                    switch ( message.getCode() ) {
-                        case Constants.MSGCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) message); break;
-                        case Constants.MSGCODE_RFRECV: processMRFReceive(writer, (MRFReceive) message); break;
+                    switch ( message.getSubCode() ) {
+                        case Constants.NS_SUBCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) message); break;
+                        case Constants.NS_SUBCODE_RFRECV: processMRFReceive(writer, (MRFReceive) message); break;
 
-                        case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
-                        case Constants.MSGCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
-                        case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
-                        case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
-//                        case Constants.MSGCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) message); break;
-                        case Constants.MSGCODE_NOK: break;
+                        case Constants.NS_SUBCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
+                        case Constants.NS_SUBCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
+                        case Constants.NS_SUBCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
+                        case Constants.NS_SUBCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
+//                        case Constants.NS_SUBCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) message); break;
+                        case Constants.NS_SUBCODE_NOK: break;
                     }
                 }
                 writer.println();
@@ -168,11 +168,11 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 writer.println();
                 writer.flush();
                 if ( result != null ) {
-                    switch ( result.getCode() ) {
-                        case Constants.MSGCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) result); finished = true; break;
-                        case Constants.MSGCODE_OK: writer.println("... [processMRFReceive] MSGCODE_OK received"); finished = true; break;
-                        case Constants.MSGCODE_INTERNAL: writer.println("... [processMRFReceive] MSGCODE_INTERNAL received"); finished = true; break;
-                        case Constants.MSGCODE_NOK: writer.println("... [processMRFReceive] MSGCODE_NOK received"); finished = true; break;//throw exception?
+                    switch ( result.getSubCode() ) {
+                        case Constants.NS_SUBCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) result); finished = true; break;
+                        case Constants.NS_SUBCODE_OK: writer.println("... [processMRFReceive] NS_SUBCODE_OK received"); finished = true; break;
+                        case Constants.NS_SUBCODE_INTERNAL: writer.println("... [processMRFReceive] NS_SUBCODE_INTERNAL received"); finished = true; break;
+                        case Constants.NS_SUBCODE_NOK: writer.println("... [processMRFReceive] NS_SUBCODE_NOK received"); finished = true; break;//throw exception?
                     }
                 }
             }
@@ -301,8 +301,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         }
         readMessagesAndDiscardAll();
         if ( !result ) {
-            writer.println("Received MSGCODE_CFGREQUEST, but not allowed! Test run will fail!");
-            throw new IllegalStateException("Received MSGCODE_CFGREQUEST, but not allowed! Test run will fail!");
+            writer.println("Received NS_SUBCODE_CFGREQUEST, but not allowed! Test run will fail!");
+            throw new IllegalStateException("Received NS_SUBCODE_CFGREQUEST, but not allowed! Test run will fail!");
         }
         return result;
     }
@@ -319,12 +319,12 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 if (temp != null) {//shouldn't happen?
                     if (temp.seq == seq) {
                         AbstractMessage message = adapter.deserialize(temp);
-                        switch ( message.getCode() ) {
-                            case Constants.MSGCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
-                            case Constants.MSGCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
-                            case Constants.MSGCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
-                            case Constants.MSGCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
-                            case Constants.MSGCODE_CFGREQUEST: breakout = autoConfig(message); break;
+                        switch ( message.getSubCode() ) {
+                            case Constants.NS_SUBCODE_RFROUTEFOUND: processMRFRouteFound(writer, (MRFRouteFound) message); break;
+                            case Constants.NS_SUBCODE_RFROUTEFAILED: processMRFRouteFailed(writer, (MRFRouteFailed) message); break;
+                            case Constants.NS_SUBCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
+                            case Constants.NS_SUBCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
+                            case Constants.NS_SUBCODE_CFGREQUEST: breakout = autoConfig(message); break;
                             default:
                                 result = temp;
                                 breakout = true;
@@ -332,7 +332,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                         }
                     } else {
                         AbstractMessage message = adapter.deserialize(temp);
-                        if (message != null && message.getCode() == Constants.MSGCODE_CFGREQUEST) {
+                        if (message != null && message.getSubCode() == Constants.NS_SUBCODE_CFGREQUEST) {
                             breakout = autoConfig(message);
                         } else {
                             writer.println("<Unexpected message> " + message);

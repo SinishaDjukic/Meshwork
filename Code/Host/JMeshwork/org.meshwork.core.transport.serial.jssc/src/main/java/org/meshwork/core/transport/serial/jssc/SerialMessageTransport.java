@@ -93,18 +93,19 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
 
         try {
             System.out.println("<<<<<<<<<< ENTER SerialMessageTransport._readOneMessage with timeout: "+timeout+" <<<<<<<<<<");
-            header = port.readBytes(3, timeout);
+            header = port.readBytes(4, timeout);
         } catch (SerialPortTimeoutException e) {
             throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
         } catch (Exception e) {
             throw new IOException("Exception while reading the message header: "+e.getMessage(), e);
         }
-        result.seq = header[0];
-        result.len = header[1];
+        result.len = header[0];
+        result.seq = header[1];
         result.code = header[2];
+        result.subCode = header[3];
         if ( result.len > 1 ) {
             try {
-                result.data = port.readBytes(result.len-1, timeout);
+                result.data = port.readBytes(result.len-4, timeout);
             } catch (SerialPortTimeoutException e) {
                 throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
             } catch (Exception e) {
@@ -132,15 +133,18 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         System.out.println(">>>>>>>>>> ENTER SerialMessageTransport._sendOneMessage: "+message+" >>>>>>>>>>");
 //        port.writeByte(message.seq);
 //        port.writeByte(message.len);
-//        port.writeByte(message.code);
+//        port.writeByte(message.subCode);
 //        if ( message.len > 1 )
 //            port.writeBytes(message.data);
-        byte[] temp = new byte[2 + message.len];
-        temp[0] = message.seq;
-        temp[1] = message.len;
-        temp[2] = message.code;
-        if ( message.len > 1 )
-            System.arraycopy(message.data, 0, temp, 3, message.len-1);
+        byte[] temp = new byte[message.len];
+        temp[0] = message.len;
+        temp[1] = message.seq;
+        temp[3] = message.code;
+        temp[4] = message.subCode;
+        if ( message.len != 4 + message.data.length)
+            throw new IllegalArgumentException("Message length invalid! message.len ("+message.len+") != 4 + message.data.len("+message.data.length+")");
+        if ( message.len > 4 )
+            System.arraycopy(message.data, 0, temp, 5, message.data.length);
         port.writeBytes(temp);
         System.out.println(">>>>>>>>>> EXIT SerialMessageTransport._sendOneMessage >>>>>>>>>>");
         return SEND_OK;

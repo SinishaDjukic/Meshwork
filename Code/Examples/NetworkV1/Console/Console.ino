@@ -101,36 +101,18 @@ void setup()
 {
 
   uart.begin(9600);
-  uint8_t mode = SLEEP_MODE_IDLE;
-  //TODO revert back watchdog settings
-  Watchdog::begin(16);  
-//  Watchdog::begin();
-//  rf.set_sleep(mode);
+
+  Watchdog::begin();
   RTC::begin();
+
   trace.begin(&uart, PSTR("Interactive Serial Console: started"));
   trace << PSTR("Board: ") << BOARD_VARIANT;
   trace.println();
 }
 
-//bool equalsConst(const char s1[], const char s2[]) {
-///	return equals((char*) s1, (char *) s2);
-//}
-
 bool equals(char s1[], char s2[]) {
     return strncmp(s1, s2, strlen(s2)) == 0;
-/*
-	if ( strlen(s1) != strlen(s2) )
-		return false;
-	for ( int i = strlen(s2) - 1; i >= 0; i --)
-		if ( s1[i] != s2[i] )
-			return false;
-	return true;
-	*/
 }
-
-//bool startsWithConst(int fullOffset, const char* full, const char* subs) {
-//	return startsWith(fullOffset, (char *) full, (char *) subs);
-//}
 
 bool startsWith(int fullOffset, char* full, char* subs) {
     int subslen = strlen(subs);
@@ -336,8 +318,6 @@ void run_clearrx() {
 
 void loop()
 {
-
-//TODO RouteProvider impl
 
 	uint8_t len = console.readline();
 	if ( len > 0 ) {

@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class MOK extends AbstractMessage implements Constants {
 
     public MOK(byte seq) {
-        super(MSGCODE_OK, seq);
+        super(seq, NS_CODE, NS_SUBCODE_OK);
     }
 
     @Override
@@ -27,9 +27,9 @@ public class MOK extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
+    public void serializeImpl(MessageData msg) {
         msg.seq = seq;
-        msg.code = getCode();
+        msg.subCode = getSubCode();
         msg.data = null;
         msg.len = 1;
     }

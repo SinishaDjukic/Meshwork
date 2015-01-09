@@ -16,7 +16,7 @@ public class MRFReceiveACK extends AbstractMessage implements Constants {
     public byte[] data;
 
     public MRFReceiveACK(byte seq) {
-        super(MSGCODE_RFRECVACK, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFRECVACK);
     }
 
     @Override
@@ -42,13 +42,10 @@ public class MRFReceiveACK extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[1 + datalen];
         msg.data[0] = datalen;
         if ( data != null )
             System.arraycopy(data, 0, msg.data, 1, datalen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }

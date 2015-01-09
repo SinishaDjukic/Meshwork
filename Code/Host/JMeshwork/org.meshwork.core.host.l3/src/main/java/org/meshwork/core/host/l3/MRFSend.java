@@ -18,7 +18,7 @@ public class MRFSend extends AbstractMessage implements Constants {
     public byte[] data;
 
     public MRFSend(byte seq) {
-        super(MSGCODE_RFSEND, seq);
+        super(seq, NS_CODE, NS_SUBCODE_RFSEND);
     }
 
     @Override
@@ -49,15 +49,12 @@ public class MRFSend extends AbstractMessage implements Constants {
     }
 
     @Override
-    public void serialize(MessageData msg) {
-        msg.seq = seq;
-        msg.code = getCode();
+    public void serializeImpl(MessageData msg) {
         msg.data = new byte[3 + datalen];
         msg.data[0] = dst;
         msg.data[1] = port;
         msg.data[2] = datalen;
         if ( datalen > 0 )
             System.arraycopy(data, 0, msg.data, 3, datalen);
-        msg.len = (byte) (msg.data.length + 1);
     }
 }
