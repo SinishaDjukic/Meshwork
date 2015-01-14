@@ -11,6 +11,15 @@ import java.io.PrintWriter;
  */
 public class MNOK extends AbstractMessage implements Constants {
 
+    public static final String GENERAL_ERROR        = "GENERAL ERROR";
+    public static final String INSUFFICIENT_DATA    = "INSUFFICIENT DATA";
+    public static final String TOO_LONG_DATA        = "TOO LONG DATA";
+    public static final String ILLEGAL_STATE        = "ILLEGAL STATE";
+    public static final String RECEIVE_ERROR        = "RECEIVE ERROR";
+    public static final String SEND_ERROR           = "SEND ERROR";
+    public static final String BROADCAST_ERROR      = "BROADCAST ERROR";
+    public static final String KEY_TOO_LONG         = "KEY TOO LONG";
+    public static final String SEQUENCE_MISMATCH    = "SEQUENCE MISMATCH";
     public byte error;
 
     public MNOK(byte seq) {
@@ -22,21 +31,19 @@ public class MNOK extends AbstractMessage implements Constants {
         writer.print("MNOK: Error=");writer.print(error);
 
         String errorText = null;
-        //TODO put error strings into a hash map
         switch ( error ) {
-            case ERROR_GENERAL: errorText = "(GENERAL ERROR)";break;
-            case ERROR_INSUFFICIENT_DATA: errorText = "(INSUFFICIENT DATA)";break;
-            case ERROR_TOO_LONG_DATA: errorText = "(TOO LONG DATA)";break;
-            case ERROR_ILLEGAL_STATE: errorText = "(ILLEGAL STATE)";break;
-            case ERROR_RECV: errorText = "(RECEIVE ERROR)";break;
-            case ERROR_SEND: errorText = "(SEND ERROR)";break;
-            case ERROR_BCAST: errorText = "(BROADCAST ERROR)";break;
-            case ERROR_KEY_TOO_LONG: errorText = "(KEY TOO LONG)";break;
-            case ERROR_SEQUENCE_MISMATCH: errorText = "(SEQUENCE MISMATCH)";break;
+            case ERROR_GENERAL: errorText = GENERAL_ERROR;break;
+            case ERROR_INSUFFICIENT_DATA: errorText = INSUFFICIENT_DATA;break;
+            case ERROR_TOO_LONG_DATA: errorText = TOO_LONG_DATA;break;
+            case ERROR_ILLEGAL_STATE: errorText = ILLEGAL_STATE;break;
+            case ERROR_RECV: errorText = RECEIVE_ERROR;break;
+            case ERROR_SEND: errorText = SEND_ERROR;break;
+            case ERROR_BCAST: errorText = BROADCAST_ERROR;break;
+            case ERROR_KEY_TOO_LONG: errorText = KEY_TOO_LONG;break;
+            case ERROR_SEQUENCE_MISMATCH: errorText = SEQUENCE_MISMATCH;break;
         }
         if ( errorText != null ) {
-            writer.print(" ");
-            writer.print(errorText);
+            writer.print(" ("+errorText+")");
         }
     }
 

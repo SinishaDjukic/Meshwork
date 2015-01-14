@@ -31,14 +31,15 @@ public class MZCNwkRes extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCNwkCfg result = new MZCNwkCfg(msg.seq);
+        MZCNwkRes result = new MZCNwkRes(msg.seq);
         result.channel = msg.data[0];
         result.nwkid = (short) (( msg.data[1] << 8 ) & 0xFF |
                 ( msg.data[2] << 0 ) & 0xFF);
         result.nodeid = msg.data[3];
         result.keylen = msg.data[4];
         result.key = result.keylen < 1 ? null : new byte[result.keylen];
-        System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
+        if ( result.keylen > 0 )
+            System.arraycopy(msg.data, 5, result.key, 0, result.keylen);
         return result;
     }
 

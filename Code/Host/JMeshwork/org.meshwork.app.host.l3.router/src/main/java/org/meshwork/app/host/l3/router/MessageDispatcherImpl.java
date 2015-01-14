@@ -133,7 +133,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     public void processMRFRouteFailed(PrintWriter writer, MRFRouteFailed message) {
         writer.print("\tRoute failed: "+message);
         RouteList list = routeMap.getRouteList(message.route.dst, true);
-        Route route = list.getRoute(message.route, true, config.getNodeid());
+        Route route = list.getRoute(message.route, true, config.getNodeId());
         message.route.addStatsFailed();
         writer.flush();
     }
@@ -141,7 +141,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     public void processMRFRouteFound(PrintWriter writer, MRFRouteFound message) {
         writer.print("\tRoute found: "+message);
         RouteList list = routeMap.getRouteList(message.route.dst, true);
-        Route route = list.getRoute(message.route, true, config.getNodeid());
+        Route route = list.getRoute(message.route, true, config.getNodeId());
         message.route.addStatsFound();
         writer.flush();
     }
@@ -215,7 +215,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
 
     protected void doConfigBasic() throws Exception {
         MConfigBasic msg = new MConfigBasic(nextSeq());
-        msg.nwkcaps = config.getNwkcaps();
+        msg.nwkcaps = config.getNwkCaps();
         msg.delivery = config.getDelivery();
         msg.retry = config.retry;
         AbstractMessage result = sendMessageAndReceive(msg);
@@ -228,8 +228,8 @@ public class MessageDispatcherImpl implements MessageDispatcher {
 
     protected void doConfigNetwork() throws Exception {
         MConfigNetwork msg = new MConfigNetwork(nextSeq());
-        msg.nodeid = config.getNodeid();
-        msg.nwkid = config.getNwkid();
+        msg.nodeid = config.getNodeId();
+        msg.nwkid = config.getNwkId();
         msg.channel = config.getChannel();
         AbstractMessage result = sendMessageAndReceive(msg);
         writer.print("[doConfigNetwork] Response: ");

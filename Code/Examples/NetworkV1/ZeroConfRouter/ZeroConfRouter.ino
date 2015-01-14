@@ -22,7 +22,7 @@
 #define __EXAMPLES_ZEROCONFROUTER_H__
 
 //Note: comment this out to disable LED tracing
-#define LED_TRACING
+//#define LED_TRACING
 
 #ifdef LED_TRACING
 	//Note: increase the delay factory multiplier to give more blink time for LEDs
@@ -127,9 +127,9 @@ bool processConfigSequence()
 	while ( RTC::since(start) < STARTUP_AUTOCONFIG_TIMEOUT ) {
 		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
 		if ( processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT) ) {
-			if ( msg.code == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
+			if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
 				state = ZeroConfSerial::ZC_SUBCODE_ZCINIT;
-			} else if ( msg.code == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT ) {
+			} else if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT ) {
 				state = ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 				break;
 			}
@@ -139,7 +139,8 @@ bool processConfigSequence()
 }
 
 void readConfig() {
-	eepromConf.read((void*) &configuration, (void*) &EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_SERNUM_EEPROM_OFFSET - EXAMPLE_ZC_CONFIGURATION_EEPROM_END + 1));
+	EEPROMInit::init(&eepromConf, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
+	eepromConf.read((void*) &configuration, (void*) EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_CONFIGURATION_EEPROM_END - EXAMPLE_ZC_SERNUM_EEPROM_OFFSET + EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN));
 
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);
 	mesh.setNodeID(configuration.nwkconfig.nodeid);
@@ -157,8 +158,6 @@ void setup()
 	Watchdog::begin();
 	RTC::begin();
 	
-	readConfig();
-	
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
 	LED(true);
@@ -173,9 +172,13 @@ void setup()
 	trace.begin(&null_device, NULL);
 #endif
 	
+	trace << PSTR("Reading EEPROM...");
+	readConfig();
+	trace << PSTR("Done") << endl;
+
 	zeroConfListener.init();
 	
-	trace << PSTR("Waiting for configuration...") << endl;
+	trace << PSTR("Waiting for ZeroConfSerial connection...") << endl;
 	//Allow some time for initial configuration
 	bool reconfigured = processConfigSequence();
 	UNUSED(reconfigured);
@@ -188,7 +191,10 @@ void setup()
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);
 	mesh.setNodeID(configuration.nwkconfig.nodeid);
 
-	trace << PSTR("Configuration done.") << endl;
+	if ( reconfigured )
+		trace << PSTR("Configuration done") << endl;
+	else
+		trace << PSTR("No external configuration") << endl;
 	//Flush all chars before disabling UART
 	uart.flush();
 	//Disable UART when reconfigured. Blink differently if reconfigured

@@ -16,13 +16,15 @@ public class MessageAdapter implements AbstractMessageAdapter {
     HashMap<Byte, AbstractMessage> hash;
 
     public MessageAdapter() {
-        //TODO use reflection to enumerate and instantiate
         messageTypes = new AbstractMessage[] {new MNOK((byte)0), new MOK((byte)0),
-                                                new MUnknown((byte)0), new MZCNwkCfg((byte)0),
-                                                new MZCRepRes((byte)0), new MZCDeinit((byte)0),
-                                                new MZCDevReq((byte)0), new MZCDevRes((byte)0),
-                                                new MZCInit((byte)0), new MZCNwkReq((byte)0),
-                                                new MZCNwkRes((byte)0), new MZCSerialCfg((byte)0)
+                                                new MUnknown((byte)0), new MZCDeinit((byte)0),
+                                                new MZCDevCfg((byte)0), new MZCDevReq((byte)0),
+                                                new MZCDevRes((byte)0), new MZCInit((byte)0),
+                                                new MZCNwkCfg((byte)0) ,new MZCNwkReq((byte)0),
+                                                new MZCNwkRes((byte)0), new MZCRepCfg((byte)0),
+                                                new MZCRepReq((byte)0), new MZCRepRes((byte)0),
+                                                new MZCSerialCfg((byte)0), new MZCSerialReq((byte)0),
+                                                new MZCSerialRes((byte)0)
         };
         hash = new HashMap<Byte, AbstractMessage>();
         for (AbstractMessage messageType : messageTypes) {
@@ -32,10 +34,9 @@ public class MessageAdapter implements AbstractMessageAdapter {
 
     @Override
     public AbstractMessage deserialize(MessageData data) throws IOException {
-        //TODO the caller must ensure that:
-        // 1) data.data != null unless data.len == 1
-        // 2) data.len == data.data.length + 1
+//        System.out.println("[DESERIALIZE] data.subCode="+data.subCode+", data="+data);
         AbstractMessage messageType = hash.get(data.subCode);
+//        System.out.println("[DESERIALIZE] type subcode="+messageType.getSubCode()+"type found="+messageType);
         AbstractMessage result = messageType != null ? messageType.deserialize(data) : null;
         return result;
     }

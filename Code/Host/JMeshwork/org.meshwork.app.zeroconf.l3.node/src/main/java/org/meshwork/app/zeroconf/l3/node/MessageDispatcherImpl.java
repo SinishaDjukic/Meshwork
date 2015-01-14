@@ -53,14 +53,16 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 writer.print("\n----------- ");
                 writer.println(dateFormatter.format(new Date(System.currentTimeMillis())));
                 doMZCInit();
-                doMZCID();
-                doMZCNwkID();
+                doMZCDevReq();
+                doMZCNwkReq();
+                doMZCRepReq();
+                doMZCSerialReq();
 				if ( config.readonly ) {
 					writer.println("[MessageDispatcher] Read-only mode. Will NOT configure the device!");
 				} else {
 					doMZCCfgNwk();
-					doMZCNwkID();//read after write
-					doMZCCfgRep();//TODO add an ID message to read current rep config
+					doMZCRepCfg();
+                    doMZCSerialCfg();
 				}
                 doMZCDeinit();
                 writer.println("[MessageDispatcher] Device configured!");
@@ -117,10 +119,10 @@ public class MessageDispatcherImpl implements MessageDispatcher {
             throw new Exception("Error sending MZCDeinit");
     }
 
-    protected void doMZCID() throws Exception {
+    protected void doMZCDevReq() throws Exception {
         MZCDevReq msg = new MZCDevReq(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
-        writer.print("[doMZCID] Response: ");
+        writer.print("[doMZCDevReq] Response: ");
         if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
 			lastMZCDevRes = (MZCDevRes) result;
@@ -129,10 +131,10 @@ public class MessageDispatcherImpl implements MessageDispatcher {
             throw new Exception("Error sending MZCDevReq");
     }
 
-    protected void doMZCNwkID() throws Exception {
+    protected void doMZCNwkReq() throws Exception {
         MZCNwkReq msg = new MZCNwkReq(nextSeq());
         AbstractMessage result = sendMessageAndReceive(msg);
-        writer.print("[doMZCNwkID] Response: ");
+        writer.print("[doMZCNwkReq] Response: ");
         if ( result != null ) {
             result.toString(writer, "\t\t", null, null);
 			lastMZCNwkRes = (MZCNwkRes) result;
@@ -144,9 +146,9 @@ public class MessageDispatcherImpl implements MessageDispatcher {
     protected void doMZCCfgNwk() throws Exception {
         MZCNwkCfg msg = new MZCNwkCfg(nextSeq());
         msg.channel = config.getChannel();
-        msg.nodeid = config.getNodeid();
+        msg.nodeid = config.getNodeId();
         msg.nwkid = config.getNwkid();
-        String k = config.getNwkkey();
+        String k = config.getNwkKey();
         msg.keylen = (byte) (k == null ? 0 : k.length());
         msg.key = msg.keylen == 0 ? null : k.getBytes();
         writer.print("[doMZCCfgNwk] Configuring network: ");
@@ -159,18 +161,52 @@ public class MessageDispatcherImpl implements MessageDispatcher {
             throw new Exception("Error sending MZCNwkCfg");
     }
 
-    protected void doMZCCfgRep() throws Exception {
+    /**
+     * Read the current reporting configuration.
+     *
+     * @return current reporting configuration
+     * @throws Exception in case of error
+     */
+    protected MZCRepRes doMZCRepReq() throws Exception {
+        MZCRepReq msg = new MZCRepReq(nextSeq());
+        AbstractMessage result = sendMessageAndReceive(msg);
+        writer.print("[doMZCRepReq] Response: ");
+        if ( result == null || !(result instanceof MZCRepRes) )
+            throw new Exception("Error sending MZCRepReq");
+        return (MZCRepRes) result;
+    }
+
+    protected void doMZCRepCfg() throws Exception {
         MZCRepRes msg = new MZCRepRes(nextSeq());
-        msg.reportNodeid = config.getReportNodeid();
+        msg.reportNodeid = config.getReportNodeId();
         msg.reportFlags = config.getReportFlags();
-        writer.print("[doMZCCfgNwk] Configuring reporting: ");
+        writer.print("[doMZCRepCfg] Configuring reporting: ");
         msg.toString(writer, "\t\t", null, null);
         AbstractMessage result = sendMessageAndReceive(msg);
-        writer.print("[doMZCCfgRep] Response: ");
+        writer.print("[doMZCRepCfg] Response: ");
         if ( result != null )
             result.toString(writer, "\t\t", null, null);
         if ( result == null || !(result instanceof MOK) )
             throw new Exception("Error sending MZCRepRes");
+    }
+
+    /**
+     * Read the current serial number.
+     *
+     * @return current serial number
+     * @throws Exception in case of error
+     */
+    protected MZCSerialRes doMZCSerialReq() throws Exception {
+        MZCSerialReq msg = new MZCSerialReq(nextSeq());
+        AbstractMessage result = sendMessageAndReceive(msg);
+        writer.print("[doMZCSerialReq] Response: " + result);
+        if ( result == null || !(result instanceof MZCSerialRes) )
+            throw new Exception("Error sending MZCSerialReq");
+        return (MZCSerialRes) result;
+    }
+
+    protected void doMZCSerialCfg() {
+        //TODO implement external serial number configuration
     }
 
     protected void readMessagesAndDiscardAll() {

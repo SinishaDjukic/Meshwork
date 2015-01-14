@@ -78,12 +78,14 @@ public class ConsolePerformanceTestArrayImpl extends AbstractConsole {
 
         byte nodes = 0;
         int testNodeCount = args.length - 4;//last param is the test router node, so exclude it
-        //TODO check if testNodeCount < 252, since we need 1 node for the base, and 0 and 255 are reserved
+        //check if testNodeCount < 254, since we need 1 node for the base, and 0 and 255 are reserved
+        if ( testNodeCount > 253 )
+            throw new IllegalArgumentException("Number of test nodes '"+testNodeCount+"' exceeds 253!");
         String dev = null;
         File outBaseDir = new File("./logs/");
         outBaseDir.mkdirs();
 
-        byte baseNodeId = routerConfig.getNodeid();
+        byte baseNodeId = routerConfig.getNodeId();
 
         writer.println("Initializing base and '"+testNodeCount+"' devices...");
         for ( int i = 0; i < testNodeCount; i ++ ) {
@@ -96,7 +98,7 @@ public class ConsolePerformanceTestArrayImpl extends AbstractConsole {
                 AbstractMessageTransport tr = c.initTransport(sc, dev);
 
                 byte nodeId = (byte) (baseNodeId + (++nodes));
-                rc.setNodeid(nodeId);
+                rc.setNodeId(nodeId);
                 File fileOut = new File(outBaseDir, "node_"+nodeId+".txt");
                 fileOut.delete();
                 PrintStream filePrinter = new PrintStream(new FileOutputStream(fileOut), true);

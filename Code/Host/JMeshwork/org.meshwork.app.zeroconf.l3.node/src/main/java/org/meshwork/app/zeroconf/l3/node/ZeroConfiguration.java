@@ -69,21 +69,21 @@ public class ZeroConfiguration {
         return nwkid;
     }
 
-    public byte getNodeid() {
+    public byte getNodeId() {
         return nodeid;
     }
 
-    public String getNwkkey() {
+    public String getNwkKey() {
         return nwkkey;
     }
 
     public int getConsoleReadTimeout() { return consoleReadTimeout; }
 
-    public void setNwkid(short nwkid) {
+    public void setNwkId(short nwkid) {
         this.nwkid = nwkid;
     }
 
-    public void setNodeid(byte nodeid) {
+    public void setNodeId(byte nodeid) {
         this.nodeid = nodeid;
     }
 
@@ -91,7 +91,7 @@ public class ZeroConfiguration {
         this.channel = channel;
     }
 
-    public void setNwkkey(String nwkkey) {
+    public void setNwkKey(String nwkkey) {
         this.nwkkey = nwkkey;
     }
 
@@ -99,11 +99,11 @@ public class ZeroConfiguration {
         this.consoleReadTimeout = consoleReadTimeout;
     }
 
-    public byte getReportNodeid() {
+    public byte getReportNodeId() {
         return reportNodeid;
     }
 
-    public void setReportNodeid(byte reportNodeid) {
+    public void setReportNodeId(byte reportNodeid) {
         this.reportNodeid = reportNodeid;
     }
 

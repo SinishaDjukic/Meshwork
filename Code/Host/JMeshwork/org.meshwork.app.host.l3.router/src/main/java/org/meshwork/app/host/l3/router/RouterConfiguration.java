@@ -63,11 +63,11 @@ public class RouterConfiguration {
         rfReadTimeout = Converter.toInt(CONFIG_KEY_RF_READ_TIMEOUT, p.getProperty(CONFIG_KEY_RF_READ_TIMEOUT));
     }
 
-    public byte getNodeid() {
+    public byte getNodeId() {
         return nodeid;
     }
 
-    public byte getNwkcaps() {
+    public byte getNwkCaps() {
         return nwkcaps;
     }
 
@@ -79,7 +79,7 @@ public class RouterConfiguration {
         return retry;
     }
 
-    public short getNwkid() {
+    public short getNwkId() {
         return nwkid;
     }
 
@@ -91,7 +91,7 @@ public class RouterConfiguration {
 
     public int getRFReadTimeout() { return rfReadTimeout; }
 
-    public void setNwkcaps(byte nwkcaps) {
+    public void setNwkCaps(byte nwkcaps) {
         this.nwkcaps = nwkcaps;
     }
 
@@ -103,11 +103,11 @@ public class RouterConfiguration {
         this.retry = retry;
     }
 
-    public void setNwkid(short nwkid) {
+    public void setNwkId(short nwkid) {
         this.nwkid = nwkid;
     }
 
-    public void setNodeid(byte nodeid) {
+    public void setNodeId(byte nodeid) {
         this.nodeid = nodeid;
     }
 

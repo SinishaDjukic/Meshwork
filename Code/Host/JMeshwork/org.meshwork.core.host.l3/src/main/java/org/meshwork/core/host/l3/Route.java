@@ -15,7 +15,6 @@ public class Route implements Printable {
     public byte[] hops;
     public byte dst;
 
-    //TODO add failed counters, reset methods, etc.
     public int statsFailed;
     public int statsFound;
 
@@ -66,5 +65,4 @@ public class Route implements Printable {
         return true;
     }
 
-    //TODO pull serialization subCode from all related messages to here
 }

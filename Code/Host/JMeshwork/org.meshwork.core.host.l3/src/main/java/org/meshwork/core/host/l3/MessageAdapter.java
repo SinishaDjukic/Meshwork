@@ -16,7 +16,6 @@ public class MessageAdapter implements AbstractMessageAdapter {
     HashMap<Byte, AbstractMessage> hash;
 
     public MessageAdapter() {
-        //TODO use reflection to enumerate and instantiate
         messageTypes = new AbstractMessage[] {new MConfigBasic((byte)0), new MConfigNetwork((byte)0),
                                                 new MRFBroadcast((byte)0), new MRFReceive((byte)0),
                                                 new MRFReceiveACK((byte)0), new MRFSend((byte)0),
@@ -37,9 +36,6 @@ public class MessageAdapter implements AbstractMessageAdapter {
 
     @Override
     public AbstractMessage deserialize(MessageData data) throws IOException {
-        //TODO the caller must ensure that:
-        // 1) data.data != null unless data.len == 1
-        // 2) data.len == data.data.length + 1
         AbstractMessage messageType = hash.get(data.subCode);
         AbstractMessage result = messageType != null ? messageType.deserialize(data) : null;
         return result;

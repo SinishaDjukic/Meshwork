@@ -52,7 +52,7 @@ public class IndentedPrintWriter extends PrintWriter {
             int pos = off;
             int posMax = off + len;
             int lastRN = -1;
-            //TODO search backwards, since we really only need the last one
+
             while (pos < posMax) {
                 if ( buf[pos] == '\r' || buf[pos] == 'n' )
                     lastRN = pos;

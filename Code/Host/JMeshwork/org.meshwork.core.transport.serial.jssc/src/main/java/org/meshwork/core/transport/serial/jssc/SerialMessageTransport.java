@@ -6,6 +6,7 @@ import org.meshwork.core.MessageData;
 import org.meshwork.core.TransportTimeoutException;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Created by Sinisha Djukic on 14-2-12.
@@ -105,7 +106,7 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         result.subCode = header[3];
         if ( result.len > 1 ) {
             try {
-                result.data = port.readBytes(result.len-4, timeout);
+                result.data = port.readBytes(result.len-3, timeout);
             } catch (SerialPortTimeoutException e) {
                 throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
             } catch (Exception e) {
@@ -129,6 +130,27 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         return result;
     }
 
+    public static final synchronized void printHex(PrintWriter writer, byte[] data,
+                                                   int maxCount, int maxPerRow,
+                                                   String rowPrefix, String rowSuffix, String separator) {
+        int len = data == null ? 0 : data.length;
+        int column = 0;
+        for ( int i = 0; i < len; i ++ ) {
+            if ( i == maxCount ) {
+                writer.print("...");
+                writer.println(rowSuffix == null ? "" : rowSuffix);
+                return;
+            }
+            writer.print(Integer.toHexString(data[i]));
+            if ( i < len - 1 )
+                writer.print(separator == null ? ", " : separator);
+            if ( ++ column == maxPerRow ) {
+                column = 0;
+                writer.println(rowSuffix == null ? "" : rowSuffix);
+                writer.print(rowPrefix == null ? "" : rowPrefix);
+            }
+        }
+    }
     protected int _sendOneMessage(MessageData message) throws SerialPortException {
         System.out.println(">>>>>>>>>> ENTER SerialMessageTransport._sendOneMessage: "+message+" >>>>>>>>>>");
 //        port.writeByte(message.seq);
@@ -136,15 +158,27 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
 //        port.writeByte(message.subCode);
 //        if ( message.len > 1 )
 //            port.writeBytes(message.data);
-        byte[] temp = new byte[message.len];
+        byte[] temp = new byte[message.len+1];
         temp[0] = message.len;
         temp[1] = message.seq;
-        temp[3] = message.code;
-        temp[4] = message.subCode;
-        if ( message.len != 4 + message.data.length)
-            throw new IllegalArgumentException("Message length invalid! message.len ("+message.len+") != 4 + message.data.len("+message.data.length+")");
-        if ( message.len > 4 )
-            System.arraycopy(message.data, 0, temp, 5, message.data.length);
+        temp[2] = message.code;
+        temp[3] = message.subCode;
+        int msgdatalen = message.data == null ? 0 : message.data.length;
+
+        System.out.print("Message header bytes to write:\n  ");
+        for ( int i = 0; i < 4; i ++ )
+            System.out.print(Integer.toHexString(temp[i])+" ");
+        System.out.println();
+
+        if ( message.len != 3 + msgdatalen )
+            throw new IllegalArgumentException("Message length invalid! message.len ("+message.len+") != 4 + message.data.len("+msgdatalen+")");
+        else if ( message.data != null ) {
+            System.out.print("Message data bytes to write:\n  ");
+            for ( int i = 0; i < message.data.length; i ++ )
+                System.out.print(Integer.toHexString(message.data[i])+" ");
+            System.out.println();
+        }
+
         port.writeBytes(temp);
         System.out.println(">>>>>>>>>> EXIT SerialMessageTransport._sendOneMessage >>>>>>>>>>");
         return SEND_OK;

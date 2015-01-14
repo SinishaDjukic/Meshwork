@@ -186,7 +186,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             //reconfigure for DIRECT only
             MConfigBasic cfg = new MConfigBasic(nextSeq());
             cfg.delivery = Constants.DELIVERY_DIRECT;
-            cfg.nwkcaps = config.getNwkcaps();
+            cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
             if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
@@ -212,7 +212,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             //reconfigure for ROUTED only
             MConfigBasic cfg = new MConfigBasic(nextSeq());
             cfg.delivery = Constants.DELIVERY_ROUTED;
-            cfg.nwkcaps = config.getNwkcaps();
+            cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
             if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
@@ -234,7 +234,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
                     //NO DUPLICATION CHECKS PERFORMED!
                     RouteList routeList = routeMap.getRouteList(dst, true);
                     Route route = new Route();
-                    route.src = config.getNodeid();
+                    route.src = config.getNodeId();
                     route.dst = dst;
                     route.hopCount = (byte) (tempsize - 1);
                     if ( route.hopCount > 0 ) {
@@ -266,7 +266,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             //reconfigure for FLOOD only
             MConfigBasic cfg = new MConfigBasic(nextSeq());
             cfg.delivery = Constants.DELIVERY_FLOOD;
-            cfg.nwkcaps = config.getNwkcaps();
+            cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
             if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
