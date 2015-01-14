@@ -36,13 +36,15 @@ namespace Meshwork {
 		class ControllerBaseSerial : public Meshwork::L3::NetworkV1::NetworkSerial {
 
 		public:
-			static const uint8_t MSGCODE_SET_MODE_ANN			= 96;
-			static const uint8_t MSGCODE_SET_MODE_ANN_RES		= 97;
-			static const uint8_t MSGCODE_GET_NODE_LIST			= 98;
-			static const uint8_t MSGCODE_GET_NODE_LIST_RES		= 99;
-			static const uint8_t MSGCODE_ADD_NODE				= 100;
-			static const uint8_t MSGCODE_ADD_NODE_RES			= 101;
-			static const uint8_t MSGCODE_REMOVE_NODE			= 102;
+			static const uint8_t CS_CODE							= 2;
+
+			static const uint8_t CS_SUBCODE_SET_MODE_ANN			= 96;
+			static const uint8_t CS_SUBCODE_SET_MODE_ANN_RES		= 97;
+			static const uint8_t CS_SUBCODE_GET_NODE_LIST			= 98;
+			static const uint8_t CS_SUBCODE_GET_NODE_LIST_RES		= 99;
+			static const uint8_t CS_SUBCODE_ADD_NODE				= 100;
+			static const uint8_t CS_SUBCODE_ADD_NODE_RES			= 101;
+			static const uint8_t CS_SUBCODE_REMOVE_NODE				= 102;
 				
 			//64-95
 			static const uint8_t ERROR_MAX_NODES_REACHED 		= 64;
