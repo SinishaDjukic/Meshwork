@@ -103,9 +103,10 @@ namespace Meshwork {
 				
 			public:
 				struct serialmsg_t {
-					uint8_t seq;
 					uint8_t len;
 					uint8_t code;
+					uint8_t subcode;
+					uint8_t seq;
 					uint8_t data[MAX_SERIALMSG_LEN];
 				};
 

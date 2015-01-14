@@ -86,9 +86,10 @@ namespace Meshwork {
 				static const uint8_t MAX_SERIAL_LEN 			= 16;
 				
 				struct serialmsg_t {
-					uint8_t seq;
 					uint8_t len;
 					uint8_t code;
+					uint8_t subcode;
+					uint8_t seq;
 				};
 
 				struct zctype_sernum_t {
@@ -112,7 +113,7 @@ namespace Meshwork {
 			public:
 				
 				//ZeroConf Serial Code ID
-				static const uint8_t ZW_CODE 					= 1;
+				static const uint8_t ZC_CODE 					= 1;
 
 				//ZeroConf Serial SubCode IDs
 				static const uint8_t ZC_SUBCODE_OK 				= 0;

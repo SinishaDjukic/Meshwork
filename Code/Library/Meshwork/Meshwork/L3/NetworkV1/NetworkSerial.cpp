@@ -38,7 +38,7 @@
 #endif
 
 int Meshwork::L3::NetworkV1::NetworkSerial::readByte() {
-	if ( m_lastSerialMsgLen > 0 ) {
+	if ( m_lastSerialMsgLen > 1 ) {
 		m_lastSerialMsgLen --;
 		return m_serial->getchar();
 	} else {
@@ -264,7 +264,7 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 			respondWCode(msg, NS_SUBCODE_OK);
 			result = true;
 		} else {
-			respondWCode(msg, ERROR_KEY_TOO_LONG);
+			respondNOK(msg, ERROR_KEY_TOO_LONG);
 			result = false;
 		}
 	} else {
@@ -277,6 +277,10 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(serialmsg_t* msg) {
 bool Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(serialmsg_t* msg) {
 	bool result = m_network->begin();
 	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
+	if ( result )
+		respondWCode(msg, NS_SUBCODE_OK);
+	else
+		respondNOK(msg, ERROR_ILLEGAL_STATE);
 	result ? respondWCode(msg, NS_SUBCODE_OK) : respondNOK(msg, ERROR_GENERAL);
 	return result;
 }
@@ -284,7 +288,10 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(serialmsg_t* msg) {
 bool Meshwork::L3::NetworkV1::NetworkSerial::processRFDeinit(serialmsg_t* msg) {
 	bool result = m_network->end();
 	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
-	result ? respondWCode(msg, NS_SUBCODE_OK) : respondNOK(msg, ERROR_GENERAL);
+	if ( result )
+		respondWCode(msg, NS_SUBCODE_OK);
+	else
+		respondNOK(msg, ERROR_ILLEGAL_STATE);
 	return result;
 }
 
@@ -460,19 +467,19 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessageEx(serialmsg_t* ms
 bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg) {
 	bool result = true;
 	
-	if ( m_serial->available() >= 3 ) {//minimal msg len
-		int len = msg->len = readByte();//len
+	if ( m_serial->available() >= 4 ) {//minimal msg len
+		int len = msg->len = m_serial->getchar();//len
 		m_lastSerialMsgLen = len;
 		if ( len > 0 ) {
 			msg->seq = readByte();//seq
-			readByte();//read major code
+			msg->code = readByte();//read major code
 			//needed to make sure we have enough data arrived in the buffer for the entire command
-			int msgcode = msg->code = readByte();//read sub-code
+			msg->subcode = readByte();//read sub-code
 			m_currentMsg = msg;
 			MW_LOG_DEBUG_TRACE(LOG_NETWORKSERIAL) << endl << endl << endl;
-			MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Len=%d, Code=%d", msg->seq, len, msgcode);
+			MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Len=%d, Code=%d, SubCode=$d", msg->seq, len, msg->code, msg->subcode);
 			if ( waitForBytes(len - 3, m_timeout) ) {
-				switch ( msgcode ) {
+				switch ( msg->subcode ) {
 					case NS_SUBCODE_CFGBASIC: processCfgBasic(msg); break;
 					case NS_SUBCODE_CFGNWK: processCfgNwk(msg); break;
 					case NS_SUBCODE_RFINIT: processRFInit(msg); break;
@@ -489,12 +496,12 @@ bool Meshwork::L3::NetworkV1::NetworkSerial::processOneMessage(serialmsg_t* msg)
 				MW_LOG_DEBUG_TRACE(LOG_NETWORKSERIAL) << endl << endl;
 			} else {
 				MW_LOG_ERROR(LOG_NETWORKSERIAL, "INSUFFICIENT_DATA", NULL);
-				respondWCode(msg, ERROR_INSUFFICIENT_DATA);
+				respondNOK(msg, ERROR_INSUFFICIENT_DATA);
 				result = false;
 			}
 		} else {
 			MW_LOG_ERROR(LOG_NETWORKSERIAL, "Invalid message: Len=%d", len);
-			respondWCode(msg, ERROR_GENERAL);
+			respondNOK(msg, ERROR_GENERAL);
 			result = false;
 		}
 	} else {
