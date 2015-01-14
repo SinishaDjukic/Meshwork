@@ -86,16 +86,26 @@ namespace Meshwork {
 				static const uint8_t MAX_SERIAL_LEN 			= 16;
 				
 				struct serialmsg_t {
-					uint8_t len;
-					uint8_t code;
-					uint8_t subcode;
-					uint8_t seq;
+					//these are actually uint8_t
+					//but we need two bytes to handle
+					//negative EOF and buffer len overrun codes
+					uint16_t len;
+					uint16_t code;
+					uint16_t subcode;
+					uint16_t seq;
 				};
 
 				struct zctype_sernum_t {
 					uint8_t sernumlen;
 					char sernum[MAX_SERIAL_LEN];
 				};
+
+				struct zctype_devconfig_t {
+					//dev config flags
+					uint8_t m_nwkcaps;
+					uint8_t m_delivery;
+				};
+
 
 				struct zctype_reporting_t {
 					uint8_t targetnodeid;
@@ -160,6 +170,7 @@ namespace Meshwork {
 				zctype_sernum_t* m_sernum;
 				zctype_reporting_t* m_reporting;
 				zctype_nwkconfig_t* m_nwkconfig;
+				zctype_devconfig_t* m_devconfig;
 				
 				ZeroConfListener* m_listener;
 				uint16_t m_timeout;
@@ -167,7 +178,7 @@ namespace Meshwork {
 				
 				serialmsg_t* m_currentMsg;
 				
-				int readByte();
+				uint16_t readByte();
 				void readRemainingMessageBytes();
 
 				//this saves us ~500 bytes against repetitive putchar calls
@@ -194,7 +205,8 @@ namespace Meshwork {
 
 			public:
 				ZeroConfSerial(Meshwork::L3::Network* network, UART* serial,
-								zctype_sernum_t* sernum, zctype_reporting_t* reporting, zctype_nwkconfig_t* nwkconfig,
+								zctype_sernum_t* sernum, zctype_reporting_t* reporting,
+									zctype_nwkconfig_t* nwkconfig, zctype_devconfig_t* devconfig,
 										ZeroConfListener* listener, uint16_t timeout = TIMEOUT_RESPONSE):
 					m_network(network),
 					m_serial(serial),
@@ -202,6 +214,7 @@ namespace Meshwork {
 					m_sernum(sernum),
 					m_reporting(reporting),
 					m_nwkconfig(nwkconfig),
+					m_devconfig(devconfig),
 					m_listener(listener),
 					m_timeout(timeout),
 					m_initmode(false)
@@ -213,6 +226,8 @@ namespace Meshwork {
 				bool processOneMessage(serialmsg_t* msg);
 				bool processOneMessageEx(serialmsg_t* msg);
 				
+				bool checkZCInit(serialmsg_t* msg);
+
 				zctype_sernum_t* getSernum() {
 					return m_sernum;
 				}
@@ -221,10 +236,13 @@ namespace Meshwork {
 					return m_reporting;
 				}
 				
-				zctype_nwkconfig_t* getNwkconfig() {
+				zctype_nwkconfig_t* getNwkConfig() {
 					return m_nwkconfig;
 				}
 				
+				zctype_devconfig_t* getDevConfig() {
+					return m_devconfig;
+				}
 			  };
 		};
 	};

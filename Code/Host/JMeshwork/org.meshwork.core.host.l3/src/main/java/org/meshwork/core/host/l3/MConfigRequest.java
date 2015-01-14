@@ -22,7 +22,7 @@ public class MConfigRequest extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MConfigRequest result = new MConfigRequest(seq);
+        MConfigRequest result = new MConfigRequest(msg.seq);
         return result;
     }
 

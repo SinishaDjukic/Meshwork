@@ -22,7 +22,7 @@ public class MZCNwkReq extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCNwkReq result = new MZCNwkReq(seq);
+        MZCNwkReq result = new MZCNwkReq(msg.seq);
         return result;
     }
 

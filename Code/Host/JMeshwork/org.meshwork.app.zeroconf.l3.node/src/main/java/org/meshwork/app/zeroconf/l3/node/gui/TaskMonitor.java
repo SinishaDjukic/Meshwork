@@ -19,8 +19,10 @@ public class TaskMonitor implements Runnable {
         AbstractTask last = null;
         for (AbstractTask task: tasks) {
             GUILogger.info("Started: " + task.getName());
-            task.setInput(last != null ? last.getOutput() : null);
+            if ( last != null )
+                task.setInput(last.getOutput());
             task.run();
+            last = task;
             Throwable exception = task.getException();
             if (exception != null) {
                 GUILogger.error("Error running: " + task.getName(), exception);

@@ -1,6 +1,9 @@
 package org.meshwork.app.zeroconf.l3.node.gui;
 
-import com.prosyst.pgui.*;
+import com.prosyst.pgui.PLabel;
+import com.prosyst.pgui.PScrollNumberField;
+import com.prosyst.pgui.PTextField;
+import com.prosyst.pgui.PTitledPanel;
 import com.prosyst.pgui.io.IniFile;
 import com.prosyst.pgui.io.IniSection;
 import com.prosyst.pgui.layout.GridBagConstraints2;
@@ -76,7 +79,7 @@ public class NetworkConfigurationPanel extends PTitledPanel implements AbstractE
     public Object getData() {
         NetworkConfigurationData data = new NetworkConfigurationData();
         data.channelID = (byte) channelField.getValue();
-        data.networkID = (byte) networkIDField.getValue();
+        data.networkID = (short) networkIDField.getValue();
         data.nodeID = (byte) nodeIDField.getValue();
         data.networkKey = keyField.getText();
         return data;

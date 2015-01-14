@@ -104,9 +104,19 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
         result.seq = header[1];
         result.code = header[2];
         result.subCode = header[3];
+        System.out.print("Message header bytes read:\n  ");
+        for ( int i = 0; i < 4; i ++ )
+            System.out.print(header[i]+" ");
+        System.out.println();
         if ( result.len > 1 ) {
             try {
                 result.data = port.readBytes(result.len-3, timeout);
+                if ( result.data != null ) {
+                    System.out.print("Message data bytes read:\n  ");
+                    for (int i = 0; i < result.data.length; i++)
+                        System.out.print(result.data[i] + " ");
+                    System.out.println();
+                }
             } catch (SerialPortTimeoutException e) {
                 throw new TransportTimeoutException("Timeout while reading the message header:" +e.getMessage(), e);
             } catch (Exception e) {
@@ -141,7 +151,7 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
                 writer.println(rowSuffix == null ? "" : rowSuffix);
                 return;
             }
-            writer.print(Integer.toHexString(data[i]));
+            writer.print(data[i]);
             if ( i < len - 1 )
                 writer.print(separator == null ? ", " : separator);
             if ( ++ column == maxPerRow ) {
@@ -167,15 +177,18 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
 
         System.out.print("Message header bytes to write:\n  ");
         for ( int i = 0; i < 4; i ++ )
-            System.out.print(Integer.toHexString(temp[i])+" ");
+            System.out.print(temp[i]+" ");
         System.out.println();
 
         if ( message.len != 3 + msgdatalen )
             throw new IllegalArgumentException("Message length invalid! message.len ("+message.len+") != 4 + message.data.len("+msgdatalen+")");
         else if ( message.data != null ) {
+
+            System.arraycopy(message.data, 0, temp, 4, message.data.length);
+
             System.out.print("Message data bytes to write:\n  ");
             for ( int i = 0; i < message.data.length; i ++ )
-                System.out.print(Integer.toHexString(message.data[i])+" ");
+                System.out.print(message.data[i]+" ");
             System.out.println();
         }
 

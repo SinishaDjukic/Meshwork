@@ -22,7 +22,7 @@ public class MRFInit extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MRFInit result = new MRFInit(seq);
+        MRFInit result = new MRFInit(msg.seq);
         return result;
     }
 

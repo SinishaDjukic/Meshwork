@@ -22,7 +22,7 @@ public class MZCDevReq extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCDevReq result = new MZCDevReq(seq);
+        MZCDevReq result = new MZCDevReq(msg.seq);
         return result;
     }
 

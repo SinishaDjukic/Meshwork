@@ -28,7 +28,7 @@ public class MZCSerialRes extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCSerialRes result = new MZCSerialRes(seq);
+        MZCSerialRes result = new MZCSerialRes(msg.seq);
         result.sernumlen = msg.data[0];
         result.sernum = result.sernumlen < 1 ? null : new byte[result.sernumlen];
 		if ( result.sernumlen > 0 )

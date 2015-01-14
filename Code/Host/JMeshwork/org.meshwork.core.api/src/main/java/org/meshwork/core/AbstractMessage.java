@@ -3,6 +3,8 @@ package org.meshwork.core;
 import org.meshwork.core.util.Printable;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Created by Sinisha Djukic on 14-2-10.
@@ -22,6 +24,12 @@ public abstract class AbstractMessage implements Printable {
     public String toString() {
         StringBuffer sb = new StringBuffer(getClass().getName());
         sb.append(": Seq=").append(seq).append(", Code=").append(code).append(", SubCode=").append(subCode);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        toString(pw, null, null, null);
+        pw.flush();
+        sw.flush();
+        sb.append(", ").append(sw);
         return sb.toString();
     }
 

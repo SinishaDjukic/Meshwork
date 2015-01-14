@@ -16,16 +16,16 @@ public class WriteDeviceTask extends AbstractDeviceTask {
 
     @Override
     public ArrayList<AbstractData> runImpl() throws Throwable {
-        ArrayList<AbstractData> input = getInput();
+        ArrayList<AbstractData> in = getInput();
 
         //unfortunately, these are split in the UI so this requires more work
         DeliveryData deliveryData = null;
         NetworkCapabilitiesData networkCapabilitiesData = null;
 
-        if ( input != null && input.size() > 0 ) {
+        if ( in != null && in.size() > 0 ) {
             doMZCInit();
 
-            for (AbstractData data : input) {
+            for (AbstractData data : in) {
                 if ( data instanceof DeliveryData ) {
                     deliveryData = (DeliveryData) data;
                 } else if ( data instanceof NetworkCapabilitiesData ) {

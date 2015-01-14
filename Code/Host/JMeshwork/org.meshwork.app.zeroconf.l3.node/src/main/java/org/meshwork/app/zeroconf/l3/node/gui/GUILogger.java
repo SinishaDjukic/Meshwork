@@ -26,12 +26,12 @@ public class GUILogger {
 
     protected void warningImpl(String message, Throwable t) {
         String time = timeFormat.format(new Date(System.currentTimeMillis()));
-        console.append("<"+time+"> [WARN] "+message+"\n... "+t+"\n");
+        console.append("<"+time+"> [WARN] "+message+(t != null ? "\n... Exception: "+t+"\n" : "\n"));
     }
 
     protected void errorImpl(String message, Throwable t) {
         String time = timeFormat.format(new Date(System.currentTimeMillis()));
-        console.append("<"+time+"> [ERR ] "+message+"\n... Exception: "+t+"\n");
+        console.append("<"+time+"> [ERR ] "+message+(t != null ? "\n... Exception: "+t+"\n" : "\n"));
     }
 
     protected void clearImpl() {

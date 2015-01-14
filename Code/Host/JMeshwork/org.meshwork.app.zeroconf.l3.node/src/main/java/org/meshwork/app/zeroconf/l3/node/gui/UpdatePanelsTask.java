@@ -16,7 +16,9 @@ public class UpdatePanelsTask extends AbstractTask {
 
     @Override
     public ArrayList<AbstractData> runImpl() throws Throwable {
-        mainFrame.updatePanels(getInput());
+        ArrayList<AbstractData> in = getInput();
+        GUILogger.info("[UpdatePanelsTask] Input data: "+in);
+        mainFrame.updatePanels(in);
         return null;
     }
 }

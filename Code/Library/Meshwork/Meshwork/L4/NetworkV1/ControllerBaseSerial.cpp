@@ -54,8 +54,8 @@ bool Meshwork::L4::ControllerBaseSerial::processSetModeAnnounce(serialmsg_t* msg
 		m_serial->putchar(m_currentMsg->seq);
 		m_serial->putchar(3);
 		m_serial->putchar(NS_SUBCODE_SET_MODE_ANN_RES);
-		m_serial->putchar(0xFF && (mres >> 8));
-		m_serial->putchar(0xFF && (mres >> 0));
+		m_serial->putchar(0xFF & (mres >> 8));
+		m_serial->putchar(0xFF & (mres >> 0));
 		result = true;
 	}
 	return result;
@@ -86,7 +86,7 @@ bool Meshwork::L4::ControllerBaseSerial::processAddNode(serialmsg_t* msg) {
 			m_serial->putchar(m_currentMsg->seq);
 			m_serial->putchar(2);
 			m_serial->putchar(NS_SUBCODE_ADD_NODE_RES);
-			m_serial->putchar(0xFF && newID);
+			m_serial->putchar(0xFF & newID);
 			result = true;
 		} else {
 			respondNOK(msg, Meshwork::L4::ControllerBaseSerial::ERROR_GENERAL);

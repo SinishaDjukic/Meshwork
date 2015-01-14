@@ -22,7 +22,7 @@ public class MZCInit extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCInit result = new MZCInit(seq);
+        MZCInit result = new MZCInit(msg.seq);
         return result;
     }
 

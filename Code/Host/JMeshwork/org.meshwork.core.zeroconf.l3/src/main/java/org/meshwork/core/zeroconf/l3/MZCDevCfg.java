@@ -26,7 +26,7 @@ public class MZCDevCfg extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MZCDevCfg result = new MZCDevCfg(seq);
+        MZCDevCfg result = new MZCDevCfg(msg.seq);
         result.nwkcaps = msg.data[0];
         result.delivery = msg.data[1];
         return result;

@@ -82,9 +82,9 @@ ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
 	static IOBuffer<UART::BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
-	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &zeroConfListener);
+	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &configuration.devconfig, &zeroConfListener);
 #else
-	ZeroConfSerial zeroConfSerial(&mesh, &uart, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &zeroConfListener);
+	ZeroConfSerial zeroConfSerial(&mesh, &uart, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &configuration.devconfig, &zeroConfListener);
 	IOStream::Device null_device;
 #endif
 
@@ -124,21 +124,28 @@ bool processConfigSequence()
 {
 	uint32_t start = RTC::millis();
 	uint8_t state = 0;
-	while ( RTC::since(start) < STARTUP_AUTOCONFIG_TIMEOUT ) {
+	uint32_t lastMessage = start;
+	bool connected = false;
+	while ( !connected && RTC::since(start) < STARTUP_AUTOCONFIG_INIT_TIMEOUT ||
+			connected && RTC::since(lastMessage) < STARTUP_AUTOCONFIG_DEINIT_TIMEOUT ) {
 		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
 		if ( processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT) ) {
+			connected = true;
 			if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
 				state = ZeroConfSerial::ZC_SUBCODE_ZCINIT;
 			} else if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT ) {
 				state = ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 				break;
 			}
+			lastMessage = RTC::millis();
 		}
 	}
 	return state == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 }
 
 void readConfig() {
+	trace << PSTR("[Config] Reading EEPROM: Start=") << EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET
+			<< PSTR(", End=") << EXAMPLE_ZC_CONFIGURATION_EEPROM_END << endl;
 	EEPROMInit::init(&eepromConf, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
 	eepromConf.read((void*) &configuration, (void*) EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_CONFIGURATION_EEPROM_END - EXAMPLE_ZC_SERNUM_EEPROM_OFFSET + EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN));
 
@@ -148,8 +155,9 @@ void readConfig() {
 	mesh.setNetworkKey((char*)(&configuration.nwkconfig.nwkkey));
 	mesh.setChannel(configuration.nwkconfig.channel);
 
-	mesh.setNetworkCaps(configuration.m_nwkcaps);
-	mesh.setDelivery(configuration.m_delivery);
+	mesh.setNetworkCaps(configuration.devconfig.m_nwkcaps);
+	mesh.setDelivery(configuration.devconfig.m_delivery);
+	trace << PSTR("[Config] Done") << endl;
 }
 
 void setup()
@@ -172,9 +180,7 @@ void setup()
 	trace.begin(&null_device, NULL);
 #endif
 	
-	trace << PSTR("Reading EEPROM...");
 	readConfig();
-	trace << PSTR("Done") << endl;
 
 	zeroConfListener.init();
 	
@@ -194,7 +200,7 @@ void setup()
 	if ( reconfigured )
 		trace << PSTR("Configuration done") << endl;
 	else
-		trace << PSTR("No external configuration") << endl;
+		trace << PSTR("ZeroConfSerial connection closed now ") << endl;
 	//Flush all chars before disabling UART
 	uart.flush();
 	//Disable UART when reconfigured. Blink differently if reconfigured

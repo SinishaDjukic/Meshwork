@@ -79,8 +79,8 @@ public class NetworkCapabilitiesPanel extends PTitledPanel implements AbstractEl
 
     @Override
     public Object getData() {
-        DeliveryData data = new DeliveryData();
-        data.delivery = getMask();
+        NetworkCapabilitiesData data = new NetworkCapabilitiesData();
+        data.capabilities = getMask();
         return data;
     }
 

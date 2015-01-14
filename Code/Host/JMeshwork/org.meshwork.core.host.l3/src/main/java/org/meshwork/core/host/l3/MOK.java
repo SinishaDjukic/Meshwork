@@ -22,7 +22,7 @@ public class MOK extends AbstractMessage implements Constants {
 
     @Override
     public AbstractMessage deserialize(MessageData msg) throws IOException {
-        MOK result = new MOK(seq);
+        MOK result = new MOK(msg.seq);
         return result;
     }
 

@@ -36,8 +36,13 @@ class EEPROMInit {
 			//start backwards to optimize the loop check
 			uint16_t next = data_end;
 			do {
-				int result = eeprom->write(&next, &marker, 1);
-				//MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d, result=%d", marker, next, result);
+				uint16_t result = eeprom->write(&next, &marker, 1);
+				MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d, result=%d", marker, next, result);
+
+				uint8_t tmp = 9;
+				eeprom->read(&tmp, &next, 1);
+				MW_LOG_DEBUG(LOG_EEPROMINIT, "Read at next=%d, result=%d", next, tmp);
+
 			} while (--next >= data_start);
 			MW_LOG_DEBUG(LOG_EEPROMINIT, "Done", NULL);
 		}
@@ -46,7 +51,7 @@ class EEPROMInit {
 		static bool init(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker) {
 			uint8_t formatted;
 			uint8_t bytes = eeprom->read(&formatted, &data_start, 1);
-			//MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d, bytes=%d", data_start, formatted, marker, bytes);
+			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d, bytes=%d", data_start, formatted, marker, bytes);
 			if ( formatted != marker ) {
 				format(eeprom, data_start, data_end, marker);
 			} else {

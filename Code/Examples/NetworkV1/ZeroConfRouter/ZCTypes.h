@@ -29,9 +29,7 @@ struct zctype_configuration_t {
 	ZeroConfSerial::zctype_sernum_t sernum;
 	ZeroConfSerial::zctype_reporting_t reporting;
 	ZeroConfSerial::zctype_nwkconfig_t nwkconfig;
-	//dev config flags
-	uint8_t m_nwkcaps;
-	uint8_t m_delivery;
+	ZeroConfSerial::zctype_devconfig_t devconfig;
 };
 
 //Formatted EEPROM marker len
@@ -54,7 +52,7 @@ static uint16_t EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET = EXAMPLE_ZC_REPORTING_EEPROM
 														sizeof(ZeroConfSerial::zctype_nwkconfig_t);
 //Final address might be useful for the app
 static uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_END = EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET +
-														sizeof(uint8_t) * 2;
+														sizeof(ZeroConfSerial::zctype_devconfig_t);
 					
 #endif
 

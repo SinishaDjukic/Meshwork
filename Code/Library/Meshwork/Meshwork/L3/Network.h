@@ -247,10 +247,10 @@ namespace Meshwork {
 				return m_driver->get_device_address();
 			}
 			
-			void setNodeID(uint8_t networkID) {
-				m_driver->set_address(m_driver->get_network_address(), networkID);
+			void setNodeID(uint8_t nodeID) {
+				m_driver->set_address(m_driver->get_network_address(), nodeID);
 			}
-						
+
 			char* getNetworkKey() {
 				return m_networkKey;
 			}

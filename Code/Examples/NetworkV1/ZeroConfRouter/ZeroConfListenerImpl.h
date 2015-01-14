@@ -50,8 +50,8 @@ public:
 	}
 	
 	void devconfig_updated() {
-		m_eeprom->write((void*) &EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
-		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Serial updated", NULL);
+		m_eeprom->write((void*) &EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET, (void*) &m_configuration->devconfig, sizeof(m_configuration->devconfig));
+		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Device config updated", NULL);
 	}
 
 	void serial_updated() {
