@@ -316,6 +316,7 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         WriteDeviceTask writeDeviceTask = new WriteDeviceTask(adapter, transport);
         UpdatePanelsTask updatePanelsTask = new UpdatePanelsTask(this);
         ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
+        writeDeviceTask.setInput(getPanelData());
         tasks.add(writeDeviceTask);
         tasks.add(updatePanelsTask);
         TaskMonitor taskMonitor = new TaskMonitor(tasks);
@@ -348,5 +349,15 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
                 }
             }
         }
+    }
+
+    public ArrayList<AbstractData> getPanelData() {
+        ArrayList<AbstractData> result = new ArrayList<AbstractData>();
+        result.add((AbstractData)deliveryPanel.getData());
+        result.add((AbstractData)networkCapabilitiesPanel.getData());
+        result.add((AbstractData)networkConfigurationPanel.getData());
+        result.add((AbstractData)reportingPanel.getData());
+        result.add((AbstractData)serialNumberPanel.getData());
+        return result;
     }
 }
