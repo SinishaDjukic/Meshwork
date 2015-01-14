@@ -36,14 +36,17 @@ class EEPROMInit {
 			//start backwards to optimize the loop check
 			uint16_t next = data_end;
 			do {
-				eeprom->write((void*) &next, (void*) &marker, 1);
+				int result = eeprom->write(&next, &marker, 1);
+				//MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d, result=%d", marker, next, result);
 			} while (--next >= data_start);
 			MW_LOG_DEBUG(LOG_EEPROMINIT, "Done", NULL);
 		}
 		
 		//returns true if the EEPROM has now been formatted
 		static bool init(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker) {
-			uint8_t formatted = eeprom->read((void*) &formatted, (void*) &data_start, 1);
+			uint8_t formatted;
+			uint8_t bytes = eeprom->read(&formatted, &data_start, 1);
+			//MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d, bytes=%d", data_start, formatted, marker, bytes);
 			if ( formatted != marker ) {
 				format(eeprom, data_start, data_end, marker);
 			} else {
