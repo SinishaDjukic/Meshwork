@@ -638,6 +638,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 
 #ifdef SUPPORT_RADIO_LISTENER
 				IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), src, port, &msg, sent);
+#else
+				UNUSED(sent);
 #endif
 
 				uint8_t devaddr = m_driver->get_device_address();

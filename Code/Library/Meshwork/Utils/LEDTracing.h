@@ -63,11 +63,22 @@ class LEDTracing: public NetworkV1::RadioListener {
 		};
 
 		void notify_send_begin(uint8_t origin, uint8_t next, uint8_t port, NetworkV1::univmsg_t* msg) {
+			UNUSED(origin);
+			UNUSED(next);
+			UNUSED(port);
+			UNUSED(msg);
+
 			//Here, a real send starts (whether BCAST, SCAST or ACK)
 			m_pin_send->on();
 		}
 
 		void notify_send_end(uint8_t origin, uint8_t next, uint8_t port, NetworkV1::univmsg_t* msg, bool sent) {
+			UNUSED(origin);
+			UNUSED(next);
+			UNUSED(port);
+			UNUSED(msg);
+			UNUSED(sent);
+
 			Meshwork::Time::delay(200);//will be multiplied by MW_DELAY_FACTOR
 			m_pin_send->off();
 		}
@@ -79,7 +90,10 @@ class LEDTracing: public NetworkV1::RadioListener {
 		}
 
 		void notify_recv_ack_end(NetworkV1::univmsg_t* msg, int result) {
-			m_pin_ack->on();\
+			UNUSED(msg);
+			UNUSED(result);
+
+			m_pin_ack->on();
 			Meshwork::Time::delay(200);//will be multiplied by MW_DELAY_FACTOR
 			m_pin_ack->off();
 		}
@@ -91,6 +105,11 @@ class LEDTracing: public NetworkV1::RadioListener {
 		}
 
 		void notify_recv_end(bool broadcast, uint8_t src, uint8_t port, NetworkV1::univmsg_t* msg) {
+			UNUSED(broadcast);
+			UNUSED(src);
+			UNUSED(port);
+			UNUSED(msg);
+
 			m_pin_recv->on();
 			Meshwork::Time::delay(200);//will be multiplied by MW_DELAY_FACTOR
 			m_pin_recv->off();

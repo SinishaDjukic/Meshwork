@@ -22,7 +22,6 @@
 #ifndef __MESHWORK_UTILS_EEPROMINIT_H__
 #define __MESHWORK_UTILS_EEPROMINIT_H__
 
-#include "Cosa/EEPROM.hh"
 #include "Meshwork.h"
 
 #ifndef LOG_EEPROMINIT
@@ -30,30 +29,45 @@
 #endif
 
 class EEPROMInit {
-	public: 
-		static void format(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker) {
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM formatting: data_start=%d, data_end=%d, marker=%d", data_start, data_end, marker);
-			//start backwards to optimize the loop check
-			uint16_t next = data_end;
+	private:
+		static uint8_t read(EEPROM* eeprom, uint16_t address) {
+			uint8_t value;
+			eeprom->read((uint8_t*) &value, (uint8_t*) address);
+			return value;
+		}
+
+		static void write(EEPROM* eeprom, uint16_t address, uint8_t value) {
+			eeprom->write((uint8_t*) address, (uint8_t*) &value, 1);
+		}
+
+	public:
+
+		static void format(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker, uint8_t memvalue) {
+			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM formatting: data_start=%d, data_end=%d, marker=%d, memvalue=%d", data_start, data_end, marker, memvalue);
+
+			uint16_t next = data_start;
+			MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d", marker, next);
+			write(eeprom, next, marker);
+			next++;
+
 			do {
-				uint16_t result = eeprom->write(&next, &marker, 1);
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d, result=%d", marker, next, result);
+				write(eeprom, next, memvalue);
+				MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing memvalue=%d at next=%d", memvalue, next);
 
-				uint8_t tmp = 9;
-				eeprom->read(&tmp, &next, 1);
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "Read at next=%d, result=%d", next, tmp);
-
-			} while (--next >= data_start);
+				uint8_t tmp = read(eeprom, next);
+				MW_LOG_DEBUG(LOG_EEPROMINIT, "Read at next=%d, memvalue=%d", next, tmp);
+			} while ( next++ < data_end);
 			MW_LOG_DEBUG(LOG_EEPROMINIT, "Done", NULL);
 		}
 		
 		//returns true if the EEPROM has now been formatted
-		static bool init(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker) {
-			uint8_t formatted;
-			uint8_t bytes = eeprom->read(&formatted, &data_start, 1);
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d, bytes=%d", data_start, formatted, marker, bytes);
+		static bool init(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker, uint8_t memvalue) {
+			uint8_t formatted = read(eeprom, data_start);
+			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d", data_start, formatted, marker);
+
 			if ( formatted != marker ) {
-				format(eeprom, data_start, data_end, marker);
+				MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM NOT formatted", NULL);
+				format(eeprom, data_start, data_end, marker, memvalue);
 			} else {
 				MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM already formatted: data_start=%d, data_end=%d, marker=%d", data_start, data_end, marker);
 			}

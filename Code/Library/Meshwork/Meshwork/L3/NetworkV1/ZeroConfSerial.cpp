@@ -21,6 +21,8 @@
 #ifndef __MESHWORK_L3_NETWORKV1_ZEROCONFSERIAL_CPP__
 #define __MESHWORK_L3_NETWORKV1_ZEROCONFSERIAL_CPP__
 
+using namespace Meshwork::L3::NetworkV1;
+
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
@@ -37,331 +39,215 @@
 #define LOG_ZEROCONFSERIAL true
 #endif
 
-uint16_t Meshwork::L3::NetworkV1::ZeroConfSerial::readByte() {
-	if ( m_lastSerialMsgLen > 0 ) {
-		m_lastSerialMsgLen --;
-		return m_serial->getchar();
-	} else {
-		return -2;
-	}
-}
-
-void Meshwork::L3::NetworkV1::ZeroConfSerial::writeMessage(uint8_t len, uint8_t* data, bool flush) {
-	for ( int i = 0; i < len; i ++ )
-		m_serial->putchar(((uint8_t*)data)[i]);
-	if ( flush )
-		m_serial->flush();
-}
-
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::waitForBytes(uint8_t count, uint16_t millis) {
-	bool result = false;
-	uint32_t start = RTC::millis();
-	while (true) {
-		if ( m_serial->available() < count )//minimum response size
-			Meshwork::Time::delay(16);
-		else
-			result = true;
-		if ( result || Meshwork::Time::passed(RTC::since(start), millis) )
-			break;
-	}
-	return result;
-}
-
-void Meshwork::L3::NetworkV1::ZeroConfSerial::readRemainingMessageBytes() {
-	if ( m_lastSerialMsgLen > 0 ) {
-		MW_LOG_WARNING(LOG_ZEROCONFSERIAL, "Remaining message bytes to be discarded=%d", m_lastSerialMsgLen);
-		if ( waitForBytes(m_lastSerialMsgLen, m_timeout) ) {
-			while (readByte() >= 0);
-		} else {
-			MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Timeout waiting for bytes count to be discarded: %d", m_lastSerialMsgLen);
-		}
-	} else {
-		MW_LOG_DEBUG(LOG_ZEROCONFSERIAL, "No message bytes to be discarded", NULL);
-	}
-}
-
-void Meshwork::L3::NetworkV1::ZeroConfSerial::respondWCode(serialmsg_t* msg, uint8_t code) {
-	readRemainingMessageBytes();
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, SubCode=%d", msg->seq, code);
-	uint8_t data[] = {3, msg->seq, ZC_CODE, code};
-	writeMessage(sizeof(data), data, true);
-}
-
-void Meshwork::L3::NetworkV1::ZeroConfSerial::respondNOK(serialmsg_t* msg, uint8_t error) {
-	readRemainingMessageBytes();
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Error=%d", msg->seq, error);
-	uint8_t data[] = {4, msg->seq, ZC_CODE, ZC_SUBCODE_NOK, error};
-	writeMessage(sizeof(data), data, true);
-}
-
-
-
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCInit(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = true;
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
 	bool result = m_network == NULL ? false : m_network->end();
 	if ( result )
-		respondWCode(msg, ZC_SUBCODE_OK);
+		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
-		respondNOK(msg, ERROR_ILLEGAL_STATE);
-	return result;
+		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
+	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDeinit(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCDeinit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = false;
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
 	bool result = m_network == NULL ? false : m_network->begin();
 	if ( result )
-		respondWCode(msg, ZC_SUBCODE_OK);
+		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
-		respondNOK(msg, ERROR_ILLEGAL_STATE);
-	return result;
+		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
+	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::checkZCInit(serialmsg_t* msg) {
+bool ZeroConfSerial::checkZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 	if ( !m_initmode ) {
 		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
-		respondNOK(msg, ERROR_ILLEGAL_STATE);
-		return false;
+		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
 	}
-	return true;
+	return m_initmode;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDevReq(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCDevReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
-		return false;
-	readRemainingMessageBytes();
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
+	m_adapter->readRemainingMessageBytes();
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
-	uint8_t data[] = {5, m_currentMsg->seq, ZC_CODE, ZC_SUBCODE_ZCDEVRES, m_network->getNetworkCaps(), m_network->getDelivery()};
-	writeMessage(sizeof(data), data, true);
-	return true;
+	uint8_t data[] = {5, (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCDEVRES, m_network->getNetworkCaps(), m_network->getDelivery()};
+	m_adapter->writeMessage(sizeof(data), data, true);
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCDevCfg(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCDevCfg(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
-		return false;
-	bool result = false;
-	if ( m_serial->available() >= 2 ) {
-		m_devconfig->m_nwkcaps = readByte();
-		m_devconfig->m_delivery = readByte();
-		m_network->setNetworkCaps(m_devconfig->m_nwkcaps);
-		m_network->setDelivery(m_devconfig->m_delivery);
-		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
+	m_devconfig->m_nwkcaps = m_adapter->readByte();
+	m_devconfig->m_delivery = m_adapter->readByte();
+	m_network->setNetworkCaps(m_devconfig->m_nwkcaps);
+	m_network->setDelivery(m_devconfig->m_delivery);
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
 
-		if ( m_listener != NULL )
-			m_listener->devconfig_updated();
-		result = true;
-		respondWCode(msg, ZC_SUBCODE_OK);
-	} else {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Not enough data in ZCDevCfg, ERROR_INSUFFICIENT_DATA", NULL);
-		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
-	}
-	return true;
+	if ( m_listener != NULL )
+		m_listener->devconfig_updated();
+	m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
 }
 
 
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCNwkReq(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCNwkReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
-		return false;
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
 			msg->seq, m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen);
-	uint8_t data[] = {8+m_nwkconfig->nwkkeylen, m_currentMsg->seq, ZC_CODE, ZC_SUBCODE_ZCNWKRES, m_nwkconfig->channel,
-			( m_nwkconfig->nwkid >> 8 ) & 0xFF, m_nwkconfig->nwkid & 0xFF, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen};
+	uint8_t data[] = {(uint8_t) (8 + m_nwkconfig->nwkkeylen), (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCNWKRES, m_nwkconfig->channel,
+			(uint8_t) (( m_nwkconfig->nwkid >> 8 ) & 0xFF), (uint8_t) (m_nwkconfig->nwkid & 0xFF), m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen};
 #ifndef ZEROCONF_NWKKEY_REPORT_ENABLE
-	writeMessage(sizeof(data), data, false);
-	writeMessage(m_nwkconfig->nwkkeylen, (uint8_t*) m_nwkconfig->nwkkey, true);
+	m_adapter->writeMessage(sizeof(data), data, false);
+	m_adapter->writeMessage(m_nwkconfig->nwkkeylen, (uint8_t*) m_nwkconfig->nwkkey, true);
 #else
 	//forbid reporting the network key for security reasons
 	data[8] = 0;
-	writeMessage(sizeof(data), data, true);
+	m_adapter->writeMessage(sizeof(data), data, true);
 #endif
-	return true;
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCNwkCfg(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCNwkCfg(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
-		return false;
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 	bool result = false;
-	if ( m_serial->available() >= 5 ) {
-		m_nwkconfig->channel = readByte();
-		m_nwkconfig->nwkid = (uint16_t) readByte() << 8 | readByte();
-		m_nwkconfig->nodeid = readByte();
-		
-		m_network->setChannel(m_nwkconfig->channel);
-		m_network->setNetworkID(m_nwkconfig->nwkid);
-		m_network->setNodeID(m_nwkconfig->nodeid);
-		
+	m_nwkconfig->channel = m_adapter->readByte();
+	m_nwkconfig->nwkid = (uint16_t) m_adapter->readByte() << 8 | m_adapter->readByte();
+	m_nwkconfig->nodeid = m_adapter->readByte();
+
+	m_network->setChannel(m_nwkconfig->channel);
+	m_network->setNetworkID(m_nwkconfig->nwkid);
+	m_network->setNodeID(m_nwkconfig->nodeid);
+
+	m_nwkconfig->nwkkey[0] = 0;
+	m_nwkconfig->nwkkeylen = m_adapter->readByte();
+
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
+			m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen);
+
+	if ( m_nwkconfig->nwkkeylen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
 		m_nwkconfig->nwkkey[0] = 0;
-		m_nwkconfig->nwkkeylen = readByte();
-
-		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
-				m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen);
-
-		if ( m_nwkconfig->nwkkeylen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
-			m_nwkconfig->nwkkey[0] = 0;
-			for (size_t i = 0; i < m_nwkconfig->nwkkeylen; i ++ )
-				m_nwkconfig->nwkkey[i] = readByte();
-			if ( m_nwkconfig->nwkkeylen > 0 )
-				m_nwkconfig->nwkkey[m_nwkconfig->nwkkeylen + 1] = 0;//zero-terminate
-			result = true;
-		} else {
-			m_nwkconfig->nwkkeylen = 0;
-		}
-		m_network->setNetworkKey((char*) m_nwkconfig->nwkkey);
-		if ( m_listener != NULL )
-			m_listener->network_updated();
-		//the only possible fail point, so far
-		if ( result )
-			respondWCode(msg, ZC_SUBCODE_OK);
-		else
-			respondNOK(msg, ERROR_KEY_TOO_LONG);
+		for (size_t i = 0; i < m_nwkconfig->nwkkeylen; i ++ )
+			m_nwkconfig->nwkkey[i] = m_adapter->readByte();
+		if ( m_nwkconfig->nwkkeylen > 0 )
+			m_nwkconfig->nwkkey[m_nwkconfig->nwkkeylen + 1] = 0;//zero-terminate
+		result = true;
 	} else {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Not enough data in ZCCfgNwk, ERROR_INSUFFICIENT_DATA", NULL);
-		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
+		m_nwkconfig->nwkkeylen = 0;
 	}
-	return result;
+	m_network->setNetworkKey((char*) m_nwkconfig->nwkkey);
+	if ( m_listener != NULL )
+		m_listener->network_updated();
+	//the only possible fail point, so far
+	if ( result )
+		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
+	else
+		m_adapter->respondNOK(msg, ZC_NOK_KEY_TOO_LONG);
+	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
 }
 
 
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCSerialReq(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCSerialReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
-		return false;
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, SerNumLen=%d", msg->seq, m_sernum->sernumlen);
-	uint8_t data[] = {4 + m_sernum->sernumlen, m_currentMsg->seq, ZC_CODE, ZC_SUBCODE_ZCSERIALRES, m_sernum->sernumlen};
-	writeMessage(sizeof(data), data, false);
-	writeMessage(m_sernum->sernumlen, (uint8_t*) m_sernum->sernum, true);
-	return true;
+	uint8_t data[] = {(uint8_t) (4 + m_sernum->sernumlen), (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCSERIALRES, m_sernum->sernumlen};
+	m_adapter->writeMessage(sizeof(data), data, false);
+	m_adapter->writeMessage(m_sernum->sernumlen, (uint8_t*) m_sernum->sernum, true);
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCSerialCfg(serialmsg_t* msg) {
+uint8_t ZeroConfSerial::processZCSerialCfg(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return false;
 #ifndef ZEROCONF_SERIAL_CHANGE_ENABLE
 	if ( m_sernum->sernumlen > 0 ) {
 		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Serial number change disabled!", NULL);
-		respondNOK(msg, ERROR_ILLEGAL_STATE);
+		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
 		return false;
 	}
 #endif
 
 	bool result = false;
-	if ( m_serial->available() >= 1 ) {
-		m_sernum->sernumlen = readByte();
-		m_sernum->sernum[0] = 0;
-		
-		if ( m_sernum->sernumlen <= MAX_SERIAL_LEN ) {
-			for (size_t i = 0; i < m_sernum->sernumlen; i ++ )
-				m_sernum->sernum[i] = readByte();
-			if ( m_sernum->sernumlen > 0 )
-				m_sernum->sernum[m_sernum->sernumlen + 1] = 0;//zero-terminate
-			result = true;
-		} else {
-			m_sernum->sernumlen = 0;
-		}
-		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SerNumLen=%d, SerNum=%s", m_sernum->sernumlen, m_sernum->sernum);
-		if ( m_listener != NULL )
-			m_listener->serial_updated();
-		//the only possible fail point, so far
-		if ( result )
-			respondWCode(msg, ZC_SUBCODE_OK);
-		else
-			respondNOK(msg, ERROR_SERIAL_TOO_LONG);
-	} else {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Not enough data in ZCCfgSerial, ERROR_INSUFFICIENT_DATA", NULL);
-		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
-	}
-	return result;
-}
+	m_sernum->sernumlen = m_adapter->readByte();
+	m_sernum->sernum[0] = 0;
 
-
-
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCRepReq(serialmsg_t* msg) {
-	if (!checkZCInit(msg) )
-		return false;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
-	uint8_t data[] = {5, m_currentMsg->seq, ZC_CODE, ZC_SUBCODE_ZCREPRES, m_reporting->targetnodeid, m_reporting->repflags};
-	writeMessage(sizeof(data), data, true);
-	return true;
-}
-
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processZCRepCfg(serialmsg_t* msg) {
-	if (!checkZCInit(msg) )
-		return false;
-	bool result = false;
-	if ( m_serial->available() >= 2 ) {
-		m_reporting->targetnodeid = readByte();
-		m_reporting->repflags = readByte();
-		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
-		
-		if ( m_listener != NULL )
-			m_listener->reporting_updated();
-		
-		respondWCode(msg, ZC_SUBCODE_OK);
+	if ( m_sernum->sernumlen <= MAX_SERIAL_LEN ) {
+		for (size_t i = 0; i < m_sernum->sernumlen; i ++ )
+			m_sernum->sernum[i] = m_adapter->readByte();
+		if ( m_sernum->sernumlen > 0 )
+			m_sernum->sernum[m_sernum->sernumlen + 1] = 0;//zero-terminate
 		result = true;
 	} else {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Not enough data in ZCCfgRep, ERROR_INSUFFICIENT_DATA", NULL);
-		respondNOK(msg, ERROR_INSUFFICIENT_DATA);
+		m_sernum->sernumlen = 0;
 	}
-	return result;
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SerNumLen=%d, SerNum=%s", m_sernum->sernumlen, m_sernum->sernum);
+	if ( m_listener != NULL )
+		m_listener->serial_updated();
+	//the only possible fail point, so far
+	if ( result )
+		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
+	else
+		m_adapter->respondNOK(msg, ZC_NOK_SERIAL_TOO_LONG);
+	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processOneMessageEx(serialmsg_t* msg) {
-	UNUSED(msg);
-	return false;
+
+
+uint8_t ZeroConfSerial::processZCRepReq(SerialMessageAdapter::serialmsg_t* msg) {
+	if (!checkZCInit(msg) )
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
+	uint8_t data[] = {5, (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCREPRES, m_reporting->targetnodeid, m_reporting->repflags};
+	m_adapter->writeMessage(sizeof(data), data, true);
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
 }
 
-bool Meshwork::L3::NetworkV1::ZeroConfSerial::processOneMessage(serialmsg_t* msg) {
-	bool result = true;
-	
-	if ( m_serial->available() >= 3 ) {//minimal msg len
-		int len = msg->len = m_serial->getchar();//len
-		m_lastSerialMsgLen = len;
-		if ( len >= 3 && waitForBytes(3, m_timeout) ) {
-			msg->seq = readByte();//seq
-			msg->code = readByte();//read major code
-			//needed to make sure we have enough data arrived in the buffer for the entire command
-			msg->subcode = readByte();//read sub-code
-			m_currentMsg = msg;
-			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFSERIAL) << endl << endl << endl;
-			MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Len=%d, Code=%d, SubCode=%d", msg->seq, len, msg->code, msg->subcode);
-			if ( waitForBytes(len - 3, m_timeout) ) {
-				switch ( msg->subcode ) {
-					case ZC_SUBCODE_ZCINIT: processZCInit(msg); break;
-					case ZC_SUBCODE_ZCDEINIT: processZCDeinit(msg); break;
+uint8_t ZeroConfSerial::processZCRepCfg(SerialMessageAdapter::serialmsg_t* msg) {
+	if (!checkZCInit(msg) )
+		return SerialMessageAdapter::SM_MESSAGE_ERROR;
+	m_reporting->targetnodeid = m_adapter->readByte();
+	m_reporting->repflags = m_adapter->readByte();
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
 
-					case ZC_SUBCODE_ZCDEVREQ: processZCDevReq(msg); break;
-					case ZC_SUBCODE_ZCDEVCFG: processZCDevCfg(msg); break;
+	if ( m_listener != NULL )
+		m_listener->reporting_updated();
 
-					case ZC_SUBCODE_ZCNWKREQ: processZCNwkReq(msg); break;
-					case ZC_SUBCODE_ZCNWKCFG: processZCNwkCfg(msg); break;
+	m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 
-					case ZC_SUBCODE_ZCREPREQ: processZCRepReq(msg); break;
-					case ZC_SUBCODE_ZCREPCFG: processZCRepCfg(msg); break;
+	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
+}
 
-					case ZC_SUBCODE_ZCSERIALREQ: processZCSerialReq(msg); break;
-					case ZC_SUBCODE_ZCSERIALCFG: processZCSerialCfg(msg); break;
+uint8_t ZeroConfSerial::processOneMessage(SerialMessageAdapter::serialmsg_t* msg) {
+	uint8_t result = SerialMessageAdapter::SM_MESSAGE_UNKNOWN;
 
-					default:
-						result = processOneMessageEx(msg);
-						if (!result)
-							respondWCode(msg, ZC_SUBCODE_UNKNOWN);
-						m_currentMsg = NULL;
-				}
-				MW_LOG_DEBUG_TRACE(LOG_ZEROCONFSERIAL) << endl << endl;
-			} else {
-				MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "INSUFFICIENT_DATA", NULL);
-				respondNOK(msg, ERROR_INSUFFICIENT_DATA);
-				result = false;
-			}
-		} else {
-			MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Invalid message: Len=%d", len);
-			respondNOK(msg, ERROR_GENERAL);
-			result = false;
+	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "[ZeroConfSerial] Code=%d, SubCode=%d", msg->code, msg->subcode);
+
+	if ( msg->code == ZC_CODE ) {
+		switch ( msg->subcode ) {
+			case ZeroConfSerial::ZC_SUBCODE_ZCINIT: result = processZCInit(msg); break;
+			case ZeroConfSerial::ZC_SUBCODE_ZCDEINIT: result = processZCDeinit(msg); break;
+
+			case ZeroConfSerial::ZC_SUBCODE_ZCDEVREQ: result = processZCDevReq(msg); break;
+			case ZeroConfSerial::ZC_SUBCODE_ZCDEVCFG: result = processZCDevCfg(msg); break;
+
+			case ZeroConfSerial::ZC_SUBCODE_ZCNWKREQ: result = processZCNwkReq(msg); break;
+			case ZeroConfSerial::ZC_SUBCODE_ZCNWKCFG: result = processZCNwkCfg(msg); break;
+
+			case ZeroConfSerial::ZC_SUBCODE_ZCREPREQ: result = processZCRepReq(msg); break;
+			case ZeroConfSerial::ZC_SUBCODE_ZCREPCFG: result = processZCRepCfg(msg); break;
+
+			case ZeroConfSerial::ZC_SUBCODE_ZCSERIALREQ: result = processZCSerialReq(msg); break;
+			case ZeroConfSerial::ZC_SUBCODE_ZCSERIALCFG: result = processZCSerialCfg(msg); break;
 		}
-	} else {
-		result = false;
 	}
 	return result;
 }

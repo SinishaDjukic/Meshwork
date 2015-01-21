@@ -206,7 +206,7 @@ namespace Meshwork {
 
 			#else
 
-			#define IF_SUPPORT_RADIO_LISTENER if (false);
+			#define IF_SUPPORT_RADIO_LISTENER if (false) { };
 
 			#define NOTIFY_SEND_BEGIN(origin, next, port, msg) \
 				  do { } while (0)
@@ -490,7 +490,7 @@ namespace Meshwork {
 				}
 			#endif
 
-			bool begin(const void* config = NULL);
+				bool begin(const void* config = NULL);
 				bool end();
 				int send(uint8_t delivery, uint8_t retry,
 									uint8_t dest, uint8_t port,

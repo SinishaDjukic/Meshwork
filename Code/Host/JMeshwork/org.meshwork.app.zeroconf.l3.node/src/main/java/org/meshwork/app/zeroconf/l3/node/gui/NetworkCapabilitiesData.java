@@ -8,7 +8,7 @@ import org.meshwork.core.zeroconf.l3.MZCDevRes;
  */
 public class NetworkCapabilitiesData extends AbstractData {
 
-    public byte capabilities;
+    public byte capabilities = 0;
 
     public void read(MZCDevRes msg) {
         capabilities = msg.nwkcaps;

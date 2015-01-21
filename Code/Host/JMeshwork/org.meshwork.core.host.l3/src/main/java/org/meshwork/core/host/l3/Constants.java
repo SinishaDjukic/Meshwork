@@ -5,47 +5,34 @@ package org.meshwork.core.host.l3;
  */
 public interface Constants {
 
-    public static final byte MAX_SERIALMSG_LEN 			    = 32;
-
     //Network Serial Code ID
     public static final byte NS_CODE 					    = 0;
 
-    //Network Serial SubCode IDs
-    public static final byte NS_SUBCODE_OK                  = 0;
-    public static final byte NS_SUBCODE_NOK                 = 1;
-    public static final byte NS_SUBCODE_UNKNOWN             = 2;
-    public static final byte NS_SUBCODE_INTERNAL            = 3;
+    //32-255: Code specific
+    public static final byte NS_SUBCODE_INTERNAL 			= 32;
+    public static final byte NS_SUBCODE_CFGBASIC 			= 41;//0x
+    public static final byte NS_SUBCODE_CFGNWK 				= 42;//0x
+    public static final byte NS_SUBCODE_RFINIT 				= 43;//0x
+    public static final byte NS_SUBCODE_RFDEINIT 			= 44;//0x
+    public static final byte NS_SUBCODE_RFRECV 				= 45;//0x
+    public static final byte NS_SUBCODE_RFRECVACK 			= 46;//0x
+    public static final byte NS_SUBCODE_RFSTARTRECV 		= 47;//0x
+    public static final byte NS_SUBCODE_RFSEND 				= 48;//0x
+    public static final byte NS_SUBCODE_RFSENDACK 			= 49;//0x
+    public static final byte NS_SUBCODE_RFBCAST 			= 50;//0x
+    public static final byte NS_SUBCODE_CFGREQUEST			= 51;//0x
+    public static final byte NS_SUBCODE_RFROUTEFOUND		= 52;//0x //called from NS_SUBCODE_RFRECV
+    public static final byte NS_SUBCODE_RFROUTEFAILED		= 53;//0x //called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTECOUNT		= 54;//0x //called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTECOUNTRES	= 55;//0x //response to NS_SUBCODE_RFGETROUTECOUNT
+    public static final byte NS_SUBCODE_RFGETROUTE			= 56;//0x //called from NS_SUBCODE_RFSEND
+    public static final byte NS_SUBCODE_RFGETROUTERES		= 57;//0x //response to NS_SUBCODE_RFGETROUTE
 
-    public static final byte NS_SUBCODE_CFGBASIC 		    = 10;
-    public static final byte NS_SUBCODE_CFGNWK 			    = 11;
-    public static final byte NS_SUBCODE_RFINIT 			    = 20;
-    public static final byte NS_SUBCODE_RFDEINIT 		    = 21;
-    public static final byte NS_SUBCODE_RFRECV 			    = 22;
-    public static final byte NS_SUBCODE_RFRECVACK 		    = 23;
-    public static final byte NS_SUBCODE_RFSTARTRECV 	    = 24;
-    public static final byte NS_SUBCODE_RFSEND 			    = 25;
-    public static final byte NS_SUBCODE_RFSENDACK 		    = 26;
-    public static final byte NS_SUBCODE_RFBCAST 		    = 27;
-    public static final byte NS_SUBCODE_CFGREQUEST		    = 28;
-    public static final byte NS_SUBCODE_RFROUTEFOUND	    = 29;//called from NS_SUBCODE_RFRECV
-    public static final byte NS_SUBCODE_RFROUTEFAILED	    = 30;//called from NS_SUBCODE_RFSEND
-    public static final byte NS_SUBCODE_RFGETROUTECOUNT	    = 31;//called from NS_SUBCODE_RFSEND
-    public static final byte NS_SUBCODE_RFGETROUTECOUNTRES	= 32;// response to NS_SUBCODE_RFGETROUTECOUNT
-    public static final byte NS_SUBCODE_RFGETROUTE			= 33;//called from NS_SUBCODE_RFSEND
-    public static final byte NS_SUBCODE_RFGETROUTERES		= 34;//response to NS_SUBCODE_RFGETROUTE
-
-    //0-63
-    public static final byte ERROR_GENERAL 				= 0;
-    public static final byte ERROR_INSUFFICIENT_DATA 	= 1;
-    public static final byte ERROR_TOO_LONG_DATA 		= 2;
-    public static final byte ERROR_ILLEGAL_STATE 		= 3;
-    public static final byte ERROR_RECV 				= 4;
-    public static final byte ERROR_SEND 				= 5;
-    public static final byte ERROR_BCAST 				= 6;
-    public static final byte ERROR_KEY_TOO_LONG 		= 7;
-    public static final byte ERROR_SEQUENCE_MISMATCH	= 8;
-
-    public static final short TIMEOUT_RESPONSE 			= 5000;
+    //32-255: Code/sub-code specific
+    public static final byte NS_NOK_RECV 				= 32;
+    public static final byte NS_NOK_SEND 				= 33;
+    public static final byte NS_NOK_BCAST 				= 34;
+    public static final byte NS_NOK_KEY_TOO_LONG 		= 35;
 
     // Define node roles.
     public static final byte ROLE_ROUTER_NODE = 0x00;

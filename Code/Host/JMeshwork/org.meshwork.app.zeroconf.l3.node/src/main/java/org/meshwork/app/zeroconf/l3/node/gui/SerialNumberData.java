@@ -7,7 +7,8 @@ import org.meshwork.core.zeroconf.l3.MZCSerialRes;
  * Created by Sinisha Djukic on 31.12.2014.
  */
 public class SerialNumberData extends AbstractData {
-    public String value;
+
+    public String value = null;
 
     public void read(MZCSerialRes msg) {
         value = (msg.sernumlen == 0 || msg.sernum == null) ? null : new String(msg.sernum);

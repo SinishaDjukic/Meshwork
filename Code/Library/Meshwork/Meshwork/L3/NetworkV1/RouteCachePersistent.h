@@ -80,7 +80,7 @@ namespace Meshwork {
 				};
 				
 				void init_eeprom() {
-					EEPROMInit::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER);
+					EEPROMInit::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER, 0);
 				}
 				
 				void read_routes() {
@@ -90,10 +90,8 @@ namespace Meshwork {
 													i * MAX_DST_NODES * ROUTE_SIZE_SINGLE +
 														j * ROUTE_SIZE_SINGLE;
 							
-							//TODO ??? check if all the pointer converstions are ok
-							
 							uint8_t tmp = 0;
-							m_eeprom->read((void*) &tmp, (void*) &data_start, 1);
+							m_eeprom->read((uint8_t*) &tmp, (uint8_t*) data_start, 1);
 							if ( tmp != 0 ) {
 								route_entry_t entry = m_table.lists[i].entries[j];
 								entry.qos = Network::QOS_LEVEL_AVERAGE;//qos not stored so reset
@@ -101,16 +99,16 @@ namespace Meshwork {
 								entry.route.src = tmp;
 								//dst
 								data_start ++;
-								m_eeprom->read((void*) &tmp, (void*) &data_start, 1);
+								m_eeprom->read((uint8_t*) &tmp, (uint8_t*) data_start, 1);
 								m_table.lists[i].dst = tmp;
 								//hopCount
 								data_start ++;
-								m_eeprom->read((void*) &tmp, (void*) &data_start, 1);
+								m_eeprom->read((uint8_t*) &tmp, (uint8_t*) data_start, 1);
 								entry.route.hopCount = tmp;
 								//hops
 								if ( tmp > 0 ) {
 									data_start ++;
-									m_eeprom->read((void*) &entry.route.hops, (void*) &data_start, tmp);
+									m_eeprom->read((uint8_t*) &entry.route.hops, (uint8_t*) data_start, tmp);
 								}
 							} else {
 								
@@ -123,8 +121,6 @@ namespace Meshwork {
 										const uint8_t change) {
 					uint8_t node_index, route_index;
 					
-					//TODO ??? check if all the pointer converstions are ok
-					
 					if ( get_route_entry_index(entry, node_index, route_index) ) {
 						uint16_t data_start = m_eeprom_offset +
 												node_index * MAX_DST_NODES * ROUTE_SIZE_SINGLE +
@@ -132,16 +128,16 @@ namespace Meshwork {
 						if ( change == ROUTE_ENTRY_REMOVING ) {
 							//just reset the first byte (src) to 0 to mark the route as removed
 							uint8_t empty = 0;
-							m_eeprom->write((void*) &data_start, (void*) &empty, 1);
+							m_eeprom->write((uint8_t*) data_start, (uint8_t*) &empty, 1);
 						} else if ( change == ROUTE_ENTRY_CHANGED ) {
-							m_eeprom->write((void*) &data_start, (void*) entry->route.src, 1);
+							m_eeprom->write((uint8_t*) data_start, (uint8_t*) &entry->route.src, 1);
 							data_start++;
-							m_eeprom->write((void*) &data_start, (void*) entry->route.dst, 1);
+							m_eeprom->write((uint8_t*) data_start, (uint8_t*) &entry->route.dst, 1);
 							data_start++;
-							m_eeprom->write((void*) &data_start, (void*) entry->route.hopCount, 1);
+							m_eeprom->write((uint8_t*) data_start, (uint8_t*) &entry->route.hopCount, 1);
 							if ( entry->route.hopCount > 0 ) {
 								data_start++;
-								m_eeprom->write((void*) &data_start, (void*) entry->route.hops, entry->route.hopCount);
+								m_eeprom->write((uint8_t*) data_start, (uint8_t*) &entry->route.hops, entry->route.hopCount);
 							}
 						}
 					}

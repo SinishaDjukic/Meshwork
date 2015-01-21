@@ -30,11 +30,13 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
     protected SerialConnectionPanel serialConnectionPanel;
     protected SerialNumberPanel serialNumberPanel;
 
+    public final ImageIcon IMG_NEW = new ImageIcon(getClass().getResourceAsStream("res/new_16.png"));
     public final ImageIcon IMG_OPEN = new ImageIcon(getClass().getResourceAsStream("res/open_16.png"));
     public final ImageIcon IMG_SAVE = new ImageIcon(getClass().getResourceAsStream("res/save_16.png"));
     public final ImageIcon IMG_EXIT = new ImageIcon(getClass().getResourceAsStream("res/exit_16.png"));
     public final ImageIcon IMG_ABOUT = new ImageIcon(getClass().getResourceAsStream("res/about_16.png"));
 
+    public static final String CMD_NEW = "New...";
     public static final String CMD_OPEN = "Open...";
     public static final String CMD_SAVE = "Save...";
     public static final String CMD_EXIT = "Exit";
@@ -100,8 +102,9 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         pmain.add(pleft, BorderLayout.WEST);
         pmain.add(pright, BorderLayout.CENTER);
 
-        content.add(pmain, BorderLayout.CENTER);
+        content.add(pmain, BorderLayout.WEST);
 
+        Action menuItemFileNew = new ActionImpl(CMD_NEW, IMG_NEW);
         Action menuItemFileOpen = new ActionImpl(CMD_OPEN, IMG_OPEN);
         Action menuItemFileSave = new ActionImpl(CMD_SAVE, IMG_SAVE);
         Action menuItemFileExit = new ActionImpl(CMD_EXIT, IMG_EXIT);
@@ -111,24 +114,36 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         PMenu menuFile = menuBar.addMenu("File");
         menuFile.setMnemonic('F');
         PMenuItem item;
+
+        item = menuFile.add(menuItemFileNew);
+        item.addActionListener(this);
+        item.setMnemonic('N');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, KeyEvent.CTRL_MASK, false));
+
         item = menuFile.add(menuItemFileOpen);
         item.addActionListener(this);
         item.setMnemonic('O');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK, false));
+
         item = menuFile.add(menuItemFileSave);
         item.addActionListener(this);
         item.setMnemonic('S');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_MASK, false));
+
         menuFile.addSeparator();
+
         item = menuFile.add(menuItemFileExit);
         item.addActionListener(this);
         item.setMnemonic('x');
+
         PMenu menuHelp = menuBar.addMenu("Help");
         menuHelp.setMnemonic('H');
+
         item = menuHelp.add(menuItemHelpAbout);
         item.addActionListener(this);
         item.setMnemonic('A');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+
         getRootPane().setPMenuBar(menuBar);
 
         console = new PTextArea(false, 80);
@@ -136,12 +151,12 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         consoleFont = new Font(Font.MONOSPACED, Font.PLAIN, consoleFont.getSize());
         console.setFont(consoleFont);
         PScrollPane consoleScroll = new PScrollPane(console);
-        content.add(consoleScroll, BorderLayout.EAST);
+        content.add(consoleScroll, BorderLayout.CENTER);
 
         GUILogger.setInstance(new GUILogger(console));
 
         updateTitle(false, null);
-        setResizable(false);
+        //setResizable(false);
 
         //calculate layout size
         revalidate();
@@ -216,6 +231,9 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
                 case SerialConnectionPanel.ACTION_APPLY:
                     applyDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
                     break;
+                case SerialConnectionPanel.ACTION_DISCONNECTING:
+                    disconnectDevice(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
+                    break;
                 case SerialConnectionPanel.ACTION_DISCONNECTED:
                     updateTitle(false, null);
                     break;
@@ -225,8 +243,9 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
                     break;
             }
         } else if (CMD_EXIT.equals(action)) {
-            readDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
-//            exit();
+            exit();
+        } else if (CMD_NEW.equals(action)) {
+            resetPanels();
         } else if (CMD_OPEN.equals(action)) {
             open();
         } else if (CMD_SAVE.equals(action)) {
@@ -263,8 +282,8 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
 
     protected void save() {
         PFileChooser fc = PFileChooser.getInstance(this);
-        String[] browseFile = fc.showFileDialog("Save configuration", false);
         fc.setFileFilters(fileFilter);
+        String[] browseFile = fc.showFileDialog("Save configuration", false);
         String file = browseFile != null && browseFile.length > 0 ? browseFile[0] : null;
         if (file != null) {
             try {
@@ -331,6 +350,38 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
         tasks.add(updatePanelsTask);
         TaskMonitor taskMonitor = new TaskMonitor(tasks);
         taskMonitor.start();
+    }
+
+    protected void disconnectDevice(MessageAdapter adapter, SerialMessageTransport transport) {
+        DisconnectDeviceTask disconnectDeviceTask = new DisconnectDeviceTask(adapter, transport);
+
+        //Option 1: Run in a separate thread and make sure the task deinits the transport
+        ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
+        tasks.add(disconnectDeviceTask);
+        TaskMonitor taskMonitor = new TaskMonitor(tasks);
+        taskMonitor.start();
+
+        //Option 2: Calling synchronously while the transport is still open
+//        try {
+//            disconnectDeviceTask.runImpl();
+//        } catch (Throwable t) {
+//            GUILogger.error("Error disconnecting device due to: "+t.getMessage(), t);
+//        }
+    }
+
+    public void resetPanels() {
+        ArrayList<AbstractData> input = new ArrayList<AbstractData>();
+        DeliveryData deliveryData = new DeliveryData();
+        input.add(deliveryData);
+        NetworkCapabilitiesData networkCapabilitiesData = new NetworkCapabilitiesData();
+        input.add(networkCapabilitiesData);
+        NetworkConfigurationData networkConfigurationData = new NetworkConfigurationData();
+        input.add(networkConfigurationData);
+        ReportingData reportingData = new ReportingData();
+        input.add(reportingData);
+        SerialNumberData serialNumberData = new SerialNumberData();
+        input.add(serialNumberData);
+        updatePanels(input);
     }
 
     public void updatePanels(ArrayList<AbstractData> input) {

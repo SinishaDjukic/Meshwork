@@ -53,6 +53,8 @@
 #include <Meshwork/L3/Network.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
+#include <Utils/SerialMessageAdapter.h>
+#include <Utils/SerialMessageAdapter.cpp>
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
@@ -82,11 +84,18 @@ ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
 	static IOBuffer<UART::BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
-	ZeroConfSerial zeroConfSerial(&mesh, &uartHC, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &configuration.devconfig, &zeroConfListener);
+	SerialMessageAdapter serialMessageAdapter(&uartHC);
 #else
-	ZeroConfSerial zeroConfSerial(&mesh, &uart, &configuration.sernum, &configuration.reporting, &configuration.nwkconfig, &configuration.devconfig, &zeroConfListener);
+	SerialMessageAdapter serialMessageAdapter(&uart);
 	IOStream::Device null_device;
 #endif
+
+ZeroConfSerial zeroConfSerial(&mesh, &serialMessageAdapter,
+								&configuration.sernum, &configuration.reporting,
+									&configuration.nwkconfig, &configuration.devconfig,
+										&zeroConfListener);
+
+SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
 #define EXAMPLE_LED		Board::LED
 
@@ -102,15 +111,15 @@ ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
 	#define LED_BLINK(state, x)	(void) (state)
 #endif
 
-ZeroConfSerial::serialmsg_t msg;
+SerialMessageAdapter::serialmsg_t msg;
 bool processed;
 uint32_t last_message_timestamp = 0;
 
-bool processOneMessage(ZeroConfSerial::serialmsg_t* msg, uint32_t timeout)
+uint8_t processOneMessage(SerialMessageAdapter::serialmsg_t* msg, uint32_t timeout)
 {
-	bool result = zeroConfSerial.processOneMessage(msg);
+	uint8_t result = serialMessageAdapter.processOneMessage(msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-	if ( result )
+	if ( result != SerialMessageAdapter::SM_MESSAGE_NONE )
 		last_message_timestamp = RTC::millis();
 	else if ( RTC::since(last_message_timestamp) > timeout ) {
 		last_message_timestamp = RTC::millis();
@@ -125,11 +134,13 @@ bool processConfigSequence()
 	uint32_t start = RTC::millis();
 	uint8_t state = 0;
 	uint32_t lastMessage = start;
+	uint8_t lastProcessCode;
 	bool connected = false;
-	while ( !connected && RTC::since(start) < STARTUP_AUTOCONFIG_INIT_TIMEOUT ||
-			connected && RTC::since(lastMessage) < STARTUP_AUTOCONFIG_DEINIT_TIMEOUT ) {
+	while ( ( !connected && (RTC::since(start)       < STARTUP_AUTOCONFIG_INIT_TIMEOUT  ) ) ||
+			(  connected && (RTC::since(lastMessage) < STARTUP_AUTOCONFIG_DEINIT_TIMEOUT) ) ) {
 		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
-		if ( processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT) ) {
+		lastProcessCode = processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT);
+		if ( lastProcessCode != SerialMessageAdapter::SM_MESSAGE_NONE) {
 			connected = true;
 			if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
 				state = ZeroConfSerial::ZC_SUBCODE_ZCINIT;
@@ -144,10 +155,14 @@ bool processConfigSequence()
 }
 
 void readConfig() {
-	trace << PSTR("[Config] Reading EEPROM: Start=") << EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET
-			<< PSTR(", End=") << EXAMPLE_ZC_CONFIGURATION_EEPROM_END << endl;
-	EEPROMInit::init(&eepromConf, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
-	eepromConf.read((void*) &configuration, (void*) EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, (size_t) (EXAMPLE_ZC_CONFIGURATION_EEPROM_END - EXAMPLE_ZC_SERNUM_EEPROM_OFFSET + EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN));
+	trace << PSTR("[Config] Reading EEPROM...") << endl;
+	EEPROMInit::init(&eepromConf, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET,
+									EXAMPLE_ZC_CONFIGURATION_EEPROM_END,
+										EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE,
+											EXAMPLE_ZC_INIT_EEPROM_MEM_VALUE);
+	trace << PSTR("\tStart: ...") << EXAMPLE_ZC_CONFIGURATION_EEPROM_START << endl;
+	trace << PSTR("\t  End: ...") << (EXAMPLE_ZC_CONFIGURATION_EEPROM_START +(size_t) sizeof(configuration)) << endl;
+	eepromConf.read((uint8_t*) &configuration, (uint8_t*) EXAMPLE_ZC_CONFIGURATION_EEPROM_START, (size_t) sizeof(configuration));
 
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);
 	mesh.setNodeID(configuration.nwkconfig.nodeid);
@@ -157,7 +172,7 @@ void readConfig() {
 
 	mesh.setNetworkCaps(configuration.devconfig.m_nwkcaps);
 	mesh.setDelivery(configuration.devconfig.m_delivery);
-	trace << PSTR("[Config] Done") << endl;
+	trace << PSTR("[Config] Reading EEPROM... Done") << endl;
 }
 
 void setup()
@@ -166,6 +181,9 @@ void setup()
 	Watchdog::begin();
 	RTC::begin();
 	
+	serialMessageListeners[0] = &zeroConfSerial;
+	serialMessageAdapter.setListeners(serialMessageListeners);
+
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
 	LED(true);
@@ -190,7 +208,7 @@ void setup()
 	UNUSED(reconfigured);
 	
 #ifdef LED_TRACING
-  mesh.set_radio_listener(&ledTracing);
+	mesh.set_radio_listener(&ledTracing);
 #endif
 
 	mesh.setChannel(configuration.nwkconfig.channel);

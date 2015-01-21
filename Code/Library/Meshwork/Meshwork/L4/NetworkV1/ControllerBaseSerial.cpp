@@ -53,7 +53,7 @@ bool Meshwork::L4::ControllerBaseSerial::processSetModeAnnounce(serialmsg_t* msg
 		int mres = m_controllerBase->setModeAnnounce(mode, timeout);
 		m_serial->putchar(m_currentMsg->seq);
 		m_serial->putchar(3);
-		m_serial->putchar(NS_SUBCODE_SET_MODE_ANN_RES);
+		m_serial->putchar(CS_SUBCODE_SET_MODE_ANN_RES);
 		m_serial->putchar(0xFF & (mres >> 8));
 		m_serial->putchar(0xFF & (mres >> 0));
 		result = true;
@@ -69,7 +69,7 @@ bool Meshwork::L4::ControllerBaseSerial::processGetNodeList(serialmsg_t* msg) {
 		nodeCount = nodeCount + nodeList[i] ? 1 : 0;
 	m_serial->putchar(m_currentMsg->seq);
 	m_serial->putchar(2 + nodeCount);
-	m_serial->putchar(NS_SUBCODE_GET_NODE_LIST_RES);
+	m_serial->putchar(CS_SUBCODE_GET_NODE_LIST_RES);
 	m_serial->putchar(nodeCount);
 	for ( uint8_t i = 0; i < Meshwork::L3::Network::MAX_NODE_COUNT; i ++ )
 		if ( nodeList[i] )
@@ -85,7 +85,7 @@ bool Meshwork::L4::ControllerBaseSerial::processAddNode(serialmsg_t* msg) {
 		if ( newID >= Meshwork::L3::Network::MIN_NODE_ID && newID <= Meshwork::L3::Network::MAX_NODE_ID ) {
 			m_serial->putchar(m_currentMsg->seq);
 			m_serial->putchar(2);
-			m_serial->putchar(NS_SUBCODE_ADD_NODE_RES);
+			m_serial->putchar(CS_SUBCODE_ADD_NODE_RES);
 			m_serial->putchar(0xFF & newID);
 			result = true;
 		} else {
@@ -101,7 +101,7 @@ bool Meshwork::L4::ControllerBaseSerial::processRemoveNode(serialmsg_t* msg) {
 		uint8_t nodeID = m_serial->getchar();
 		int res = m_controllerBase->removeNode(nodeID);
 		if ( res == 0 ) {
-			respondWCode(msg, NS_SUBCODE_OK);
+			respondWCode(msg, CS_SUBCODE_OK);
 		} else {
 			respondNOK(msg, res == Meshwork::L4::ControllerBase::ERROR_NODE_INVALID ? Meshwork::L4::ControllerBase::ERROR_NODE_INVALID :
 							(res == Meshwork::L4::ControllerBase::ERROR_NODE_INVALID_CONTROLLER ? Meshwork::L4::ControllerBase::ERROR_NODE_INVALID_CONTROLLER :
@@ -116,10 +116,10 @@ bool Meshwork::L4::ControllerBaseSerial::processRemoveNode(serialmsg_t* msg) {
 bool Meshwork::L4::ControllerBaseSerial::processOneMessageEx(serialmsg_t* msg) {
 	bool result = true;
 	switch ( msg->subcode ) {
-		case NS_SUBCODE_SET_MODE_ANN: processSetModeAnnounce(msg); break;
-		case NS_SUBCODE_GET_NODE_LIST: processGetNodeList(msg); break;
-		case NS_SUBCODE_ADD_NODE: processAddNode(msg); break;
-		case NS_SUBCODE_REMOVE_NODE: processRemoveNode(msg); break;
+		case CS_SUBCODE_SET_MODE_ANN: processSetModeAnnounce(msg); break;
+		case CS_SUBCODE_GET_NODE_LIST: processGetNodeList(msg); break;
+		case CS_SUBCODE_ADD_NODE: processAddNode(msg); break;
+		case CS_SUBCODE_REMOVE_NODE: processRemoveNode(msg); break;
 		default: result = false;
 	}
 	return result;

@@ -46,26 +46,27 @@ public:
 			};
 	
 	void init() {
-		EEPROMInit::init(m_eeprom, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE);
+		//not needed, since invoked previously in the main sketch
+		//EEPROMInit::init(m_eeprom, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET, EXAMPLE_ZC_CONFIGURATION_EEPROM_END, EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE, EXAMPLE_ZC_INIT_EEPROM_MEM_VALUE);
 	}
 	
 	void devconfig_updated() {
-		m_eeprom->write((void*) &EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET, (void*) &m_configuration->devconfig, sizeof(m_configuration->devconfig));
+		m_eeprom->write((void*) EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET, (void*) &m_configuration->devconfig, sizeof(m_configuration->devconfig));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Device config updated", NULL);
 	}
 
 	void serial_updated() {
-		m_eeprom->write((void*) &EXAMPLE_ZC_SERNUM_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
+		m_eeprom->write((void*) EXAMPLE_ZC_SERNUM_EEPROM_OFFSET, (void*) &m_configuration->sernum, sizeof(m_configuration->sernum));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Serial updated", NULL);
 	}
 	
 	void network_updated() {
-		m_eeprom->write((void*) &EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET, (void*) &m_configuration->nwkconfig, sizeof(m_configuration->nwkconfig));
+		m_eeprom->write((void*) EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET, (void*) &m_configuration->nwkconfig, sizeof(m_configuration->nwkconfig));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Network updated", NULL);
 	}
 	
 	void reporting_updated() {
-		m_eeprom->write((void*) &EXAMPLE_ZC_REPORTING_EEPROM_OFFSET, (void*) &m_configuration->reporting, sizeof(m_configuration->reporting));
+		m_eeprom->write((void*) EXAMPLE_ZC_REPORTING_EEPROM_OFFSET, (void*) &m_configuration->reporting, sizeof(m_configuration->reporting));
 		MW_LOG_DEBUG(LOG_ZEROCONFROUTER, "Reporting updated", NULL);
 	}
 

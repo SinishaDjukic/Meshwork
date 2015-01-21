@@ -2,6 +2,7 @@ package org.meshwork.core.zeroconf.l3;
 
 import org.meshwork.core.AbstractMessage;
 import org.meshwork.core.MessageData;
+import org.meshwork.core.SerialMessageConstants;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,7 +13,7 @@ import java.io.PrintWriter;
 public class MOK extends AbstractMessage implements Constants {
 
     public MOK(byte seq) {
-        super(seq, ZC_CODE, ZC_SUBCODE_OK);
+        super(seq, ZC_CODE, SerialMessageConstants.SM_SUBCODE_OK);
     }
 
     @Override

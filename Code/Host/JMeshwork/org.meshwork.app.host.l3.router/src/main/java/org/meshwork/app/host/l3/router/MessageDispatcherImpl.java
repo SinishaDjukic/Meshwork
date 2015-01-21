@@ -1,9 +1,6 @@
 package org.meshwork.app.host.l3.router;
 
-import org.meshwork.core.AbstractMessage;
-import org.meshwork.core.AbstractMessageTransport;
-import org.meshwork.core.MessageData;
-import org.meshwork.core.TransportTimeoutException;
+import org.meshwork.core.*;
 import org.meshwork.core.host.l3.*;
 
 import java.io.PrintWriter;
@@ -80,7 +77,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                         case Constants.NS_SUBCODE_RFGETROUTECOUNT: processMRFGetRouteCount(writer, (MRFGetRouteCount) message); break;
                         case Constants.NS_SUBCODE_RFGETROUTE: processMRFGetRoute(writer, (MRFGetRoute) message); break;
 //                        case Constants.NS_SUBCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) message); break;
-                        case Constants.NS_SUBCODE_NOK: break;
+                        case SerialMessageConstants.SM_SUBCODE_NOK: break;
                     }
                 }
                 writer.println();
@@ -106,7 +103,7 @@ public class MessageDispatcherImpl implements MessageDispatcher {
         AbstractMessage result;
         if ( route == null ) {
             MNOK nok = new MNOK(message.seq);
-            nok.error = Constants.ERROR_GENERAL;
+            nok.error = SerialMessageConstants.SM_NOK_GENERAL;
             result = nok;
         } else {
             MRFGetRouteRes msg = new MRFGetRouteRes(message.seq);
@@ -170,9 +167,9 @@ public class MessageDispatcherImpl implements MessageDispatcher {
                 if ( result != null ) {
                     switch ( result.getSubCode() ) {
                         case Constants.NS_SUBCODE_CFGREQUEST: processMCfgRequest(writer, (MConfigRequest) result); finished = true; break;
-                        case Constants.NS_SUBCODE_OK: writer.println("... [processMRFReceive] NS_SUBCODE_OK received"); finished = true; break;
+                        case SerialMessageConstants.SM_SUBCODE_OK: writer.println("... [processMRFReceive] SM_SUBCODE_OK received"); finished = true; break;
                         case Constants.NS_SUBCODE_INTERNAL: writer.println("... [processMRFReceive] NS_SUBCODE_INTERNAL received"); finished = true; break;
-                        case Constants.NS_SUBCODE_NOK: writer.println("... [processMRFReceive] NS_SUBCODE_NOK received"); finished = true; break;//throw exception?
+                        case SerialMessageConstants.SM_SUBCODE_NOK: writer.println("... [processMRFReceive] SM_SUBCODE_NOK received"); finished = true; break;//throw exception?
                     }
                 }
             }

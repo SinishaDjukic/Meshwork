@@ -38,6 +38,10 @@ namespace Meshwork {
 		public:
 			static const uint8_t CS_CODE							= 2;
 
+			static const uint8_t CS_SUBCODE_OK 						= 0;
+			static const uint8_t CS_SUBCODE_NOK 					= 1;
+			static const uint8_t CS_SUBCODE_UNKNOWN 				= 2;
+
 			static const uint8_t CS_SUBCODE_SET_MODE_ANN			= 96;
 			static const uint8_t CS_SUBCODE_SET_MODE_ANN_RES		= 97;
 			static const uint8_t CS_SUBCODE_GET_NODE_LIST			= 98;

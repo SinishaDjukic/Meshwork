@@ -24,9 +24,11 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
     public final ImageIcon IMG_DISCONNECTED = new ImageIcon(getClass().getResourceAsStream("res/disconnected_16.png"));
     public final ImageIcon IMG_APPLY = new ImageIcon(getClass().getResourceAsStream("res/apply_16.png"));
 
-    public static final int ACTION_CONNECTED = 0;
-    public static final int ACTION_DISCONNECTED = 1;
-    public static final int ACTION_APPLY = 3;
+    public static final int ACTION_CONNECTING = 10;
+    public static final int ACTION_CONNECTED = 20;
+    public static final int ACTION_DISCONNECTING = 30;
+    public static final int ACTION_DISCONNECTED = 40;
+    public static final int ACTION_APPLY = 50;
 
     public static final Integer[] SPEED_LIST = { 115200, 57600, 38400, 19200, 9600 };
     public static final int SPEED_DEFAULT = 0;
@@ -86,6 +88,9 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
         applyButton.addActionListener(this);
         applyButton.setEnabled(connected);
         applyButton.setToolTipText("Apply configuration");
+
+        transport = new SerialMessageTransport();
+        adapter = new MessageAdapter();
 
         refreshPorts();
     }
@@ -151,8 +156,8 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
         if ( b == connected )
             return;
         if ( b ) {
-            transport = new SerialMessageTransport();
-            adapter = new MessageAdapter();
+            ActionEvent ae = new ActionEvent(this, ACTION_CONNECTING, null);
+            fireActionEvent(ae);
             String portName = (String) portCombo.getEditorValue();
             SerialConfiguration config = createConfiguration();
             if ( config == null ) {
@@ -162,12 +167,18 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
                 transport.init(config, portName);
             }
         } else {
-            try {
-                transport.deinit();
-            } catch (Throwable t) {
-                System.err.println("[Warning] Error during transport deinit: "+t);
-            }
-            transport = null;
+            ActionEvent ae = new ActionEvent(this, ACTION_DISCONNECTING, null);
+            fireActionEvent(ae);
+
+            //This one is nastry to solve: if ZCDeinit is sent by the ActionListener above synchronously it
+            //may hang the UI for the duration of the serial message timeout
+            //To avoid having to run this synchronously and deinit here - we'll rely on the DisconnectDeviceTask
+            //to deinit the transport... Need to come up with a better plan
+//            try {
+//                transport.deinit();
+//            } catch (Throwable t) {
+//                System.err.println("[Warning] Error during transport deinit: "+t);
+//            }
         }
         setConnectState(b);
         ActionEvent ae = new ActionEvent(this, b ? ACTION_CONNECTED : ACTION_DISCONNECTED, null);

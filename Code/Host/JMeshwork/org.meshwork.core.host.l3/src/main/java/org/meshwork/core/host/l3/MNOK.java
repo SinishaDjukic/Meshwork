@@ -2,6 +2,7 @@ package org.meshwork.core.host.l3;
 
 import org.meshwork.core.AbstractMessage;
 import org.meshwork.core.MessageData;
+import org.meshwork.core.SerialMessageConstants;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,7 +24,7 @@ public class MNOK extends AbstractMessage implements Constants {
     public byte error;
 
     public MNOK(byte seq) {
-        super(seq, NS_CODE, NS_SUBCODE_NOK);
+        super(seq, NS_CODE, SerialMessageConstants.SM_SUBCODE_NOK);
     }
 
     @Override
@@ -32,15 +33,15 @@ public class MNOK extends AbstractMessage implements Constants {
 
         String errorText = null;
         switch ( error ) {
-            case ERROR_GENERAL: errorText = GENERAL_ERROR;break;
-            case ERROR_INSUFFICIENT_DATA: errorText = INSUFFICIENT_DATA;break;
-            case ERROR_TOO_LONG_DATA: errorText = TOO_LONG_DATA;break;
-            case ERROR_ILLEGAL_STATE: errorText = ILLEGAL_STATE;break;
-            case ERROR_RECV: errorText = RECEIVE_ERROR;break;
-            case ERROR_SEND: errorText = SEND_ERROR;break;
-            case ERROR_BCAST: errorText = BROADCAST_ERROR;break;
-            case ERROR_KEY_TOO_LONG: errorText = KEY_TOO_LONG;break;
-            case ERROR_SEQUENCE_MISMATCH: errorText = SEQUENCE_MISMATCH;break;
+            case SerialMessageConstants.SM_NOK_GENERAL: errorText = GENERAL_ERROR;break;
+            case SerialMessageConstants.SM_NOK_INSUFFICIENT_DATA: errorText = INSUFFICIENT_DATA;break;
+            case SerialMessageConstants.SM_NOK_TOO_LONG_DATA: errorText = TOO_LONG_DATA;break;
+            case SerialMessageConstants.SM_NOK_ILLEGAL_STATE: errorText = ILLEGAL_STATE;break;
+            case NS_NOK_RECV: errorText = RECEIVE_ERROR;break;
+            case NS_NOK_SEND: errorText = SEND_ERROR;break;
+            case NS_NOK_BCAST: errorText = BROADCAST_ERROR;break;
+            case NS_NOK_KEY_TOO_LONG: errorText = KEY_TOO_LONG;break;
+            case SerialMessageConstants.SM_NOK_SEQUENCE_MISMATCH: errorText = SEQUENCE_MISMATCH;break;
         }
         if ( errorText != null ) {
             writer.print(" ("+errorText+")");

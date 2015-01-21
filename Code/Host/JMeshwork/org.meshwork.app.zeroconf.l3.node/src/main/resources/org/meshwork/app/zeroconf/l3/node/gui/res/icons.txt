@@ -1,0 +1,8 @@
+Icons acquired from:
+http://www.iconarchive.com/show/oxygen-icons-by-oxygen-icons.org.1.html
+
+Artist: Oxygen Team
+Iconset Homepage: https://github.com/pasnox/oxygen-icons-png
+License: GNU Lesser General Public License
+Commercial usage: Allowed
+Readme file: authors.txt

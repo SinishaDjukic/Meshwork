@@ -5,6 +5,7 @@ import org.meshwork.app.host.l3.router.RouterConfiguration;
 import org.meshwork.core.AbstractMessage;
 import org.meshwork.core.AbstractMessageTransport;
 import org.meshwork.core.MessageData;
+import org.meshwork.core.SerialMessageConstants;
 import org.meshwork.core.host.l3.*;
 
 import java.io.PrintWriter;
@@ -149,7 +150,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             if ( result != null ) {
                 switch (result.getSubCode()) {
                     case Constants.NS_SUBCODE_RFSENDACK: processMRFSendAck(writer, (MRFSendACK) result); sendSeqComplete = true; break;
-                    case Constants.NS_SUBCODE_NOK: sendSeqComplete = true; break;
+                    case SerialMessageConstants.SM_SUBCODE_NOK: sendSeqComplete = true; break;
                 }
                 if ( !sendSeqComplete ) {
                     MessageData data = readMessageUntil(consoleReadTimeout, req.seq);
@@ -189,7 +190,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
+            if ( resp == null || resp.getSubCode() != SerialMessageConstants.SM_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
             testSendImpl(stats, ((TestSendDirectConfiguration) stats.config).dstlist, stats.config.iterationDelay);
         } catch (Throwable t) {
@@ -215,7 +216,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
+            if ( resp == null || resp.getSubCode() != SerialMessageConstants.SM_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
 
             //prepare a dstlist - last element of each route is our dst
@@ -269,7 +270,7 @@ public class PerfMessageDispatcherImpl extends MessageDispatcherImpl {
             cfg.nwkcaps = config.getNwkCaps();
             cfg.retry = config.getRetry();
             AbstractMessage resp = sendMessageAndReceive(cfg);
-            if ( resp == null || resp.getSubCode() != Constants.NS_SUBCODE_OK)
+            if ( resp == null || resp.getSubCode() != SerialMessageConstants.SM_SUBCODE_OK)
                 throw new Exception("Could not reconfigure the Controller");
             testSendImpl(stats, ((TestSendFloodConfiguration)stats.config).dstlist, stats.config.iterationDelay);
         } catch (Throwable t) {

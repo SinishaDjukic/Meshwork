@@ -33,25 +33,28 @@ struct zctype_configuration_t {
 };
 
 //Formatted EEPROM marker len
-static uint8_t EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN = 1;
+static const uint8_t EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN = 1;
 //Formatted EEPROM marker value
-static uint16_t EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE = 0x00;
+static const uint16_t EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE = 0x02;
+//Formatted EEPROM default value
+static const uint16_t EXAMPLE_ZC_INIT_EEPROM_MEM_VALUE = 0x00;
 //Offset for storing ZC device configuration in the EEPROM
-static uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET = 64;
+static const uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET = 64;
+//Start offset for the data itself (excl. marker)
+static const uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_START = EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET + EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN;
 //Offset for storing the serial number structure
-static uint16_t EXAMPLE_ZC_SERNUM_EEPROM_OFFSET = EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET +
-													EXAMPLE_ZC_INIT_EEPROM_MARKER_LEN;
+static const uint16_t EXAMPLE_ZC_SERNUM_EEPROM_OFFSET = EXAMPLE_ZC_CONFIGURATION_EEPROM_START;
 //Offset for storing the reporting structure
-static uint16_t EXAMPLE_ZC_REPORTING_EEPROM_OFFSET = EXAMPLE_ZC_SERNUM_EEPROM_OFFSET +
+static const uint16_t EXAMPLE_ZC_REPORTING_EEPROM_OFFSET = EXAMPLE_ZC_SERNUM_EEPROM_OFFSET +
 														sizeof(ZeroConfSerial::zctype_sernum_t);
 //Offset for storing the network configuration structure
-static uint16_t EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET = EXAMPLE_ZC_REPORTING_EEPROM_OFFSET +
+static const uint16_t EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET = EXAMPLE_ZC_REPORTING_EEPROM_OFFSET +
 														sizeof(ZeroConfSerial::zctype_reporting_t);
 //Offset for storing the devic configuration flags structure
-static uint16_t EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET = EXAMPLE_ZC_REPORTING_EEPROM_OFFSET +
+static const uint16_t EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET = EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET +
 														sizeof(ZeroConfSerial::zctype_nwkconfig_t);
 //Final address might be useful for the app
-static uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_END = EXAMPLE_ZC_NWKCONFIG_EEPROM_OFFSET +
+static const uint16_t EXAMPLE_ZC_CONFIGURATION_EEPROM_END = EXAMPLE_ZC_DEVCONFIG_EEPROM_OFFSET +
 														sizeof(ZeroConfSerial::zctype_devconfig_t);
 					
 #endif

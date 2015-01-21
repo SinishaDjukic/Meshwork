@@ -8,8 +8,8 @@ import org.meshwork.core.zeroconf.l3.MZCRepRes;
  */
 public class ReportingData extends AbstractData {
 
-    public byte reportingFlags;
-    public byte reportingNodeID;
+    public byte reportingFlags = 0;
+    public byte reportingNodeID = 0;
 
     public void read(MZCRepRes msg) {
         reportingFlags = msg.reportFlags;

@@ -53,6 +53,8 @@
 #include <Meshwork/L3/Network.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
+#include <Utils/SerialMessageAdapter.h>
+#include <Utils/SerialMessageAdapter.cpp>
 #include "NetworkInit.h"
 //END: Include set for initializing the network
 
@@ -75,16 +77,27 @@
 	static IOBuffer<UART::BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
-	NetworkSerial networkSerial(&mesh, &uartHC);
+	SerialMessageAdapter serialMessageAdapter(&uartHC);
 #else
-	NetworkSerial networkSerial(&mesh, &uart);
+	SerialMessageAdapter serialMessageAdapter(&uart);
 	IOStream::Device null_device;
 #endif
+
+NetworkSerial networkSerial(&mesh, &serialMessageAdapter);
+
+SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
 
 void setup()
 {
-  uart.begin(115200);
+	//Basic setup
+	Watchdog::begin();
+	RTC::begin();
+
+	serialMessageListeners[0] = (SerialMessageAdapter::SerialMessageListener*) &serialMessageAdapter;
+	serialMessageAdapter.setListeners(serialMessageListeners);
+
+	uart.begin(115200);
 
 //Trace debugs only supported on Mega, since it has extra UARTs
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
@@ -99,21 +112,18 @@ void setup()
   mesh.set_radio_listener(&ledTracing);
 #endif
 
-  Watchdog::begin();
-  RTC::begin();
-  
   networkSerial.initSerial();
 }
 
-NetworkSerial::serialmsg_t msg;
-bool processed;
+SerialMessageAdapter::serialmsg_t msg;
+uint8_t last_message_processed;
 uint32_t last_message_timestamp = 0;
 
 void loop()
 {
-	processed = networkSerial.processOneMessage(&msg);
+	last_message_processed = networkSerial.processOneMessage(&msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-	if ( processed )
+	if ( last_message_processed != SerialMessageAdapter::SM_MESSAGE_NONE )
 		last_message_timestamp = RTC::millis();
 	else if ( RTC::since(last_message_timestamp) > SERIAL_NEXT_MSG_TIMEOUT ) {
 		last_message_timestamp = RTC::millis();

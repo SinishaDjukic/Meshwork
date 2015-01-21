@@ -8,7 +8,7 @@ import org.meshwork.core.zeroconf.l3.MZCDevRes;
  */
 public class DeliveryData extends AbstractData {
 
-    public byte delivery;
+    public byte delivery = 0;
 
     public void read(MZCDevRes msg) {
         delivery = msg.delivery;

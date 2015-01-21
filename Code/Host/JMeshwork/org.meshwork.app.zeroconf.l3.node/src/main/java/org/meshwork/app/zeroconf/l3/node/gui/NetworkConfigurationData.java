@@ -8,10 +8,10 @@ import org.meshwork.core.zeroconf.l3.MZCNwkRes;
  */
 public class NetworkConfigurationData extends AbstractData {
 
-    public byte channelID;
-    public short networkID;
-    public byte nodeID;
-    public String networkKey;
+    public byte channelID = 0;
+    public short networkID = 0;
+    public byte nodeID = 0;
+    public String networkKey = null;
 
     public void read(MZCNwkRes msg) {
         channelID = msg.channel;
