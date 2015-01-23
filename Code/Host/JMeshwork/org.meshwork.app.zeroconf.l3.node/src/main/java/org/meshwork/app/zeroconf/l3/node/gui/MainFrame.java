@@ -241,6 +241,12 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
                     updateTitle(true, ((SerialConnectionData)serialConnectionPanel.getData()));
                     readDeviceConfiguration(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
                     break;
+                case SerialConnectionPanel.ACTION_FACTORYRESET:
+                    int answer = POptionPane.showConfirmDialog(this, "Do you really want to reset the device?", "Factory reset", POptionPane.YES_NO_OPTION);
+                    if (answer == 0) {//yes
+                        factoryResetDevice(serialConnectionPanel.getAdapter(), serialConnectionPanel.getTransport());
+                    }
+                    break;
             }
         } else if (CMD_EXIT.equals(action)) {
             exit();
@@ -333,21 +339,21 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
 
     protected void applyDeviceConfiguration(MessageAdapter adapter, SerialMessageTransport transport) {
         WriteDeviceTask writeDeviceTask = new WriteDeviceTask(adapter, transport);
-        UpdatePanelsTask updatePanelsTask = new UpdatePanelsTask(this);
+        UpdateUITask updateUITask = new UpdateUITask(this, UpdateUITask.ACTION_UPDATE_PANELS);
         ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
         writeDeviceTask.setInput(getPanelData());
         tasks.add(writeDeviceTask);
-        tasks.add(updatePanelsTask);
+        tasks.add(updateUITask);
         TaskMonitor taskMonitor = new TaskMonitor(tasks);
         taskMonitor.start();
     }
 
     protected void readDeviceConfiguration(MessageAdapter adapter, SerialMessageTransport transport) {
         ReadDeviceTask readDeviceTask = new ReadDeviceTask(adapter, transport);
-        UpdatePanelsTask updatePanelsTask = new UpdatePanelsTask(this);
+        UpdateUITask updateUITask = new UpdateUITask(this, UpdateUITask.ACTION_UPDATE_PANELS);
         ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
         tasks.add(readDeviceTask);
-        tasks.add(updatePanelsTask);
+        tasks.add(updateUITask);
         TaskMonitor taskMonitor = new TaskMonitor(tasks);
         taskMonitor.start();
     }
@@ -367,6 +373,16 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
 //        } catch (Throwable t) {
 //            GUILogger.error("Error disconnecting device due to: "+t.getMessage(), t);
 //        }
+    }
+
+    protected void factoryResetDevice(MessageAdapter adapter, SerialMessageTransport transport) {
+        FactoryResetDeviceTask factoryResetDeviceTaskTask = new FactoryResetDeviceTask(adapter, transport);
+        UpdateUITask updateUITask = new UpdateUITask(this, UpdateUITask.ACTION_SET_DISCONNECTED);
+        ArrayList<AbstractTask> tasks = new ArrayList<AbstractTask>();
+        tasks.add(factoryResetDeviceTaskTask);
+        tasks.add(updateUITask);
+        TaskMonitor taskMonitor = new TaskMonitor(tasks);
+        taskMonitor.start();
     }
 
     public void resetPanels() {
@@ -399,6 +415,14 @@ public class MainFrame extends PFrame implements AbstractElement, ActionListener
                     serialNumberPanel.setData((SerialNumberData)data);
                 }
             }
+        }
+    }
+
+    public void updateConnectionState(boolean state) {
+        try {
+            serialConnectionPanel.connect(state);
+        } catch (Exception e) {
+            GUILogger.error("[updateConnectionState] Error changing connection state: "+e.getMessage(), e);
         }
     }
 

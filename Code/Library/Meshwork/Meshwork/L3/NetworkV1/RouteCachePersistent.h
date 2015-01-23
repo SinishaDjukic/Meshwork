@@ -25,7 +25,7 @@
 #include "Cosa/EEPROM.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
-#include "Utils/EEPROMInit.h"
+#include "Utils/EEPROMUtils.h"
 
 #ifndef LOG_ROUTECACHEPERSISTENT
 #define LOG_ROUTECACHEPERSISTENT  true
@@ -80,7 +80,7 @@ namespace Meshwork {
 				};
 				
 				void init_eeprom() {
-					EEPROMInit::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER, 0);
+					EEPROMUtils::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER, 0);
 				}
 				
 				void read_routes() {
@@ -119,6 +119,7 @@ namespace Meshwork {
 				void route_entry_change(RouteCache* route_cache,
 										RouteCache::route_entry_t* entry,
 										const uint8_t change) {
+					UNUSED(route_cache);
 					uint8_t node_index, route_index;
 					
 					if ( get_route_entry_index(entry, node_index, route_index) ) {

@@ -23,12 +23,14 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
     public final ImageIcon IMG_CONNECTED = new ImageIcon(getClass().getResourceAsStream("res/connected_16.png"));
     public final ImageIcon IMG_DISCONNECTED = new ImageIcon(getClass().getResourceAsStream("res/disconnected_16.png"));
     public final ImageIcon IMG_APPLY = new ImageIcon(getClass().getResourceAsStream("res/apply_16.png"));
+    public final ImageIcon IMG_FACTORYRESET = new ImageIcon(getClass().getResourceAsStream("res/factoryreset_16.png"));
 
     public static final int ACTION_CONNECTING = 10;
     public static final int ACTION_CONNECTED = 20;
     public static final int ACTION_DISCONNECTING = 30;
     public static final int ACTION_DISCONNECTED = 40;
     public static final int ACTION_APPLY = 50;
+    public static final int ACTION_FACTORYRESET = 60;
 
     public static final Integer[] SPEED_LIST = { 115200, 57600, 38400, 19200, 9600 };
     public static final int SPEED_DEFAULT = 0;
@@ -39,6 +41,7 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
     protected PComboBox speedCombo;
     protected PButton connectButton;
     protected PButton applyButton;
+    protected PButton factoryResetButton;
 
     protected boolean connected = false;
     protected  Vector<ActionListener> listeners;
@@ -88,6 +91,15 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
         applyButton.addActionListener(this);
         applyButton.setEnabled(connected);
         applyButton.setToolTipText("Apply configuration");
+
+        PPanel spacer3 = new PPanel();
+        spacer3.setPreferredSize(new Dimension(5, 1));
+        add(spacer2);
+
+        add(factoryResetButton = createButton(IMG_FACTORYRESET));
+        factoryResetButton.addActionListener(this);
+        factoryResetButton.setEnabled(connected);
+        factoryResetButton.setToolTipText("Factory reset");
 
         transport = new SerialMessageTransport();
         adapter = new MessageAdapter();
@@ -181,6 +193,8 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
 //            }
         }
         setConnectState(b);
+        updateButtonsState();
+
         ActionEvent ae = new ActionEvent(this, b ? ACTION_CONNECTED : ACTION_DISCONNECTED, null);
         fireActionEvent(ae);
     }
@@ -261,6 +275,11 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
         fireActionEvent(ae);
     }
 
+    protected void factoryReset() {
+        ActionEvent ae = new ActionEvent(this, ACTION_FACTORYRESET, null);
+        fireActionEvent(ae);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         Object src = e.getSource();
@@ -275,10 +294,17 @@ public class SerialConnectionPanel extends PPanel implements AbstractElement, Ac
                 System.err.println("Error during serial connection due to: " + e1);
                 e1.printStackTrace();
             }
-            applyButton.setEnabled(connected);
+            updateButtonsState();
         } else if (src == applyButton) {
             apply();
+        } else if (src == factoryResetButton) {
+            factoryReset();
         }
+    }
+
+    protected void updateButtonsState() {
+        applyButton.setEnabled(connected);
+        factoryResetButton.setEnabled(connected);
     }
 
 }

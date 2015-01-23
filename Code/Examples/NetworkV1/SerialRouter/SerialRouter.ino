@@ -66,8 +66,8 @@
 	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
 #endif
 
-#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
-#include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
+#include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.cpp"
 
 //Setup extra UART on Mega
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA

@@ -27,6 +27,8 @@
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
+#include "Utils/SerialMessageAdapter.h"
+
 
 #ifndef LOG_SERIALMESSAGEADAPTER
 #define LOG_SERIALMESSAGEADAPTER true
@@ -128,9 +130,8 @@ uint8_t SerialMessageAdapter::processOneMessage(serialmsg_t* msg) {
 		if ( waitForBytes(msg->len - 3, m_timeout) ) {
 			SerialMessageListener* listener;
 
-			for ( int i = 0; i < membersof(m_listeners); i ++ ) {
+			for ( int i = 0; i < (int) membersof(m_listeners); i ++ ) {
 				listener = m_listeners[i];
-				trace << PSTR("Listener x=") << listener << endl;
 				result = listener->processOneMessage(m_currentMsg);
 
 				MW_LOG_DEBUG(LOG_SERIALMESSAGEADAPTER, "Listner [%d] result=%d", i, result);

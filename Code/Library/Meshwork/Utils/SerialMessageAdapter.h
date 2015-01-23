@@ -25,6 +25,8 @@
 #include "Cosa/Power.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 
+#include "Meshwork.h"
+
 /**
  */
 class SerialMessageAdapter {

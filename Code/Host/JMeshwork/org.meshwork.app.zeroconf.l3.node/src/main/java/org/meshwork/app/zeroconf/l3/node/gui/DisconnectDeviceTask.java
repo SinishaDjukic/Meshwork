@@ -21,6 +21,7 @@ public class DisconnectDeviceTask extends AbstractDeviceTask {
         //We deinit here to avoid hanging the UI... to be fixed
         if ( transport instanceof SerialMessageTransport )
             ((SerialMessageTransport)transport).deinit();
+        //TODO update connection state in the GUI?
         return null;
     }
 }

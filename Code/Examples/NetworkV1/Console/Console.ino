@@ -25,8 +25,6 @@
 #define MW_LOG_ALL_ENABLE true
 #define MW_LOG_DEBUG_ENABLE true
 #define LOG_NETWORKV1  true
-#define LOG_NETWORKSERIAL true
-#define LOG_SERIALROUTER true
 
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
@@ -44,8 +42,6 @@
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
 //END: Include set for initializing the network
 
-#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
-#include "Meshwork/L3/NetworkV1/NetworkSerial.cpp"
 #include "Utils/LineReader.h"
 
 #ifndef LOG_CONSOLE

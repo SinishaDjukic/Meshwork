@@ -19,16 +19,18 @@
  * Boston, MA  02111-1307  USA
  */
 
-#ifndef __MESHWORK_UTILS_EEPROMINIT_H__
-#define __MESHWORK_UTILS_EEPROMINIT_H__
+#ifndef __MESHWORK_UTILS_EEPROMUTILS_H__
+#define __MESHWORK_UTILS_EEPROMUTILS_H__
 
 #include "Meshwork.h"
+#include "Cosa/EEPROM.hh"
 
-#ifndef LOG_EEPROMINIT
-#define LOG_EEPROMINIT  true
+#ifndef LOG_EEPROMUTILS
+#define LOG_EEPROMUTILS  true
 #endif
 
-class EEPROMInit {
+class EEPROMUtils {
+	
 	private:
 		static uint8_t read(EEPROM* eeprom, uint16_t address) {
 			uint8_t value;
@@ -43,33 +45,34 @@ class EEPROMInit {
 	public:
 
 		static void format(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker, uint8_t memvalue) {
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM formatting: data_start=%d, data_end=%d, marker=%d, memvalue=%d", data_start, data_end, marker, memvalue);
-
 			uint16_t next = data_start;
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing marker=%d at next=%d", marker, next);
+			MW_LOG_DEBUG(LOG_EEPROMUTILS, "Writing marker=%d at next=%d", marker, next);
 			write(eeprom, next, marker);
 			next++;
 
+			MW_LOG_DEBUG(LOG_EEPROMUTILS, "Formatting: data_start=%d, data_end=%d, marker=%d, memvalue=%d", data_start, data_end, marker, memvalue);
+
 			do {
 				write(eeprom, next, memvalue);
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "Writing memvalue=%d at next=%d", memvalue, next);
+//				MW_LOG_DEBUG(LOG_EEPROMUTILS, "Writing memvalue=%d at next=%d", memvalue, next);
 
 				uint8_t tmp = read(eeprom, next);
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "Read at next=%d, memvalue=%d", next, tmp);
+				UNUSED(tmp);
+//				MW_LOG_DEBUG(LOG_EEPROMUTILS, "Read at next=%d, memvalue=%d", next, tmp);
 			} while ( next++ < data_end);
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "Done", NULL);
+			MW_LOG_DEBUG(LOG_EEPROMUTILS, "Done", NULL);
 		}
 		
 		//returns true if the EEPROM has now been formatted
 		static bool init(EEPROM* eeprom, uint16_t data_start, uint16_t data_end, uint8_t marker, uint8_t memvalue) {
 			uint8_t formatted = read(eeprom, data_start);
-			MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM data_start=%d, formatted=%d, marker=%d", data_start, formatted, marker);
+			MW_LOG_DEBUG(LOG_EEPROMUTILS, "EEPROM data_start=%d, formatted=%d, marker=%d", data_start, formatted, marker);
 
 			if ( formatted != marker ) {
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM NOT formatted", NULL);
+				MW_LOG_DEBUG(LOG_EEPROMUTILS, "EEPROM NOT formatted", NULL);
 				format(eeprom, data_start, data_end, marker, memvalue);
 			} else {
-				MW_LOG_DEBUG(LOG_EEPROMINIT, "EEPROM already formatted: data_start=%d, data_end=%d, marker=%d", data_start, data_end, marker);
+				MW_LOG_DEBUG(LOG_EEPROMUTILS, "EEPROM already formatted: data_start=%d, data_end=%d, marker=%d", data_start, data_end, marker);
 			}
 			return formatted != marker;
 		}

@@ -33,11 +33,7 @@
 
 #include "Config.h"
 
-#if FULL_DEBUG != false
-	#define LOG_ZEROCONFROUTER	true
-#else
-	#define LOG_ZEROCONFROUTER	false
-#endif
+#define LOG_ZEROCONFROUTER	(FULL_DEBUG != false)
 
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
@@ -66,15 +62,14 @@
 	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
 #endif
 
-#include "Meshwork/L3/NetworkV1/ZeroConfSerial.h"
-#include "Meshwork/L3/NetworkV1/ZeroConfSerial.cpp"
-
-#include "ZCTypes.h"
-zctype_configuration_t configuration;
-
-#include "ZeroConfListenerImpl.h"
+#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.h"
+#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.cpp"
+#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfEEPROM.h"
+ZeroConfEEPROM::zctype_configuration_t configuration;
 EEPROM eepromConf;
-ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
+//Offset for storing ZC device configuration in the EEPROM
+static const uint16_t ZC_CONFIGURATION_EEPROM_OFFSET = 64;
+ZeroConfEEPROM zeroConfEEPROM(&eepromConf, &configuration, ZC_CONFIGURATION_EEPROM_OFFSET);
 
 //Setup extra UART on Mega
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
@@ -93,7 +88,7 @@ ZeroConfListenerImpl zeroConfListener(&eepromConf, &configuration);
 ZeroConfSerial zeroConfSerial(&mesh, &serialMessageAdapter,
 								&configuration.sernum, &configuration.reporting,
 									&configuration.nwkconfig, &configuration.devconfig,
-										&zeroConfListener);
+										&zeroConfEEPROM);
 
 SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
@@ -111,58 +106,10 @@ SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 	#define LED_BLINK(state, x)	(void) (state)
 #endif
 
-SerialMessageAdapter::serialmsg_t msg;
-bool processed;
-uint32_t last_message_timestamp = 0;
-
-uint8_t processOneMessage(SerialMessageAdapter::serialmsg_t* msg, uint32_t timeout)
-{
-	uint8_t result = serialMessageAdapter.processOneMessage(msg);
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
-	if ( result != SerialMessageAdapter::SM_MESSAGE_NONE )
-		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > timeout ) {
-		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING(LOG_ZEROCONFROUTER, "No serial messages processed for %d ms", timeout);
-	}
-#endif
-	return result;
-}
-
-bool processConfigSequence()
-{
-	uint32_t start = RTC::millis();
-	uint8_t state = 0;
-	uint32_t lastMessage = start;
-	uint8_t lastProcessCode;
-	bool connected = false;
-	while ( ( !connected && (RTC::since(start)       < STARTUP_AUTOCONFIG_INIT_TIMEOUT  ) ) ||
-			(  connected && (RTC::since(lastMessage) < STARTUP_AUTOCONFIG_DEINIT_TIMEOUT) ) ) {
-		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
-		lastProcessCode = processOneMessage(&msg, SERIAL_NEXT_MSG_TIMEOUT);
-		if ( lastProcessCode != SerialMessageAdapter::SM_MESSAGE_NONE) {
-			connected = true;
-			if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCINIT ) {
-				state = ZeroConfSerial::ZC_SUBCODE_ZCINIT;
-			} else if ( msg.subcode == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT ) {
-				state = ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
-				break;
-			}
-			lastMessage = RTC::millis();
-		}
-	}
-	return state == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
-}
-
 void readConfig() {
 	trace << PSTR("[Config] Reading EEPROM...") << endl;
-	EEPROMInit::init(&eepromConf, EXAMPLE_ZC_CONFIGURATION_EEPROM_OFFSET,
-									EXAMPLE_ZC_CONFIGURATION_EEPROM_END,
-										EXAMPLE_ZC_INIT_EEPROM_MARKER_VALUE,
-											EXAMPLE_ZC_INIT_EEPROM_MEM_VALUE);
-	trace << PSTR("\tStart: ...") << EXAMPLE_ZC_CONFIGURATION_EEPROM_START << endl;
-	trace << PSTR("\t  End: ...") << (EXAMPLE_ZC_CONFIGURATION_EEPROM_START +(size_t) sizeof(configuration)) << endl;
-	eepromConf.read((uint8_t*) &configuration, (uint8_t*) EXAMPLE_ZC_CONFIGURATION_EEPROM_START, (size_t) sizeof(configuration));
+	zeroConfEEPROM.init();
+	zeroConfEEPROM.read_configuration();
 
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);
 	mesh.setNodeID(configuration.nwkconfig.nodeid);
@@ -200,25 +147,14 @@ void setup()
 	
 	readConfig();
 
-	zeroConfListener.init();
-	
 	trace << PSTR("Waiting for ZeroConfSerial connection...") << endl;
 	//Allow some time for initial configuration
-	bool reconfigured = processConfigSequence();
-	UNUSED(reconfigured);
+	bool reconfigured = zeroConfSerial.processConfigSequence(STARTUP_AUTOCONFIG_INIT_TIMEOUT, STARTUP_AUTOCONFIG_DEINIT_TIMEOUT, SERIAL_NEXT_MSG_TIMEOUT);
 	
-#ifdef LED_TRACING
-	mesh.set_radio_listener(&ledTracing);
-#endif
+	readConfig();
 
-	mesh.setChannel(configuration.nwkconfig.channel);
-	mesh.setNetworkID(configuration.nwkconfig.nwkid);
-	mesh.setNodeID(configuration.nwkconfig.nodeid);
+	trace << (reconfigured ? PSTR("New configuration applied") : PSTR("Previous configuration used")) << endl << PSTR("Closing serial") << endl;
 
-	if ( reconfigured )
-		trace << PSTR("Configuration done") << endl;
-	else
-		trace << PSTR("ZeroConfSerial connection closed now ") << endl;
 	//Flush all chars before disabling UART
 	uart.flush();
 	//Disable UART when reconfigured. Blink differently if reconfigured
@@ -226,6 +162,10 @@ void setup()
 	LED_BLINK(false, reconfigured ? 2000 : 500);
 	LED(false);
 	
+#ifdef LED_TRACING
+	mesh.set_radio_listener(&ledTracing);
+#endif
+
 	mesh.begin();
 }
 

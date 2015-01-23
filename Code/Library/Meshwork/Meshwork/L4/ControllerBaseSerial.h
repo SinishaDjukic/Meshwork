@@ -27,7 +27,8 @@
 #include "Cosa/Power.hh"
 #include "Cosa/IOStream/Driver/UART.hh"
 #include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkV1/NetworkSerial.h"
+#include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"
+#include "Utils/SerialMessageAdapter.h"
 
 namespace Meshwork {
 
@@ -62,19 +63,21 @@ namespace Meshwork {
 			
 		protected:
 			ControllerBase* m_controllerBase;
+			SerialMessageAdapter* m_adapter;
 			
-			virtual bool processSetModeAnnounce(serialmsg_t* msg);
-			virtual bool processGetNodeList(serialmsg_t* msg);
-			virtual bool processAddNode(serialmsg_t* msg);
-			virtual bool processRemoveNode(serialmsg_t* msg);
+			virtual bool processSetModeAnnounce(SerialMessageAdapter::serialmsg_t* msg);
+			virtual bool processGetNodeList(SerialMessageAdapter::serialmsg_t* msg);
+			virtual bool processAddNode(SerialMessageAdapter::serialmsg_t* msg);
+			virtual bool processRemoveNode(SerialMessageAdapter::serialmsg_t* msg);
 
 		public:
-			ControllerBaseSerial(Meshwork::L3::Network* network, UART* serial, ControllerBase* controllerBase):
-				NetworkSerial(network, serial),
+			ControllerBaseSerial(Meshwork::L3::Network* network, SerialMessageAdapter* adapter, ControllerBase* controllerBase):
+				NetworkSerial(network, adapter),
+				m_adapter(adapter),
 				m_controllerBase(controllerBase)
 			{ }
 			
-			virtual bool processOneMessageEx(serialmsg_t* msg);
+			virtual bool processOneMessageEx(SerialMessageAdapter::serialmsg_t* msg);
 			
 		};
 	};

@@ -261,4 +261,17 @@ public abstract class AbstractDeviceTask extends AbstractTask {
             throw new Exception("Error sending MZCSerialCfg");
     }
 
+    /**
+     * Factory resets the device. This should involve cleaning the EEPROM.
+     *
+     * @throws Exception in case of error
+     */
+    protected void doMZCFactoryReset() throws Exception {
+        MZCFactoryReset msg = new MZCFactoryReset(nextSeq());
+        AbstractMessage result = sendMessageAndReceive(msg);
+        GUILogger.info("[doMZCFactoryReset] Response: "+result);
+        if ( result == null || !(result instanceof MOK) )
+            throw new Exception("Error sending MZCFactoryReset");
+    }
+
 }

@@ -25,6 +25,7 @@ public interface Constants {
     public static final byte ZC_SUBCODE_ZCSERIALREQ     = 52;
     public static final byte ZC_SUBCODE_ZCSERIALRES		= 53;
     public static final byte ZC_SUBCODE_ZCSERIALCFG		= 54;
+    public static final byte ZC_SUBCODE_ZCFACTORYRESET	= (byte) 255;
 
     //32-255: Code/sub-code specific
     public static final byte ZC_NOK_KEY_TOO_LONG 		= 32;
