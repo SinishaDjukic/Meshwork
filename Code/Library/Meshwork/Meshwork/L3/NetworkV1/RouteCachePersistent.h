@@ -21,14 +21,15 @@
 #ifndef __MESHWORK_L3_NETWORKV1_ROUTECACHEPERSISTENT_H__
 #define __MESHWORK_L3_NETWORKV1_ROUTECACHEPERSISTENT_H__
 
+#include "Meshwork.h"
 #include "Cosa/Wireless.hh"
 #include "Cosa/EEPROM.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Utils/EEPROMUtils.h"
 
-#ifndef LOG_ROUTECACHEPERSISTENT
-#define LOG_ROUTECACHEPERSISTENT  true
+#ifndef MW_LOG_ROUTECACHEPERSISTENT
+	#define MW_LOG_ROUTECACHEPERSISTENT		MW_FULL_DEBUG
 #endif
 
 using Meshwork::L3::NetworkV1::NetworkV1;
@@ -60,12 +61,17 @@ namespace Meshwork {
 				static const uint16_t ROUTE_SIZE_SINGLE	= 1 + 1 + 1 +
 															NetworkV1::MAX_ROUTING_HOPS;
 				
-				//Header storing a formatting marker
-				static const uint8_t ROUTE_SIZE_TABLE_MARKER = 1;
-				//Marker value denoting a formatted eeprom
-				static const uint8_t ROUTE_VALUE_TABLE_MARKER = 0x00;
+				//Formatted EEPROM marker len
+				static const uint8_t ROUTE_INIT_EEPROM_MARKER_LEN 		= 1;
+				//Formatted EEPROM marker value
+				static const uint16_t ROUTE_INIT_EEPROM_MARKER_VALUE 	= 0x02;
+				//Formatted EEPROM default value
+				static const uint16_t ROUTE_INIT_EEPROM_MEM_VALUE 		= 0x00;
+
+				//This is where the data starts
+				static const uint8_t ROUTE_STRUCT_DATA_START =  ROUTE_INIT_EEPROM_MARKER_LEN;
 				//EEPROM bytecount for the entire routing table
-				static const uint16_t ROUTE_SIZE_TABLE	= ROUTE_SIZE_TABLE_MARKER + 
+				static const uint16_t ROUTE_STRUCT_END	= ROUTE_STRUCT_DATA_START +
 															ROUTE_SIZE_SINGLE *
 																RouteCache::MAX_DST_NODES *
 																	RouteCache::MAX_DST_ROUTES;
@@ -75,12 +81,12 @@ namespace Meshwork {
 					m_eeprom(eeprom),
 					m_eeprom_offset(eeprom_offset)
 				{
-					init_eeprom();
+					init();
 					read_routes();
 				};
 				
-				void init_eeprom() {
-					EEPROMUtils::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_SIZE_TABLE_MARKER + ROUTE_SIZE_TABLE - 1, ROUTE_VALUE_TABLE_MARKER, 0);
+				void init() {
+					EEPROMUtils::init(m_eeprom, m_eeprom_offset, m_eeprom_offset + ROUTE_STRUCT_END, ROUTE_INIT_EEPROM_MARKER_VALUE, ROUTE_INIT_EEPROM_MEM_VALUE);
 				}
 				
 				void read_routes() {

@@ -21,6 +21,7 @@
 #ifndef __MESHWORK_L3_NETWORKV1_ZEROCONFSERIAL_H__
 #define __MESHWORK_L3_NETWORKV1_ZEROCONFSERIAL_H__
 
+#include "Meshwork.h"
 #include "Cosa/Pin.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
@@ -29,6 +30,12 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include <Utils/SerialMessageAdapter.h>
+
+
+#ifndef MW_LOG_ZEROCONFSERIAL
+	#define MW_LOG_ZEROCONFSERIAL		MW_FULL_DEBUG
+#endif
+
 
 /*
 	LEN | SEQ | MSG
@@ -117,7 +124,7 @@ namespace Meshwork {
 				//ZeroConf Serial Code ID
 				static const uint8_t ZC_CODE 					= 1;
 
-        //32-255: Code specific
+				//32-255: Code specific
 				static const uint8_t ZC_SUBCODE_ZCINIT 			= 41;
 				static const uint8_t ZC_SUBCODE_ZCDEINIT 		= 42;
 				static const uint8_t ZC_SUBCODE_ZCDEVREQ        = 43;
@@ -136,7 +143,7 @@ namespace Meshwork {
 
 				//TODO add messages for reading device vendor and model, used RF chip and frequency, extra metadata
 				
-        //32-255: Code/sub-code specific
+				//32-255: Code/sub-code specific
 				static const uint8_t ZC_NOK_KEY_TOO_LONG 		= 32;
 				static const uint8_t ZC_NOK_SERIAL_TOO_LONG 	= 33;
 				

@@ -21,11 +21,22 @@
 #ifndef __MESHWORK_L3_NETWORK_NETWORKV1_H__
 #define __MESHWORK_L3_NETWORK_NETWORKV1_H__
 
+#include "Meshwork.h"
 #include "Cosa/Pin.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Meshwork/L3/Network.h"
+
+#ifndef MW_LOG_NETWORKV1
+	#define MW_LOG_NETWORKV1		MW_FULL_DEBUG
+#endif
+
+//This one is not really needed for production
+#ifndef MW_SUPPORT_RADIO_LISTENER
+	#define MW_SUPPORT_RADIO_LISTENER	false
+#endif
+
 
  /*
  Payload structure:
@@ -72,11 +83,6 @@
  NWKID | DSTID	| DSTPORT | SEQ | DELIVERY_FLOOD + ACK		| <Empty>
 */
 
-//Note: SUPPORT_RADIO_LISTENER not defined, by default
-//#ifndef SUPPORT_RADIO_LISTENER_DISABLE
-//#define SUPPORT_RADIO_LISTENER
-//#endif
-
 namespace Meshwork {
 
 	namespace L3 {
@@ -92,7 +98,7 @@ namespace Meshwork {
 					uint8_t delivery;
 				  };
 				  
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				  struct route_t {
 					uint8_t hopCount;
 					uint8_t src;
@@ -105,12 +111,12 @@ namespace Meshwork {
 					uint8_t breadcrumbs;
 				  };
 				  
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 				  struct flood_info_t {
 					route_t route;
 				  };
-			#endif
-			#endif
+	#endif
+#endif
 				  
 				  struct msg_direct_t {
 					nwk_ctrl_t nwk_ctrl;
@@ -118,7 +124,7 @@ namespace Meshwork {
 					uint8_t* data;
 				  };
 				  
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				  struct msg_routed_t {
 					nwk_ctrl_t nwk_ctrl;
 					route_info_t route_info;
@@ -126,30 +132,30 @@ namespace Meshwork {
 					uint8_t* data;
 				  };
 				  
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 				  struct msg_flood_t {
 					nwk_ctrl_t nwk_ctrl;
 					flood_info_t flood_info;
 					uint8_t dataLen;
 					uint8_t* data;
 				  };
-			#endif
-			#endif
+	#endif
+#endif
 
 				  union univmsg_any_t {
 					nwk_ctrl_t nwk_ctrl;
 					msg_direct_t msg_direct;
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					msg_routed_t msg_routed;
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 					msg_flood_t msg_flood;
-			#endif
-			#endif
+	#endif
+#endif
 				  };
 				  
 				  typedef univmsg_any_t univmsg_t;
 				  
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				  class RouteProvider {
 				  public:
 					  //may invalidate cache, if any
@@ -159,9 +165,9 @@ namespace Meshwork {
 					  virtual void route_found(route_t* route) = 0;
 					  virtual void route_failed(route_t* route) = 0;
 				  };
-			#endif
+#endif
 
-			#ifdef SUPPORT_RADIO_LISTENER
+#if MW_SUPPORT_RADIO_LISTENER
 				  class RadioListener {
 				  public:
 					  virtual void notify_send_begin(uint8_t origin, uint8_t next, uint8_t port, univmsg_t* msg) = 0;
@@ -172,7 +178,7 @@ namespace Meshwork {
 					  virtual void notify_recv_end(bool broadcast, uint8_t src, uint8_t port, univmsg_t* msg) = 0;
 				  };
 
-			#define IF_SUPPORT_RADIO_LISTENER
+			#define MW_DECL_IF_SUPPORT_RADIO_LISTENER
 
 			#define NOTIFY_SEND_BEGIN(origin, next, port, msg) \
 				  do { if ( m_radio_listener != NULL ) { \
@@ -204,9 +210,9 @@ namespace Meshwork {
 						  m_radio_listener->notify_recv_end(broadcast, src, port, msg); \
 					  }; } while (0)
 
-			#else
+#else
 
-			#define IF_SUPPORT_RADIO_LISTENER if (false) { };
+			#define MW_DECL_IF_SUPPORT_RADIO_LISTENER if (false) { };
 
 			#define NOTIFY_SEND_BEGIN(origin, next, port, msg) \
 				  do { } while (0)
@@ -226,7 +232,7 @@ namespace Meshwork {
 			#define NOTIFY_RECV_END(broadcast, src, port, msg) \
 				  do { } while (0)
 
-			#endif
+#endif
 
 			protected:
 				
@@ -252,7 +258,7 @@ namespace Meshwork {
 					return msg;
 				}
 				
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				///////////// ROUTED  /////////////
 				static iovec_t* get_iovec_msg_routed(iovec_t* vec, univmsg_t* msg) {
 					iovec_t* vp = vec;
@@ -291,7 +297,7 @@ namespace Meshwork {
 					return result;
 				}
 				
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 				///////////// FLOOD /////////////	
 				static iovec_t* get_iovec_msg_flood(iovec_t* vec, univmsg_t* msg) {
 					iovec_t* vp = vec;
@@ -328,76 +334,76 @@ namespace Meshwork {
 					return result;
 				}
 				
-			#endif
-			#endif
+	#endif
+#endif
 				
 				///////////// GENERIC /////////////
 				static iovec_t* get_iovec_msg(iovec_t* vec, univmsg_t* msg) {
 					if ( msg->nwk_ctrl.delivery & DELIVERY_DIRECT )
 						return get_iovec_msg_direct(vec, msg);
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_ROUTED )
 						return get_iovec_msg_routed(vec, msg);
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_FLOOD )
 						return get_iovec_msg_flood(vec, msg);
-			#endif
-			#endif
+	#endif
+#endif
 					return NULL;
 				}
 				
 				static univmsg_t* get_msg(univmsg_t* msg, uint8_t* data, int len) {
 					if ( data[1] & DELIVERY_DIRECT )
 						return get_msg_direct(msg, data, len);
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					else if ( data[1] & DELIVERY_ROUTED )
 						return get_msg_routed(msg, data, len);
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 					else if ( data[1] & DELIVERY_FLOOD )
 						return get_msg_flood(msg, data, len);
-			#endif
-			#endif
+	#endif
+#endif
 					return msg;
 				}
 				
 				static uint8_t* get_msg_payload(univmsg_t* msg) {
 					if ( msg->nwk_ctrl.delivery & DELIVERY_DIRECT )
 						return msg->msg_direct.data;
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_ROUTED )
 						return msg->msg_routed.data;
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_FLOOD )
 						return msg->msg_flood.data;
-			#endif
-			#endif
+	#endif
+#endif
 					return NULL;
 				}
 
 				static uint8_t get_msg_payload_len(univmsg_t* msg) {
 					if ( msg->nwk_ctrl.delivery & DELIVERY_DIRECT )
 						return msg->msg_direct.dataLen;
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_ROUTED )
 						return msg->msg_routed.dataLen;
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 					else if ( msg->nwk_ctrl.delivery & DELIVERY_FLOOD )
 						return msg->msg_flood.dataLen;
-			#endif
-			#endif
+	#endif
+#endif
 					return 0;
 				}
 				
 			protected:
 
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				RouteProvider* m_advisor;
 				uint8_t m_maxHops;
-			#endif
+#endif
 
-			#ifdef SUPPORT_RADIO_LISTENER
+#if MW_SUPPORT_RADIO_LISTENER
 				RadioListener* m_radio_listener;
-			#endif
+#endif
 
 				bool sendWithoutACK(uint8_t dest, uint8_t hopPort, iovec_t* vp, uint8_t attempts);
 				bool sendWithoutACK(uint8_t dest, uint8_t hopPort, const void* buf, size_t len, uint8_t attempts);
@@ -407,15 +413,15 @@ namespace Meshwork {
 					uint8_t dest, uint8_t port,
 					univmsg_t* msg,
 					void* bufACK, size_t& maxACKLen
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 					, route_t* returnRoute, size_t& returnRouteSize
-			#endif
+#endif
 					);
 
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				int sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 									univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
-			#endif
+#endif
 				int sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 									univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
 
@@ -436,7 +442,7 @@ namespace Meshwork {
 				/** Wait period before DIRECT delivery retry. */
 				static const uint16_t RETRY_WAIT_DIRECT = (uint16_t) TIMEOUT_ACK_RECEIVE;
 				
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				/** Maximum routing hops for this network design. */
 				static const uint8_t MAX_ROUTING_HOPS = 8;
 				
@@ -445,50 +451,50 @@ namespace Meshwork {
 				/** Wait period before ROUTED delivery retry. */
 				static const uint32_t RETRY_WAIT_ROUTED = (uint16_t) TIMEOUT_ACK_RECEIVE;
 				
-			#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 				/** Timeout for ACK from FLOOD delivery send. */
 				static const uint32_t TIMEOUT_ACK_FLOOD = (uint16_t) TIMEOUT_ACK_DIRECT * (MAX_ROUTING_HOPS + 2); //extra 2 spare cycles, just in case
 				/** Wait period before FLOOD delivery retry. */
 				static const uint32_t RETRY_WAIT_FLOOD = (uint16_t) TIMEOUT_ACK_RECEIVE;
 
-			#endif
-			#endif
+	#endif
+#endif
 
 				NetworkV1(Wireless::Driver* driver,
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 						RouteProvider* advisor = NULL,
-			#endif
+#endif
 						uint8_t nwkcaps = NWKCAPS_ROUTER,
 						uint8_t delivery = DELIVERY_EXHAUSTIVE,
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 						uint8_t maxHops = MAX_ROUTING_HOPS,
-			#endif
+#endif
 						uint8_t retry = DEFAULT_SEND_RETRY):
 							Meshwork::L3::Network(driver, nwkcaps, delivery, retry)
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 							, m_advisor(advisor),
 							m_maxHops(maxHops)
-			#endif
+#endif
 
 									{ seq = 0; };
 				
-			#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 				RouteProvider* get_route_advisor() {
 					return m_advisor;
 				}
 				void set_route_advisor(RouteProvider* provider) {
 					m_advisor = provider;
 				}
-			#endif
+#endif
 				
-			#ifdef SUPPORT_RADIO_LISTENER
+#if MW_SUPPORT_RADIO_LISTENER
 				RadioListener* get_radio_listener() {
 					return m_radio_listener;
 				}
 				void set_radio_listener(RadioListener* radio_listener) {
 					m_radio_listener = radio_listener;
 				}
-			#endif
+#endif
 
 				bool begin(const void* config = NULL);
 				bool end();

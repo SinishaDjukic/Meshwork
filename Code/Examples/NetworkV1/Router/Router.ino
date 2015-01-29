@@ -28,7 +28,7 @@
 	//Note: increase the delay factory multiplier to give more blink time for LEDs
 	#define MW_DELAY_FACTOR	5
 	//Enable NetworkV1::RadioListener in the code
-	#define SUPPORT_RADIO_LISTENER
+	#define MW_SUPPORT_RADIO_LISTENER
 #endif
 
 #include "Config.h"

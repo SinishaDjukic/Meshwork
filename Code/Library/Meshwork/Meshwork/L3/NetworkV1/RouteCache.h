@@ -21,10 +21,15 @@
 #ifndef __MESHWORK_L3_NETWORKV1_ROUTECACHE_H__
 #define __MESHWORK_L3_NETWORKV1_ROUTECACHE_H__
 
+#include "Meshwork.h"
 #include "Cosa/Wireless.hh"
 #include "Cosa/IOStream.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
+
+#ifndef LOG_ROUTECACHE
+	#define LOG_ROUTECACHE		MW_FULL_DEBUG
+#endif
 
 using Meshwork::L3::NetworkV1::NetworkV1;
 

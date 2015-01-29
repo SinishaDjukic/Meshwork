@@ -21,6 +21,7 @@
 #ifndef __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_H__
 #define __MESHWORK_L3_NETWORKV1_NETWORKSERIAL_H__
 
+#include "Meshwork.h"
 #include "Cosa/Pin.hh"
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
@@ -29,6 +30,10 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include <Utils/SerialMessageAdapter.h>
+
+#ifndef MW_LOG_NETWORKSERIAL
+	#define MW_LOG_NETWORKSERIAL	MW_FULL_DEBUG
+#endif
 
 /*
 	LEN | SEQ | MSG

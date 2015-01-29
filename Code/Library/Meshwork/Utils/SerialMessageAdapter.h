@@ -27,8 +27,7 @@
 
 #include "Meshwork.h"
 
-/**
- */
+
 class SerialMessageAdapter {
 
 	public:

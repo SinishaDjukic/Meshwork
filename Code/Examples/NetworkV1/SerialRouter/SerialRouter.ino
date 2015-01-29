@@ -21,56 +21,72 @@
 #ifndef __EXAMPLES_SERIALROUTER_H__
 #define __EXAMPLES_SERIALROUTER_H__
 
-//Note: comment this out to disable LED tracing
-#define LED_TRACING
+//First, include the configuration constants file
+#include "MeshworkConfiguration.h"
 
-#ifdef LED_TRACING
-	//Note: increase the delay factory multiplier to give more blink time for LEDs
-	#define MW_DELAY_FACTOR	5
-	//Enable NetworkV1::RadioListener in the code
-	#define SUPPORT_RADIO_LISTENER
-#endif
 
+
+//All build-time configuration, RF selection, EEPROM usage,
+//Route Cache table, etc. is defined in a single place here
 #include "Config.h"
 
-#if FULL_DEBUG != false
-	#define LOG_SERIALROUTER	true
-#else
-	#define LOG_SERIALROUTER	false
-#endif
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: INCLUDES AND USES //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <Cosa/EEPROM.hh>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
 #include <Cosa/IOStream/Driver/UART.hh>
 #include <Cosa/Watchdog.hh>
+#include <Cosa/OutputPin.hh>
 #include <Cosa/RTC.hh>
 #include <Cosa/Wireless.hh>
 
-//BEGIN: Include set for initializing the network
 #include <Meshwork.h>
 #include <Meshwork/L3/Network.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
+
+#if EX_LED_TRACING
+	#include "Utils/LEDTracing.h"
+#endif
+
+#if ( MW_RF_SELECT == MW_RF_NRF24L01P )
+	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+#endif
+
 #include <Utils/SerialMessageAdapter.h>
 #include <Utils/SerialMessageAdapter.cpp>
-#include "NetworkInit.h"
-//END: Include set for initializing the network
-
-#ifdef LED_TRACING
-	OutputPin pin_send(Board::D4);
-	OutputPin pin_recv(Board::D5);
-	OutputPin pin_ack(Board::D6);
-	#include "Utils/LEDTracing.h"
-	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
-#endif
 
 #include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.cpp"
 
+using namespace Meshwork::L3::NetworkV1;
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: MEMBER DECLARATION /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+//RF and Mesh
+MW_DECL_NRF24L01P(rf)
+
+NetworkV1 mesh(&rf, NULL, NetworkV1::NWKCAPS_ROUTER | NetworkV1::NWKCAPS_GATEWAY | NetworkV1::NWKCAPS_CONTROLLER);
+
+//Tracing LEDs
+#ifdef EX_LED_TRACING
+	OutputPin pin_send(EX_LED_TRACING_SEND);
+	OutputPin pin_recv(EX_LED_TRACING_RECV);
+	OutputPin pin_ack(EX_LED_TRACING_ACK);
+	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
+#endif
+
 //Setup extra UART on Mega
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+#if MW_BOARD_SELECT == MW_BOARD_MEGA
 	#include "Cosa/IOBuffer.hh"
 	// Create buffer for HC UART
 	static IOBuffer<UART::BUFFER_MAX> ibuf;
@@ -83,11 +99,15 @@
 	IOStream::Device null_device;
 #endif
 
+//Network Serial support
 NetworkSerial networkSerial(&mesh, &serialMessageAdapter);
-
 SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: BUSINESS LOGIC/CODE ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
+//Setup sequence
 void setup()
 {
 	//Basic setup
@@ -100,7 +120,7 @@ void setup()
 	uart.begin(115200);
 
 //Trace debugs only supported on Mega, since it has extra UARTs
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+#if MW_BOARD_SELECT == MW_BOARD_MEGA
   trace.begin(&uart, NULL);
   trace << PSTR("Serial Router: started") << endl;
   uartHC.begin(115200);
@@ -119,17 +139,23 @@ SerialMessageAdapter::serialmsg_t msg;
 uint8_t last_message_processed;
 uint32_t last_message_timestamp = 0;
 
-void loop()
-{
+//Receive RF messages
+void run_recv() {
 	last_message_processed = networkSerial.processOneMessage(&msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 	if ( last_message_processed != SerialMessageAdapter::SM_MESSAGE_NONE )
 		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > SERIAL_NEXT_MSG_TIMEOUT ) {
+	else if ( RTC::since(last_message_timestamp) > EX_SERIAL_NEXT_MSG_TIMEOUT ) {
 		last_message_timestamp = RTC::millis();
-		MW_LOG_WARNING(LOG_SERIALROUTER, "No serial messages processed for %d ms", SERIAL_NEXT_MSG_TIMEOUT);
+		MW_LOG_WARNING(EX_LOG_SERIALROUTER, "No serial messages processed for %d ms", EX_SERIAL_NEXT_MSG_TIMEOUT);
 	}
 #endif
+}
+
+//Main loop
+void loop()
+{
+	run_recv();
 }
 
 #endif

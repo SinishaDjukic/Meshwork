@@ -35,13 +35,9 @@
 
 using namespace Meshwork::L3::NetworkV1;
 
-#ifndef LOG_ZEROCONFSERIAL
-#define LOG_ZEROCONFSERIAL true
-#endif
-
 uint8_t ZeroConfSerial::processZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = true;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
 	bool result = m_network == NULL ? false : m_network->end();
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
@@ -52,7 +48,7 @@ uint8_t ZeroConfSerial::processZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 
 uint8_t ZeroConfSerial::processZCDeinit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = false;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
 	bool result = m_network == NULL ? false : m_network->begin();
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
@@ -63,7 +59,7 @@ uint8_t ZeroConfSerial::processZCDeinit(SerialMessageAdapter::serialmsg_t* msg) 
 
 bool ZeroConfSerial::checkZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 	if ( !m_initmode ) {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
+		MW_LOG_ERROR(MW_LOG_ZEROCONFSERIAL, "Must be in ZCInit mode!", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
 	}
 	return m_initmode;
@@ -73,7 +69,7 @@ uint8_t ZeroConfSerial::processZCDevReq(SerialMessageAdapter::serialmsg_t* msg) 
 	if (!checkZCInit(msg) )
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 	m_adapter->readRemainingMessageBytes();
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
 	uint8_t data[] = {5, (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCDEVRES, m_network->getNetworkCaps(), m_network->getDelivery()};
 	m_adapter->writeMessage(sizeof(data), data, true);
 	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
@@ -86,7 +82,7 @@ uint8_t ZeroConfSerial::processZCDevCfg(SerialMessageAdapter::serialmsg_t* msg) 
 	m_devconfig->m_delivery = m_adapter->readByte();
 	m_network->setNetworkCaps(m_devconfig->m_nwkcaps);
 	m_network->setDelivery(m_devconfig->m_delivery);
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, NwkCaps=%d, Delivery=%d", msg->seq, m_network->getNetworkCaps(), m_network->getDelivery());
 
 	if ( m_listener != NULL )
 		m_listener->devconfig_updated();
@@ -99,7 +95,7 @@ uint8_t ZeroConfSerial::processZCDevCfg(SerialMessageAdapter::serialmsg_t* msg) 
 uint8_t ZeroConfSerial::processZCNwkReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
 			msg->seq, m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen);
 	uint8_t data[] = {(uint8_t) (8 + m_nwkconfig->nwkkeylen), (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCNWKRES, m_nwkconfig->channel,
 			(uint8_t) (( m_nwkconfig->nwkid >> 8 ) & 0xFF), (uint8_t) (m_nwkconfig->nwkid & 0xFF), m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen};
@@ -129,7 +125,7 @@ uint8_t ZeroConfSerial::processZCNwkCfg(SerialMessageAdapter::serialmsg_t* msg) 
 	m_nwkconfig->nwkkey[0] = 0;
 	m_nwkconfig->nwkkeylen = m_adapter->readByte();
 
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "Channel=%d, NwkID=%d, NodeID=%d, NwkKeyLen=%d",
 			m_nwkconfig->channel, m_nwkconfig->nwkid, m_nwkconfig->nodeid, m_nwkconfig->nwkkeylen);
 
 	if ( m_nwkconfig->nwkkeylen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
@@ -158,7 +154,7 @@ uint8_t ZeroConfSerial::processZCNwkCfg(SerialMessageAdapter::serialmsg_t* msg) 
 uint8_t ZeroConfSerial::processZCSerialReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, SerNumLen=%d", msg->seq, m_sernum->sernumlen);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, SerNumLen=%d", msg->seq, m_sernum->sernumlen);
 	uint8_t data[] = {(uint8_t) (4 + m_sernum->sernumlen), (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCSERIALRES, m_sernum->sernumlen};
 	m_adapter->writeMessage(sizeof(data), data, false);
 	m_adapter->writeMessage(m_sernum->sernumlen, (uint8_t*) m_sernum->sernum, true);
@@ -168,9 +164,9 @@ uint8_t ZeroConfSerial::processZCSerialReq(SerialMessageAdapter::serialmsg_t* ms
 uint8_t ZeroConfSerial::processZCSerialCfg(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return false;
-#ifndef ZEROCONF_SERIAL_CHANGE_ENABLE
+#if !(ZEROCONF_SERIAL_CHANGE_ENABLE)
 	if ( m_sernum->sernumlen > 0 ) {
-		MW_LOG_ERROR(LOG_ZEROCONFSERIAL, "Serial number change disabled!", NULL);
+		MW_LOG_ERROR(MW_LOG_ZEROCONFSERIAL, "Serial number change disabled!", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_ILLEGAL_STATE);
 		return false;
 	}
@@ -189,7 +185,7 @@ uint8_t ZeroConfSerial::processZCSerialCfg(SerialMessageAdapter::serialmsg_t* ms
 	} else {
 		m_sernum->sernumlen = 0;
 	}
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SerNumLen=%d, SerNum=%s", m_sernum->sernumlen, m_sernum->sernum);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SerNumLen=%d, SerNum=%s", m_sernum->sernumlen, m_sernum->sernum);
 	if ( m_listener != NULL )
 		m_listener->serial_updated();
 	//the only possible fail point, so far
@@ -205,7 +201,7 @@ uint8_t ZeroConfSerial::processZCSerialCfg(SerialMessageAdapter::serialmsg_t* ms
 uint8_t ZeroConfSerial::processZCRepReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
 	uint8_t data[] = {5, (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCREPRES, m_reporting->targetnodeid, m_reporting->repflags};
 	m_adapter->writeMessage(sizeof(data), data, true);
 	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;
@@ -216,7 +212,7 @@ uint8_t ZeroConfSerial::processZCRepCfg(SerialMessageAdapter::serialmsg_t* msg) 
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 	m_reporting->targetnodeid = m_adapter->readByte();
 	m_reporting->repflags = m_adapter->readByte();
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
 
 	if ( m_listener != NULL )
 		m_listener->reporting_updated();
@@ -231,11 +227,11 @@ uint8_t ZeroConfSerial::processZCFactoryReset(SerialMessageAdapter::serialmsg_t*
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
 
 	if ( m_listener != NULL ) {
-		MW_LOG_INFO(LOG_ZEROCONFSERIAL, "Factory reset", NULL);
+		MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "Factory reset", NULL);
 
 		m_listener->factory_reset();
 	} else {
-		MW_LOG_WARNING(LOG_ZEROCONFSERIAL, "No listener for Factory reset", NULL);
+		MW_LOG_WARNING(MW_LOG_ZEROCONFSERIAL, "No listener for Factory reset", NULL);
 	}
 	m_adapter->respondWCode(msg, m_listener != NULL ? SerialMessageAdapter::SM_SUBCODE_OK : SerialMessageAdapter::SM_SUBCODE_NOK);
 
@@ -245,7 +241,7 @@ uint8_t ZeroConfSerial::processZCFactoryReset(SerialMessageAdapter::serialmsg_t*
 uint8_t ZeroConfSerial::processOneMessage(SerialMessageAdapter::serialmsg_t* msg) {
 	uint8_t result = SerialMessageAdapter::SM_MESSAGE_UNKNOWN;
 
-	MW_LOG_INFO(LOG_ZEROCONFSERIAL, "[ZeroConfSerial] Code=%d, SubCode=%d", msg->code, msg->subcode);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "[ZeroConfSerial] Code=%d, SubCode=%d", msg->code, msg->subcode);
 
 	if ( msg->code == ZC_CODE ) {
 		switch ( msg->subcode ) {
@@ -271,6 +267,7 @@ uint8_t ZeroConfSerial::processOneMessage(SerialMessageAdapter::serialmsg_t* msg
 }
 
 bool ZeroConfSerial::processConfigSequence(uint16_t initTimeout, uint16_t deinitTimeout, uint16_t nextMsgTimeout) {
+	UNUSED(nextMsgTimeout);
 	uint32_t start = RTC::millis();
 	uint8_t state = 0;
 	uint32_t lastMessage = start;

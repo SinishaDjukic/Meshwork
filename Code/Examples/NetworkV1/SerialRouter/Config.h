@@ -21,56 +21,42 @@
 #ifndef __EXAMPLES_CONFIG_H__
 #define __EXAMPLES_CONFIG_H__
 
-//Early include of Cosa's files, so that board definitions and identifiers are loaded
-#include "Cosa/Trace.hh"
+////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// SECTION: BUILD-TIME CONFIGURATION //////////////////////////////
+////////////////////////// ~feel free to edit and adapt to your needs~ /////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define EXAMPLE_BOARD_AUTO				0
-#define EXAMPLE_BOARD_RBBB				1
-#define EXAMPLE_BOARD_MEGA				2
-#define EXAMPLE_BOARD_UNO				3
+//Select your RF chip. Currently, only NRF24L01P is supported
+#define MW_RF_SELECT 				MW_RF_NRF24L01P
 
-//Choose board flavor
-#if !defined(EXAMPLE_BOARD)
-//Auto-detect Mega and Uno, by default
-#define EXAMPLE_BOARD EXAMPLE_BOARD_AUTO
-//Otherwise, uncomment to use real bare-bone board based on ATmega328
-//#define EXAMPLE_BOARD EXAMPLE_BOARD_RBBB
+//Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
+#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_NONE
+
+//Enable/disable LED tracing for RF messages
+#define EX_LED_TRACING		true
+#if EX_LED_TRACING
+	#define EX_LED_TRACING_SEND	Board::D4
+	#define EX_LED_TRACING_RECV	Board::D5
+	#define EX_LED_TRACING_ACK	Board::D6
+	#define EX_LED_BOOTUP		Board::LED
 #endif
 
-#if defined (BOARD_ATMEGA2560)
-#warning BOARD_ATMEGA2560
-#elif defined (__ARDUINO_MEGA__)
-#warning __ARDUINO_MEGA__
-#elif defined (ARDUINO_MEGA2560)
-#warning ARDUINO_MEGA2560
+//Uncomment to enforce true/false. Otherwise it will be automatically
+//set to true for more powerful boards, like the Mega
+//#define MW_FULL_DEBUG	true
+
+//Our sketch's own debug
+#define EX_LOG_SERIALROUTER		MW_FULL_DEBUG
+
+//Timeout for arrival of new serial messages
+#define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
+
+//Defines a delay (slowness) factor if LED tracing is enabled
+#if EX_LED_TRACING
+	//Note: increase the delay factory multiplier to give more blink time for LEDs
+	#define MW_DELAY_FACTOR	5
+	//Enable NetworkV1::RadioListener in the code
+	#define MW_SUPPORT_RADIO_LISTENER	true
 #endif
 
-#define FULL_DEBUG	false
-
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_AUTO
-	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__) || defined (ARDUINO_MEGA2560)
-		#warning "Mega selected"
-		#define EXAMPLE_BOARD	EXAMPLE_BOARD_MEGA
-		#define FULL_DEBUG		true
-	#else
-		#define EXAMPLE_BOARD	EXAMPLE_BOARD_UNO
-	#endif
 #endif
-
-//One-stop-shop for debug flags. Just uncomment if you don't want debugs on the Mega
-//#define FULL_DEBUG	false
-
-#if defined (FULL_DEBUG)
-	#warning "Full debugs enabled"
-#endif
-
-#define MW_LOG_ALL_ENABLE 	FULL_DEBUG
-#define MW_LOG_DEBUG_ENABLE	FULL_DEBUG
-#define LOG_NETWORKV1		FULL_DEBUG
-#define LOG_NETWORKSERIAL	FULL_DEBUG
-#define LOG_NETWORKINIT		FULL_DEBUG
-
-#define SERIAL_NEXT_MSG_TIMEOUT	5000
-
-#endif
-

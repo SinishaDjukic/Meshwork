@@ -30,9 +30,10 @@
 #include "Utils/SerialMessageAdapter.h"
 
 
-#ifndef LOG_SERIALMESSAGEADAPTER
-#define LOG_SERIALMESSAGEADAPTER true
+#ifndef MW_LOG_SERIALMESSAGEADAPTER
+	#define MW_LOG_SERIALMESSAGEADAPTER		MW_FULL_DEBUG
 #endif
+
 
 int16_t SerialMessageAdapter::readByte() {
 	if ( m_lastSerialMsgLen > 0 ) {
@@ -65,12 +66,12 @@ bool SerialMessageAdapter::waitForBytes(uint8_t count, uint16_t millis) {
 }
 
 void SerialMessageAdapter::readRemainingMessageBytes() {
-  MW_LOG_DEBUG(LOG_SERIALMESSAGEADAPTER, "Bytes to discard=%d", m_lastSerialMsgLen);
+  MW_LOG_DEBUG(MW_LOG_SERIALMESSAGEADAPTER, "Bytes to discard=%d", m_lastSerialMsgLen);
 	if ( m_lastSerialMsgLen > 0 ) {
 		if ( waitForBytes(m_lastSerialMsgLen, m_timeout) ) {
 			while (readByte() >= 0);
 		} else {
-			MW_LOG_ERROR(LOG_SERIALMESSAGEADAPTER, "Timeout while discarding bytes: %d", m_lastSerialMsgLen);
+			MW_LOG_ERROR(MW_LOG_SERIALMESSAGEADAPTER, "Timeout while discarding bytes: %d", m_lastSerialMsgLen);
 		}
 	}
 }
@@ -78,7 +79,7 @@ void SerialMessageAdapter::readRemainingMessageBytes() {
 void SerialMessageAdapter::respondWCode(serialmsg_t* msg, uint8_t subcode) {
 	readRemainingMessageBytes();
 	uint8_t code = msg->code;
-	MW_LOG_INFO(LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Code=%d, SubCode=%d", msg->seq, code, subcode);
+	MW_LOG_INFO(MW_LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Code=%d, SubCode=%d", msg->seq, code, subcode);
 	uint8_t data[] = {3, (uint8_t) msg->seq, code, subcode};
 	writeMessage(sizeof(data), data, true);
 }
@@ -86,7 +87,7 @@ void SerialMessageAdapter::respondWCode(serialmsg_t* msg, uint8_t subcode) {
 void SerialMessageAdapter::respondNOK(serialmsg_t* msg, uint8_t errorValue) {
 	readRemainingMessageBytes();
 	uint8_t code = msg->code;
-	MW_LOG_INFO(LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Code=%d, SubCode=%d, ErrorValue=%d", msg->seq, code, SM_SUBCODE_NOK, errorValue);
+	MW_LOG_INFO(MW_LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Code=%d, SubCode=%d, ErrorValue=%d", msg->seq, code, SM_SUBCODE_NOK, errorValue);
 	uint8_t data[] = {4, (uint8_t) msg->seq, code, SM_SUBCODE_NOK, errorValue};
 	writeMessage(sizeof(data), data, true);
 }
@@ -110,7 +111,7 @@ uint8_t SerialMessageAdapter::processOneMessageHeader(serialmsg_t* msg) {
 			m_currentMsg = msg;
 			result = SM_MESSAGE_PROCESSED;
 		} else {
-			MW_LOG_ERROR(LOG_SERIALMESSAGEADAPTER, "Invalid message: Len=%d", len);
+			MW_LOG_ERROR(MW_LOG_SERIALMESSAGEADAPTER, "Invalid message: Len=%d", len);
 			respondNOK(msg, SM_NOK_GENERAL);
 			result = SM_MESSAGE_ERROR;
 		}
@@ -125,8 +126,8 @@ uint8_t SerialMessageAdapter::processOneMessage(serialmsg_t* msg) {
 	uint8_t resultCode = processOneMessageHeader(msg);
 	
 	if ( resultCode == SM_MESSAGE_PROCESSED ) {
-		MW_LOG_DEBUG_TRACE(LOG_SERIALMESSAGEADAPTER) << endl << endl << endl;
-		MW_LOG_INFO(LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Len=%d, Code=%d, SubCode=%d", msg->seq, msg->len, msg->code, msg->subcode);
+		MW_LOG_DEBUG_TRACE(MW_LOG_SERIALMESSAGEADAPTER) << endl << endl << endl;
+		MW_LOG_INFO(MW_LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Len=%d, Code=%d, SubCode=%d", msg->seq, msg->len, msg->code, msg->subcode);
 		if ( waitForBytes(msg->len - 3, m_timeout) ) {
 			SerialMessageListener* listener;
 
@@ -134,7 +135,7 @@ uint8_t SerialMessageAdapter::processOneMessage(serialmsg_t* msg) {
 				listener = m_listeners[i];
 				result = listener->processOneMessage(m_currentMsg);
 
-				MW_LOG_DEBUG(LOG_SERIALMESSAGEADAPTER, "Listner [%d] result=%d", i, result);
+				MW_LOG_DEBUG(MW_LOG_SERIALMESSAGEADAPTER, "Listner [%d] result=%d", i, result);
 
 				if ( result != SM_MESSAGE_UNKNOWN ) {
 					//all done
@@ -148,10 +149,10 @@ uint8_t SerialMessageAdapter::processOneMessage(serialmsg_t* msg) {
 			}
 			//this was set in processOneMessageHeader, so null it here
 			m_currentMsg = NULL;
-			MW_LOG_INFO(LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Processed=%d", msg->seq, result);
-			MW_LOG_DEBUG_TRACE(LOG_SERIALMESSAGEADAPTER) << endl << endl;
+			MW_LOG_INFO(MW_LOG_SERIALMESSAGEADAPTER, "SERSEQ=%d, Processed=%d", msg->seq, result);
+			MW_LOG_DEBUG_TRACE(MW_LOG_SERIALMESSAGEADAPTER) << endl << endl;
 		} else {
-			MW_LOG_ERROR(LOG_SERIALMESSAGEADAPTER, "INSUFFICIENT_DATA", NULL);
+			MW_LOG_ERROR(MW_LOG_SERIALMESSAGEADAPTER, "INSUFFICIENT_DATA", NULL);
 			respondNOK(msg, SM_NOK_INSUFFICIENT_DATA);
 			result = SM_MESSAGE_ERROR;
 		}

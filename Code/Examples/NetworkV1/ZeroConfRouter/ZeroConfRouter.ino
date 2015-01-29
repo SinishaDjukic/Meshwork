@@ -21,58 +21,96 @@
 #ifndef __EXAMPLES_ZEROCONFROUTER_H__
 #define __EXAMPLES_ZEROCONFROUTER_H__
 
-//Note: comment this out to disable LED tracing
-//#define LED_TRACING
+//First, include the configuration constants file
+#include "MeshworkConfiguration.h"
 
-#ifdef LED_TRACING
-	//Note: increase the delay factory multiplier to give more blink time for LEDs
-	#define MW_DELAY_FACTOR	5
-	//Enable NetworkV1::RadioListener in the code
-	#define SUPPORT_RADIO_LISTENER
-#endif
 
+
+//All build-time configuration, RF selection, EEPROM usage,
+//Route Cache table, etc. is defined in a single place here
 #include "Config.h"
 
-#define LOG_ZEROCONFROUTER	(FULL_DEBUG != false)
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: INCLUDES AND USES //////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
+#include <Cosa/EEPROM.hh>
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
 #include <Cosa/IOStream/Driver/UART.hh>
 #include <Cosa/Watchdog.hh>
+#include <Cosa/OutputPin.hh>
 #include <Cosa/RTC.hh>
 #include <Cosa/Wireless.hh>
 
-//BEGIN: Include set for initializing the network
 #include <Meshwork.h>
 #include <Meshwork/L3/Network.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
+
+#if EX_LED_TRACING
+	#include "Utils/LEDTracing.h"
+#endif
+
+#if ( MW_RF_SELECT == MW_RF_NRF24L01P )
+	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+#endif
+
+#if ( ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_RAM ) || ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT ) )
+	#include <Meshwork/L3/NetworkV1/RouteCache.h>
+	#include <Meshwork/L3/NetworkV1/RouteCache.cpp>
+	#include <Meshwork/L3/NetworkV1/CachingRouteProvider.h>
+	#if ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT )
+		#include <Meshwork/L3/NetworkV1/RouteCachePersistent.h>
+	#endif
+#endif
+
+#include <Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.h>
+#include <Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.cpp>
+#include <Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfPersistent.h>
+
 #include <Utils/SerialMessageAdapter.h>
 #include <Utils/SerialMessageAdapter.cpp>
-#include "NetworkInit.h"
-//END: Include set for initializing the network
 
-#ifdef LED_TRACING
-	OutputPin pin_send(Board::D4);
-	OutputPin pin_recv(Board::D5);
-	OutputPin pin_ack(Board::D6);
-	#include "Utils/LEDTracing.h"
+using namespace Meshwork::L3::NetworkV1;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: MEMBER DECLARATION /////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Our EEPROM instance
+EEPROM eeprom;
+
+//RF and Mesh
+MW_DECL_NRF24L01P(rf)
+#if ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT )
+	MW_DECLP_ROUTEPROVIDER_ROUTECACHE_PERSISTENT(routeprovider, eeprom, EX_ROUTECACHE_TABLE_EEPROM_OFFSET)
+#elif ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_RAM )
+	MW_DECLP_ROUTEPROVIDER_ROUTECACHE_RAM(routeprovider)
+#else // MW_ROUTECACHE_NONE
+	MW_DECLP_ROUTEPROVIDER_ROUTECACHE_NONE(routeprovider)
+#endif
+NetworkV1 mesh(&rf, routeprovider, NetworkV1::NWKCAPS_NONE);
+
+//Tracing LEDs
+#ifdef EX_LED_TRACING
+	OutputPin pin_send(EX_LED_TRACING_SEND);
+	OutputPin pin_recv(EX_LED_TRACING_RECV);
+	OutputPin pin_ack(EX_LED_TRACING_ACK);
 	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
 #endif
 
-#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.h"
-#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfSerial.cpp"
-#include "Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfEEPROM.h"
-ZeroConfEEPROM::zctype_configuration_t configuration;
-EEPROM eepromConf;
-//Offset for storing ZC device configuration in the EEPROM
-static const uint16_t ZC_CONFIGURATION_EEPROM_OFFSET = 64;
-ZeroConfEEPROM zeroConfEEPROM(&eepromConf, &configuration, ZC_CONFIGURATION_EEPROM_OFFSET);
+//ZeroConf data persistence
+ZeroConfPersistent::zctype_configuration_t configuration;
+ZeroConfPersistent zeroConfPersistent(&eeprom, &configuration, EX_ZC_CONFIGURATION_EEPROM_OFFSET);
 
 //Setup extra UART on Mega
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+#if MW_BOARD_SELECT == MW_BOARD_MEGA
 	#include "Cosa/IOBuffer.hh"
 	// Create buffer for HC UART
 	static IOBuffer<UART::BUFFER_MAX> ibuf;
@@ -85,17 +123,16 @@ ZeroConfEEPROM zeroConfEEPROM(&eepromConf, &configuration, ZC_CONFIGURATION_EEPR
 	IOStream::Device null_device;
 #endif
 
+//ZeroConf Serial support
 ZeroConfSerial zeroConfSerial(&mesh, &serialMessageAdapter,
 								&configuration.sernum, &configuration.reporting,
 									&configuration.nwkconfig, &configuration.devconfig,
-										&zeroConfEEPROM);
-
+										&zeroConfPersistent);
 SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
-#define EXAMPLE_LED		Board::LED
-
-#if defined(EXAMPLE_LED)
-	OutputPin ledPin(EXAMPLE_LED);
+//Bootup notification LED
+#if defined(EX_LED_BOOTUP)
+	OutputPin ledPin(EX_LED_BOOTUP);
 	#define LED(state)	ledPin.set(state)
 	#define LED_BLINK(state, x)	\
 		LED(state); \
@@ -106,10 +143,16 @@ SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 	#define LED_BLINK(state, x)	(void) (state)
 #endif
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// SECTION: BUSINESS LOGIC/CODE ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//Read stored configuration
 void readConfig() {
 	trace << PSTR("[Config] Reading EEPROM...") << endl;
-	zeroConfEEPROM.init();
-	zeroConfEEPROM.read_configuration();
+	zeroConfPersistent.init();
+	zeroConfPersistent.read_configuration();
 
 	mesh.setNetworkID(configuration.nwkconfig.nwkid);
 	mesh.setNodeID(configuration.nwkconfig.nodeid);
@@ -122,6 +165,7 @@ void readConfig() {
 	trace << PSTR("[Config] Reading EEPROM... Done") << endl;
 }
 
+//Setup sequence
 void setup()
 {
 	//Basic setup
@@ -137,7 +181,7 @@ void setup()
 	uart.begin(115200);
 	
 	//Trace debugs only supported on Mega, since it has extra UARTs
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+#if MW_BOARD_SELECT == MW_BOARD_MEGA
 	trace.begin(&uart, NULL);
 	trace << PSTR("ZeroConf Router: started") << endl;
 	uartHC.begin(115200);
@@ -149,7 +193,7 @@ void setup()
 
 	trace << PSTR("Waiting for ZeroConfSerial connection...") << endl;
 	//Allow some time for initial configuration
-	bool reconfigured = zeroConfSerial.processConfigSequence(STARTUP_AUTOCONFIG_INIT_TIMEOUT, STARTUP_AUTOCONFIG_DEINIT_TIMEOUT, SERIAL_NEXT_MSG_TIMEOUT);
+	bool reconfigured = zeroConfSerial.processConfigSequence(EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT, EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT, EX_SERIAL_NEXT_MSG_TIMEOUT);
 	
 	readConfig();
 
@@ -162,36 +206,38 @@ void setup()
 	LED_BLINK(false, reconfigured ? 2000 : 500);
 	LED(false);
 	
-#ifdef LED_TRACING
+#if EX_LED_TRACING
 	mesh.set_radio_listener(&ledTracing);
 #endif
 
 	mesh.begin();
 }
 
+//Receive RF messages loop
 void run_recv() {
 	uint32_t duration = (uint32_t) 60 * 1000L;
 	uint8_t src, port;
 	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
-	MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
 	while (true) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
 		if ( result != -1 ) {
-			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
-			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
-			MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << endl;
+			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
+			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
+			MW_LOG_DEBUG_ARRAY(EX_LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
 		}
 		if ( RTC::since(start) >= duration )
 			break;
 	} 
 	
-	MW_LOG_DEBUG_TRACE(LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
 }
 
+//Main loop
 void loop()
 {
 	run_recv();

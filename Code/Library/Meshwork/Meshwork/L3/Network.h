@@ -28,21 +28,19 @@
 
 #include "Meshwork.h"
 
-//#define SUPPORT_DELIVERY_ROUTED_DISABLE
-//#define SUPPORT_DELIVERY_FLOOD_DISABLE
-//#define SUPPORT_REROUTING_DISABLE
 
-#ifndef SUPPORT_DELIVERY_ROUTED_DISABLE
-#define SUPPORT_DELIVERY_ROUTED
+#ifndef MW_SUPPORT_DELIVERY_ROUTED
+	#define MW_SUPPORT_DELIVERY_ROUTED	true
 #endif
 
-#ifndef SUPPORT_DELIVERY_FLOOD_DISABLE
-#define SUPPORT_DELIVERY_FLOOD
+#ifndef MW_SUPPORT_DELIVERY_FLOOD
+	#define MW_SUPPORT_DELIVERY_FLOOD	true
 #endif
 
-#ifndef SUPPORT_REROUTING_DISABLE
-#define SUPPORT_REROUTING
+#ifndef MW_SUPPORT_REROUTING
+	#define MW_SUPPORT_REROUTING		true
 #endif
+
 
 namespace Meshwork {
 
@@ -58,6 +56,9 @@ namespace Meshwork {
 		};//end of Meshwork::L3::Network::ACKProvider
 		
 		// Define networking capabilities.
+
+		//Shouldn't really be used
+		static const uint8_t NWKCAPS_NONE 				= 0;
 
 		// Bits: 0, 1
 		/** If set: sleeping node. Not set: always on*/
@@ -79,22 +80,22 @@ namespace Meshwork {
 		/** Defines direct delivery. */
 		static const uint8_t DELIVERY_DIRECT = 0x01;
 		/** Defines routed message delivery. */
-	#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 		static const uint8_t DELIVERY_ROUTED = 0x02;
-	#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 		/** Defines flood routing message delivery. */
 		static const uint8_t DELIVERY_FLOOD = 0x04;
 	#endif
-	#endif
+#endif
 		/** Defines exhaustive delivery approach. */
 		static const uint8_t DELIVERY_EXHAUSTIVE =
 								DELIVERY_DIRECT
-	#ifdef SUPPORT_DELIVERY_ROUTED
+#if MW_SUPPORT_DELIVERY_ROUTED
 								| DELIVERY_ROUTED
-	#ifdef SUPPORT_DELIVERY_FLOOD
+	#if MW_SUPPORT_DELIVERY_FLOOD
 								| DELIVERY_FLOOD
 	#endif
-	#endif
+#endif
 								;
 
 		//Positive values define success
@@ -130,7 +131,7 @@ namespace Meshwork {
 		static const int8_t ERROR_ACK_NOT_RECEIVED = -30;
 		/** Sending an ACK has failed. */
 		static const int8_t ERROR_ACK_SEND_FAILED = -31;
-#ifdef SUPPORT_DELIVERY_FLOOD
+#if MW_SUPPORT_DELIVERY_FLOOD
 		/** Flood message not received by neighbours. */
 		static const int8_t FLOOD_NOT_RECEIVED_BY_NEIGHBOURS = -32;
 #endif

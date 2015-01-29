@@ -33,10 +33,6 @@
 #include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-#ifndef LOG_NETWORKSERIAL
-#define LOG_NETWORKSERIAL true
-#endif
-
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::initSerial() {
 	uint8_t data[] = {2, 1, NS_SUBCODE_CFGREQUEST};
 	m_adapter->writeMessage(sizeof(data), data, true);
@@ -49,7 +45,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::set_address(uint8_t src) {
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
 	uint8_t hopCount = route->hopCount;	
 	uint8_t data[] = {(uint8_t) (6 + hopCount), (uint8_t) m_currentMsg->seq, NS_CODE, NS_SUBCODE_RFROUTEFOUND, hopCount, route->src};
 	m_adapter->writeMessage(sizeof(data), data, false);
@@ -59,7 +55,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_found(Meshwork::L3::NetworkV1
 }
 
 void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV1::NetworkV1::route_t* route) {
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Dst=%d, hops=%d", m_currentMsg->seq, route->src, route->dst, route->hopCount);
 	uint8_t hopCount = route->hopCount;
 	uint8_t data[] = {(uint8_t) (6 + hopCount), (uint8_t) m_currentMsg->seq, NS_CODE, NS_SUBCODE_RFROUTEFAILED, hopCount, route->src};
 	m_adapter->writeMessage(sizeof(data), data, false);
@@ -69,7 +65,7 @@ void Meshwork::L3::NetworkV1::NetworkSerial::route_failed(Meshwork::L3::NetworkV
 }
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d", m_currentMsg->seq, dst);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d", m_currentMsg->seq, dst);
 
 	uint8_t result = 0;
 	uint8_t data[] = {4, (uint8_t) m_currentMsg->seq, NS_CODE, NS_SUBCODE_RFGETROUTECOUNT, dst};
@@ -86,28 +82,28 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::get_routeCount(uint8_t dst) {
 				} else if ( m_currentMsg->code == NS_SUBCODE_RFGETROUTECOUNTRES ) {
 					result = m_adapter->readByte();
 					m_adapter->readRemainingMessageBytes();
-					MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Route count: %d", result);
+					MW_LOG_DEBUG(MW_LOG_NETWORKSERIAL, "Route count: %d", result);
 				} else {
-					MW_LOG_ERROR(LOG_NETWORKSERIAL, "Wrong response code received to RFGETROUTECOUNT: %d", m_currentMsg->code);
+					MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Wrong response code received to RFGETROUTECOUNT: %d", m_currentMsg->code);
 					m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_GENERAL);
 				}
 			} else {
-				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SERSEQ=%d", m_currentMsg->seq, seq);
+				MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SERSEQ=%d", m_currentMsg->seq, seq);
 				m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_SEQUENCE_MISMATCH);
 			}
 		} else {
-			MW_LOG_ERROR(LOG_NETWORKSERIAL, "Invalid response to NS_SUBCODE_RFGETROUTECOUNT, Process Code=%d", processCode);
+			MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Invalid response to NS_SUBCODE_RFGETROUTECOUNT, Process Code=%d", processCode);
 			m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_SEQUENCE_MISMATCH);
 		}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "No response to NS_SUBCODE_RFGETROUTECOUNT", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "No response to NS_SUBCODE_RFGETROUTECOUNT", NULL);
 		m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result;
 }
 
 Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSerial::get_route(uint8_t dst, uint8_t index) {
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, index=%d", m_currentMsg->seq, dst, index);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, index=%d", m_currentMsg->seq, dst, index);
 	Meshwork::L3::NetworkV1::NetworkV1::route_t* result = NULL;
 	
 	uint8_t data[] = {5, (uint8_t) m_currentMsg->seq, NS_CODE, NS_SUBCODE_RFGETROUTE, dst, index};
@@ -139,26 +135,26 @@ Meshwork::L3::NetworkV1::NetworkV1::route_t* Meshwork::L3::NetworkV1::NetworkSer
 						result = &m_currentRoute;
 						m_adapter->readRemainingMessageBytes();
 					} else {
-						MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough hops in NS_SUBCODE_RFGETROUTE, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
+						MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough hops in NS_SUBCODE_RFGETROUTE, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
 						m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 					}	
 				} else {
-					MW_LOG_ERROR(LOG_NETWORKSERIAL, "Wrong response code received to RFGETROUTE: %d", code);
+					MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Wrong response code received to RFGETROUTE: %d", code);
 					m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_GENERAL);
 				}
 			} else {
-				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SEQSEQ=%d", m_currentMsg->seq, seq);
+				MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Sequence mismatch! Expected SERSEQ=%d, Received SEQSEQ=%d", m_currentMsg->seq, seq);
 				m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_SEQUENCE_MISMATCH);
 			}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "No response to NS_SUBCODE_RFGETROUTE, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "No response to NS_SUBCODE_RFGETROUTE, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
 		m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}	
 	return result;
 }
 
 //void Meshwork::L3::NetworkV1::NetworkSerial::respondSendACK(serialmsg_t* msg, uint8_t datalen, uint8_t* ackData) {
-//	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, DataLen=%d", msg->seq, datalen);
+//	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, DataLen=%d", msg->seq, datalen);
 //	uint8_t data[] = {4 + datalen, msg->seq, NS_CODE, NS_SUBCODE_RFSENDACK, datalen};
 //	m_adapter->writeMessage(sizeof(data), data, false);
 //	m_adapter->writeMessage(datalen, data, true);
@@ -175,12 +171,12 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processCfgBasic(SerialMessageAda
 		m_network->setDelivery(delivery);
 		m_network->setRetry(retry);
 		
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "NwkCaps=%d, Delivery=%d, Retry=%d", nwkcaps, delivery, retry);
+		MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "NwkCaps=%d, Delivery=%d, Retry=%d", nwkcaps, delivery, retry);
 		
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 		result = true;
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Config Basic, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough data in Config Basic, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
@@ -197,7 +193,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(SerialMessageAdapt
 		m_network->setNetworkID(nwkid);
 		m_network->setNodeID(nodeid);
 
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "NodeID=%d, NwkID=%d, Channel=%d", nodeid, nwkid, channel);
+		MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "NodeID=%d, NwkID=%d, Channel=%d", nodeid, nwkid, channel);
 
 		int16_t keyLen = m_adapter->readByte();
 		if ( keyLen >= 0 && keyLen <= Meshwork::L3::Network::MAX_NETWORK_KEY_LEN ) {
@@ -214,7 +210,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(SerialMessageAdapt
 			result = false;
 		}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Config Network, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough data in Config Network, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
@@ -222,7 +218,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processCfgNwk(SerialMessageAdapt
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(SerialMessageAdapter::serialmsg_t* msg) {
 	bool result = m_network->begin();
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "", NULL);
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
@@ -233,7 +229,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFInit(SerialMessageAdapt
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFDeinit(SerialMessageAdapter::serialmsg_t* msg) {
 	bool result = m_network->end();
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "", NULL);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "", NULL);
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
@@ -245,9 +241,9 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 													void* buf, uint8_t len,
 														void* bufACK, size_t lenACK) {
 	int bytes = 0;
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Port=%d, SerLen=%d", m_currentMsg->seq, src, port, len);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Src=%d, Port=%d, SerLen=%d", m_currentMsg->seq, src, port, len);
 	if ( m_currentMsg != NULL ) {//must be the case, but need a sanity check
-		MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Sending RFRECV", NULL);
+		MW_LOG_DEBUG(MW_LOG_NETWORKSERIAL, "Sending RFRECV", NULL);
 		//first, send RFRECV
 		uint8_t data[] = {(uint8_t) (6 + len), (uint8_t) m_currentMsg->seq, NS_CODE, NS_SUBCODE_RFRECV, src, port, len};
 		m_adapter->writeMessage(sizeof(data), data, false);
@@ -256,14 +252,14 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 		if ( m_adapter->waitForBytes(6, SerialMessageAdapter::TIMEOUT_RESPONSE) )  {
 			m_lastSerialMsgLen = m_adapter->readByte();
 			uint8_t seq = m_adapter->readByte();
-			MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Response to RFRECV, SERSEQ=%d", seq);
+			MW_LOG_DEBUG(MW_LOG_NETWORKSERIAL, "Response to RFRECV, SERSEQ=%d", seq);
 			if ( m_currentMsg->seq == seq ) {
 				m_adapter->readByte();//read major code
 				uint8_t code = m_adapter->readByte();//read sub-code
 
 				if ( code == NS_SUBCODE_RFRECVACK ) {
 					int16_t reslen = m_adapter->readByte();
-					MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Response to RFRECV, reslen=%d", reslen);
+					MW_LOG_DEBUG(MW_LOG_NETWORKSERIAL, "Response to RFRECV, reslen=%d", reslen);
 					if ( reslen >=0 && ((size_t) reslen <= lenACK) && m_adapter->waitForBytes(reslen, SerialMessageAdapter::TIMEOUT_RESPONSE) ) {
 						for ( int16_t i = 0; i < reslen; i ++ )
 							((char*) bufACK)[i] = m_adapter->readByte();
@@ -271,17 +267,17 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 						//m_adapter->respondWCode(m_currentMsg, SerialMessageAdapter::SM_SUBCODE_OK);
 						bytes = reslen;
 					} else {
-						MW_LOG_ERROR(LOG_NETWORKSERIAL, "Response to RFRECV, ERROR_TOO_LONG_DATA", NULL);
+						MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Response to RFRECV, ERROR_TOO_LONG_DATA", NULL);
 						//The other side does not expect a reply here, so response must not be sent
 						//m_adapter->respondNOK(m_currentMsg, ERROR_TOO_LONG_DATA);
 					}
 				} else {
-					MW_LOG_ERROR(LOG_NETWORKSERIAL, "Wrong response code received to RFRECV: %d", code);
+					MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Wrong response code received to RFRECV: %d", code);
 					//The other side does not expect a reply here, so response must not be sent
 					//m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_GENERAL);
 				}
 			} else {
-				MW_LOG_ERROR(LOG_NETWORKSERIAL, "Response to RFRECV, serial seq WRONG", NULL);
+				MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Response to RFRECV, serial seq WRONG", NULL);
 				//The other side does not expect a reply here, so response must not be sent
 				//m_adapter->respondNOK(m_currentMsg, ERROR_SEQUENCE_MISMATCH);
 			}
@@ -289,7 +285,7 @@ int Meshwork::L3::NetworkV1::NetworkSerial::returnACKPayload(uint8_t src, uint8_
 			//we read out the message fully at the end here
 			m_adapter->readRemainingMessageBytes();
 		} else {
-			MW_LOG_ERROR(LOG_NETWORKSERIAL, "Response to RFRECV, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
+			MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Response to RFRECV, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA", NULL);
 			m_adapter->respondNOK(m_currentMsg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 		}
 	} else {
@@ -305,14 +301,14 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(SerialMessage
 						   (uint32_t) m_adapter->readByte() << 16 |
 						   (uint32_t) m_adapter->readByte() << 8 |
 						   (uint32_t) m_adapter->readByte();
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "Receiving with timeout=%l", timeout);
+		MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Receiving with timeout=%l", timeout);
 
 		//not needed here:
 		//m_currentMsg = msg;
 
 		int res = m_network->recv(m_lastMsgSrc, m_lastMsgPort, &m_lastMsgData, m_lastMsgLen, timeout, this);
 
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "Receive done. SerResult=%d, Src=%d, Port=%d", res, m_lastMsgSrc, m_lastMsgPort);
+		MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Receive done. SerResult=%d, Src=%d, Port=%d", res, m_lastMsgSrc, m_lastMsgPort);
 
 		//not needed here:
 		//m_currentMsg = NULL;
@@ -329,7 +325,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(SerialMessage
 			m_adapter->respondNOK(msg, res);
 		}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Start Recv", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough data in Start Recv", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
@@ -337,16 +333,16 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFStartRecv(SerialMessage
 
 uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(SerialMessageAdapter::serialmsg_t* msg) {
 	bool result = false;
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "Entered", NULL);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Entered", NULL);
 	uint16_t dst = m_adapter->readByte();
 	uint16_t port = m_adapter->readByte();
 	uint16_t datalen = m_adapter->readByte();
 	uint8_t indata[datalen];
 
 	if ( m_adapter->waitForBytes(datalen, SerialMessageAdapter::TIMEOUT_RESPONSE) ) {//minimal msg len
-		MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
+		MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Dst=%d, Port=%d, DataLen=%d", msg->seq, dst, port, datalen);
 
-		MW_LOG_DEBUG(LOG_NETWORKSERIAL, "Reading data to send...", NULL);
+		MW_LOG_DEBUG(MW_LOG_NETWORKSERIAL, "Reading data to send...", NULL);
 		for ( uint8_t i = 0; i < datalen; i ++ )//ok, this can be optimized
 			indata[i] = (uint8_t) m_adapter->readByte();
 
@@ -355,25 +351,25 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(SerialMessageAdapt
 
 		size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
 
-		MW_LOG_DEBUG_ARRAY(LOG_NETWORKSERIAL, PSTR("Sending data: "), indata, datalen);
+		MW_LOG_DEBUG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Sending data: "), indata, datalen);
 
 		int res = m_network->send(dst, port, indata, datalen, m_lastAckData, maxACKLen);
 
 		if ( res == Meshwork::L3::Network::OK ) {
-			MW_LOG_INFO(LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, maxACKLen);
+			MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, maxACKLen);
 			//TODO ??? check why m_lastAckData always has zeros
-			MW_LOG_DEBUG_ARRAY(LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, maxACKLen);
+			MW_LOG_DEBUG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, maxACKLen);
 
 			uint8_t data[] = {(uint8_t) (4 + maxACKLen), (uint8_t) msg->seq, NS_CODE, NS_SUBCODE_RFSENDACK, (uint8_t) maxACKLen};
 			m_adapter->writeMessage(sizeof(data), data, false);
 			m_adapter->writeMessage(maxACKLen, m_lastAckData, true);
 			result = true;
 		} else {
-			MW_LOG_INFO(LOG_NETWORKSERIAL, "Send error. Code=%d", res);
+			MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Send error. Code=%d", res);
 			m_adapter->respondNOK(msg, NetworkSerial::NS_NOK_SEND);
 		}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data in Send", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough data in Send", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;
@@ -385,7 +381,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(SerialMessage
 	uint16_t datalen = m_adapter->readByte();
 	uint8_t indata[datalen];
 
-	MW_LOG_INFO(LOG_NETWORKSERIAL, "SERSEQ=%d, Port=%d, DataLen=%d", msg->seq, port, datalen);
+	MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "SERSEQ=%d, Port=%d, DataLen=%d", msg->seq, port, datalen);
 
 	if ( m_adapter->waitForBytes(datalen, SerialMessageAdapter::TIMEOUT_RESPONSE) ) {
 		for ( uint16_t i = 0; i < datalen; i ++ )//ok, this can be optimized
@@ -400,7 +396,7 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFBroadcast(SerialMessage
 			m_adapter->respondNOK(msg, NS_NOK_BCAST);
 		}
 	} else {
-		MW_LOG_ERROR(LOG_NETWORKSERIAL, "Not enough data to send in Broadcast", NULL);
+		MW_LOG_ERROR(MW_LOG_NETWORKSERIAL, "Not enough data to send in Broadcast", NULL);
 		m_adapter->respondNOK(msg, SerialMessageAdapter::SM_NOK_INSUFFICIENT_DATA);
 	}
 	return result ? SerialMessageAdapter::SM_MESSAGE_PROCESSED : SerialMessageAdapter::SM_MESSAGE_ERROR;

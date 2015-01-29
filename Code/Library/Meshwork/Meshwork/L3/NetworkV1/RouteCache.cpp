@@ -26,10 +26,6 @@
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 #include "Meshwork/L3/NetworkV1/RouteCache.h"
 
-#ifndef LOG_ROUTECACHE
-#define LOG_ROUTECACHE  true
-#endif
-
 using Meshwork::L3::NetworkV1::NetworkV1;
 using Meshwork::L3::NetworkV1::RouteCache;
 
