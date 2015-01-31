@@ -40,12 +40,12 @@ using namespace Meshwork::L3::NetworkV1;
 class ZeroConfPersistent: public ZeroConfSerial::ZeroConfListener {
 	
 	public:
-		struct zctype_configuration_t {
+		typedef struct {
 			ZeroConfSerial::zctype_sernum_t sernum;
 			ZeroConfSerial::zctype_reporting_t reporting;
 			ZeroConfSerial::zctype_nwkconfig_t nwkconfig;
 			ZeroConfSerial::zctype_devconfig_t devconfig;
-		};
+		} zctype_configuration_t;
 
 		//Formatted EEPROM marker len
 		static const uint8_t ZC_INIT_EEPROM_MARKER_LEN 		= 1;

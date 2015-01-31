@@ -27,8 +27,8 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
-#ifndef LOG_ROUTECACHE
-	#define LOG_ROUTECACHE		MW_FULL_DEBUG
+#ifndef MW_LOG_ROUTECACHE
+	#define MW_LOG_ROUTECACHE		MW_FULL_DEBUG
 #endif
 
 using Meshwork::L3::NetworkV1::NetworkV1;
@@ -98,13 +98,15 @@ namespace Meshwork {
 				
 				int8_t normalize_QoS(int8_t qos);
 
+				void remove_all(bool notify);
+
 			public:
 				
 				RouteCache(RouteCacheListener* listener):
 					m_route_cache_listener(listener)
 				{
-					//make sure we start clean
-					remove_all();
+					//make sure we start with initialized fields
+					remove_all(false);
 				};
 				
 

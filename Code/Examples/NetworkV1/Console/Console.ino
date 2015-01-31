@@ -21,10 +21,12 @@
 #ifndef __EXAMPLES_CONSOLE_H__
 #define __EXAMPLES_CONSOLE_H__
 
-#define __ARDUINO_MEGA__
-#define MW_LOG_ALL_ENABLE true
-#define MW_LOG_DEBUG_ENABLE true
-#define LOG_NETWORKV1  true
+#include <MeshworkConfiguration.h>
+//Select your RF chip. Currently, only NRF24L01P is supported
+#define MW_RF_SELECT 				MW_RF_NRF24L01P
+
+//Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
+#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_NONE
 
 #include <stdlib.h>
 #include <Cosa/Trace.hh>
@@ -35,12 +37,10 @@
 #include <Cosa/RTC.hh>
 #include <Cosa/Wireless.hh>
 
-//BEGIN: Include set for initializing the network
 #include <Meshwork.h>
 #include <Meshwork/L3/Network.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.h>
 #include <Meshwork/L3/NetworkV1/NetworkV1.cpp>
-//END: Include set for initializing the network
 
 #include "Utils/LineReader.h"
 
@@ -48,61 +48,29 @@
 #define LOG_CONSOLE  true
 #endif
 
-// Select Wireless device driver
-// #include "Cosa/Wireless/Driver/CC1101.hh"
-// CC1101 rf(0xC05A, 0x01);
-
 #include "Cosa/Wireless/Driver/NRF24L01P.hh"
-//NRF24L01P rf(0xC05A, 0x01);
 
 #include "StaticACKProvider.h"
 #include "StaticRouteProvider.h"
 
-//#define RBBB
 
-//RBBB
-#if defined (RBBB)
-#define BOARD_VARIANT	PSTR("RBBB")
-NRF24L01P rf(0x0001, 0x01,
-	    Board::DigitalPin(Board::D7), 
-	    Board::DigitalPin(Board::D8), 
-	    Board::ExternalInterruptPin(Board::EXT0));
-#else
-
-//Mega
-#if defined (__ARDUINO_MEGA__)
-#define BOARD_VARIANT	2
-NRF24L01P rf(0x0001, 0x01,
-	    Board::DigitalPin(Board::D53), 
-	    Board::DigitalPin(Board::D48), 
-	    Board::ExternalInterruptPin(Board::EXT2));
-
-//Mini Pro or Nano
-#else
-#define BOARD_VARIANT	PSTR("Mini/Nano")
-NRF24L01P rf(0x0001, 0x01,
-	    Board::DigitalPin(Board::D10), 
-	    Board::DigitalPin(Board::D3), 
-	    Board::ExternalInterruptPin(Board::EXT0));
-#endif
-
-#endif
+MW_DECL_NRF24L01P(rf)
 
 StaticRouteProvider advisor;
-Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, &advisor);
+Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, NULL);//&advisor);
 LineReader<64> console(&uart);
 StaticACKProvider ackProvider;
 
 void setup()
 {
 
-  uart.begin(9600);
-
   Watchdog::begin();
   RTC::begin();
 
+  uart.begin(115200);
+
   trace.begin(&uart, PSTR("Interactive Serial Console: started"));
-  trace << PSTR("Board: ") << BOARD_VARIANT;
+  trace << PSTR("Board: ") << MW_BOARD_SELECT;
   trace.println();
 }
 

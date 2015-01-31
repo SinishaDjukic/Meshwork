@@ -21,24 +21,31 @@
 #ifndef __EXAMPLES_CONFIG_H__
 #define __EXAMPLES_CONFIG_H__
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////// SECTION: BUILD-TIME CONFIGURATION //////////////////////////////
-////////////////////////// ~feel free to edit and adapt to your needs~ /////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+/////////////////////// SECTION: BUILD-TIME CONFIGURATION /////////////////////
+////////////////// ~feel free to edit and adapt to your needs~ ////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 //Select your RF chip. Currently, only NRF24L01P is supported
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
-#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_PERSISTENT
+#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 
 //Enable/disable LED tracing for RF messages
-#define EX_LED_TRACING		true
+#define EX_LED_TRACING		false
+
 #if EX_LED_TRACING
 	#define EX_LED_TRACING_SEND	Board::D4
 	#define EX_LED_TRACING_RECV	Board::D5
 	#define EX_LED_TRACING_ACK	Board::D6
 	#define EX_LED_BOOTUP		Board::LED
+
+	//Defines a delay (slowness) factor if LED tracing is enabled
+	//Increase the delay factory multiplier to give more blink time for LEDs
+	#define MW_DELAY_FACTOR	5
+	//Enable NetworkV1::RadioListener in the code
+	#define MW_SUPPORT_RADIO_LISTENER	true
 #endif
 
 //Allows us to change the serial number at any time, opposed to only once
@@ -61,17 +68,9 @@
 #define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
 
 //Incoming connection timeout for serial autoconfig init
-#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 30000 : 5000)
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 5000)
 
 //Timeout after last incoming serial autoconfig message before autodeinit
-#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 30000 : 1000)
-
-//Defines a delay (slowness) factor if LED tracing is enabled
-#if EX_LED_TRACING
-	//Note: increase the delay factory multiplier to give more blink time for LEDs
-	#define MW_DELAY_FACTOR	5
-	//Enable NetworkV1::RadioListener in the code
-	#define MW_SUPPORT_RADIO_LISTENER	true
-#endif
+#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 10000 : 1000)
 
 #endif

@@ -29,16 +29,14 @@
 //Select your RF chip. Currently, only NRF24L01P is supported
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
 
-//Network configuration is hardcoded here
-#define EX_NODE_NWK_ID				1
-#define EX_NODE_CHANNEL_ID			0
-#define EX_NODE_ID					200
+//Beacon message interval (ms)
+#define EX_BEACON_INTERVAL			1000
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
 #define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 
 //Enable/disable LED tracing for RF messages
-#define EX_LED_TRACING		true
+#define EX_LED_TRACING		false
 
 #if EX_LED_TRACING
 	#define EX_LED_TRACING_SEND	Board::D4
@@ -48,10 +46,16 @@
 
 	//Defines a delay (slowness) factor if LED tracing is enabled
 	//Increase the delay factory multiplier to give more blink time for LEDs
-	#define MW_DELAY_FACTOR	5
+	#define MW_DELAY_FACTOR				5
 	//Enable NetworkV1::RadioListener in the code
 	#define MW_SUPPORT_RADIO_LISTENER	true
 #endif
+
+//Allows us to change the serial number at any time, opposed to only once
+#define ZEROCONF_SERIAL_CHANGE_ENABLE	true
+
+//Offset for storing ZC device configuration in the EEPROM
+#define EX_ZC_CONFIGURATION_EEPROM_OFFSET  64
 
 //Offset for storing Route Cache table in the EEPROM
 #define EX_ROUTECACHE_TABLE_EEPROM_OFFSET 128
@@ -61,6 +65,15 @@
 //#define MW_FULL_DEBUG	true
 
 //Our sketch's own debug
-#define EX_LOG_ROUTER	MW_FULL_DEBUG
+#define EX_LOG_ZEROCONFBEACON		MW_FULL_DEBUG
+
+//Timeout for arrival of new serial messages
+#define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
+
+//Incoming connection timeout for serial autoconfig init
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 5000)
+
+//Timeout after last incoming serial autoconfig message before autodeinit
+#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 10000 : 1000)
 
 #endif

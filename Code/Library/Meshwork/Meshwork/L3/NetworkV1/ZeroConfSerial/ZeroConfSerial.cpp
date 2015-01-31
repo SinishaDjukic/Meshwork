@@ -38,7 +38,7 @@ using namespace Meshwork::L3::NetworkV1;
 uint8_t ZeroConfSerial::processZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = true;
 	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
-	bool result = m_network == NULL ? false : m_network->end();
+	bool result = m_network == NULL ? false : true;//m_network->end();//temporarily commented out
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
@@ -49,7 +49,7 @@ uint8_t ZeroConfSerial::processZCInit(SerialMessageAdapter::serialmsg_t* msg) {
 uint8_t ZeroConfSerial::processZCDeinit(SerialMessageAdapter::serialmsg_t* msg) {
 	m_initmode = false;
 	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d", msg->seq);
-	bool result = m_network == NULL ? false : m_network->begin();
+	bool result = m_network == NULL ? false : true;//m_network->begin();//temporarily commented out
 	if ( result )
 		m_adapter->respondWCode(msg, SerialMessageAdapter::SM_SUBCODE_OK);
 	else
@@ -201,7 +201,7 @@ uint8_t ZeroConfSerial::processZCSerialCfg(SerialMessageAdapter::serialmsg_t* ms
 uint8_t ZeroConfSerial::processZCRepReq(SerialMessageAdapter::serialmsg_t* msg) {
 	if (!checkZCInit(msg) )
 		return SerialMessageAdapter::SM_MESSAGE_ERROR;
-	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", m_reporting->targetnodeid, m_reporting->repflags);
+	MW_LOG_INFO(MW_LOG_ZEROCONFSERIAL, "SERSEQ=%d, TargetNodeID=%d, RepFlags=%d", msg->seq, m_reporting->targetnodeid, m_reporting->repflags);
 	uint8_t data[] = {5, (uint8_t) msg->seq, ZC_CODE, ZC_SUBCODE_ZCREPRES, m_reporting->targetnodeid, m_reporting->repflags};
 	m_adapter->writeMessage(sizeof(data), data, true);
 	return SerialMessageAdapter::SM_MESSAGE_PROCESSED;

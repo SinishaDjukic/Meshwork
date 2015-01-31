@@ -94,30 +94,30 @@ namespace Meshwork {
 				
 				static const uint8_t MAX_SERIAL_LEN 			= 16;
 				
-				struct zctype_sernum_t {
+				typedef struct {
 					uint8_t sernumlen;
 					char sernum[MAX_SERIAL_LEN];
-				};
+				} zctype_sernum_t;
 
-				struct zctype_devconfig_t {
+				typedef struct {
 					//dev config flags
 					uint8_t m_nwkcaps;
 					uint8_t m_delivery;
-				};
+				} zctype_devconfig_t;
 
 
-				struct zctype_reporting_t {
+				typedef struct  {
 					uint8_t targetnodeid;
 					uint8_t repflags;
-				};
+				} zctype_reporting_t;
 
-				struct zctype_nwkconfig_t {
+				typedef struct  {
 					uint8_t channel;
 					uint16_t nwkid;
 					uint8_t nodeid;
 					uint8_t nwkkeylen;
 					char nwkkey[Network::MAX_NETWORK_KEY_LEN];
-				};
+				} zctype_nwkconfig_t;
 
 			public:
 				

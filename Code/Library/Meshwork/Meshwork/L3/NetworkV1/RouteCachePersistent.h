@@ -81,8 +81,6 @@ namespace Meshwork {
 					m_eeprom(eeprom),
 					m_eeprom_offset(eeprom_offset)
 				{
-					init();
-					read_routes();
 				};
 				
 				void init() {
@@ -120,6 +118,10 @@ namespace Meshwork {
 								
 							}
 						}
+					if ( MW_LOG_ROUTECACHEPERSISTENT ) {
+						MW_LOG_DEBUG(MW_LOG_ROUTECACHEPERSISTENT, "Routes read from EEPROM:", NULL);
+						print(trace);
+					}
 				}
 
 				void route_entry_change(RouteCache* route_cache,

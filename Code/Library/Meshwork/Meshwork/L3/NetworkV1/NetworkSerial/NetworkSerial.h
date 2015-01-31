@@ -35,6 +35,8 @@
 	#define MW_LOG_NETWORKSERIAL	MW_FULL_DEBUG
 #endif
 
+using namespace Meshwork::L3::NetworkV1;
+
 /*
 	LEN | SEQ | MSG
 	MSG = MSGCODE | MSGSUBCODE | MSGDATA

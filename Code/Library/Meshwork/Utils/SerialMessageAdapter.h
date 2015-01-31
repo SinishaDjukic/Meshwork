@@ -58,7 +58,7 @@ class SerialMessageAdapter {
 		//Default message response timeout (ms)
 		static const uint16_t TIMEOUT_RESPONSE 			= 5000;
 
-		struct serialmsg_t {
+		typedef struct {
 			//these are actually uint8_t
 			//but we need two bytes to handle
 			//negative EOF and buffer len overrun codes
@@ -66,7 +66,7 @@ class SerialMessageAdapter {
 			uint16_t code;
 			uint16_t subcode;
 			uint16_t seq;
-		};
+		} serialmsg_t;
 
     	class SerialMessageListener {
     		public:

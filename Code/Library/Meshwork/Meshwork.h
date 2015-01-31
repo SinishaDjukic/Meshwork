@@ -174,4 +174,19 @@ namespace Meshwork {
 			Meshwork::L3::NetworkV1::CachingRouteProvider::UPDATE_REPLACE_ON_QOS_WORST);				\
 	Meshwork::L3::NetworkV1::NetworkV1::RouteProvider* routeprovider = &p_routeprovider;
 
+//Don't forget to include before using:
+//#include <Cosa/OutputPin.hh>
+//#include <Utils/LEDTracing.h>
+#define MW_DECL_LEDTRACING(ledTracing, mesh, send, recv, ack)			\
+		OutputPin pin_send_##ledTracing(send);							\
+		OutputPin pin_recv_##ledTracing(recv);							\
+		OutputPin pin_ack_##ledTracing(ack);							\
+		LEDTracing ledTracing(&mesh, &pin_send_##ledTracing, &pin_recv_##ledTracing, &pin_ack_##ledTracing);
+
+//Don't forget to include before using:
+//#include <Meshwork/L3/NetworkV1/ZeroConfSerial/ZeroConfPersistent.h>
+#define MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, eepromoffset)				\
+		ZeroConfPersistent::zctype_configuration_t zeroConfConfiguration;											\
+		ZeroConfPersistent zeroConfPersistent(&eeprom, &zeroConfConfiguration, eepromoffset);
+
 #endif

@@ -304,7 +304,7 @@ namespace Meshwork {
 			//convenience broadcast method
 			virtual int broadcast(uint8_t port, const void* buf, size_t len) {
 				size_t none = 0;
-				return send(Wireless::Driver::BROADCAST, port, buf, len, NULL, none);
+				return send(DELIVERY_DIRECT, m_retry, Wireless::Driver::BROADCAST, port, buf, len, NULL, none);
 			}
 
 			//main recv method

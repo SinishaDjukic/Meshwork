@@ -32,9 +32,9 @@
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////// SECTION: INCLUDES AND USES //////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+////////////////////////// SECTION: INCLUDES AND USES /////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
 #include <Cosa/EEPROM.hh>
@@ -68,9 +68,9 @@
 
 using namespace Meshwork::L3::NetworkV1;
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////// SECTION: MEMBER DECLARATION /////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+////////////////////////// SECTION: MEMBER DECLARATION ////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 //RF and Mesh
 MW_DECL_NRF24L01P(rf)
@@ -78,11 +78,8 @@ MW_DECL_NRF24L01P(rf)
 NetworkV1 mesh(&rf, NULL, NetworkV1::NWKCAPS_ROUTER | NetworkV1::NWKCAPS_GATEWAY | NetworkV1::NWKCAPS_CONTROLLER);
 
 //Tracing LEDs
-#ifdef EX_LED_TRACING
-	OutputPin pin_send(EX_LED_TRACING_SEND);
-	OutputPin pin_recv(EX_LED_TRACING_RECV);
-	OutputPin pin_ack(EX_LED_TRACING_ACK);
-	LEDTracing ledTracing(&mesh, &pin_send, &pin_recv, &pin_ack);
+#if EX_LED_TRACING
+	MW_DECL_LEDTRACING(ledTracing, mesh, EX_LED_TRACING_SEND, EX_LED_TRACING_RECV, EX_LED_TRACING_ACK)
 #endif
 
 //Setup extra UART on Mega
@@ -103,9 +100,9 @@ NetworkV1 mesh(&rf, NULL, NetworkV1::NWKCAPS_ROUTER | NetworkV1::NWKCAPS_GATEWAY
 NetworkSerial networkSerial(&mesh, &serialMessageAdapter);
 SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////// SECTION: BUSINESS LOGIC/CODE ////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+////////////////////////// SECTION: BUSINESS LOGIC/CODE ///////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 //Setup sequence
 void setup()
@@ -114,25 +111,25 @@ void setup()
 	Watchdog::begin();
 	RTC::begin();
 
-	serialMessageListeners[0] = (SerialMessageAdapter::SerialMessageListener*) &serialMessageAdapter;
-	serialMessageAdapter.setListeners(serialMessageListeners);
-
 	uart.begin(115200);
 
 //Trace debugs only supported on Mega, since it has extra UARTs
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
-  trace.begin(&uart, NULL);
-  trace << PSTR("Serial Router: started") << endl;
-  uartHC.begin(115200);
+	  trace.begin(&uart, NULL);
+	  trace << PSTR("Serial Router: started") << endl;
+	  uartHC.begin(115200);
 #else
-  trace.begin(&null_device, NULL);
+	  trace.begin(&null_device, NULL);
 #endif
 
-#ifdef LED_TRACING
-  mesh.set_radio_listener(&ledTracing);
+#if LED_TRACING
+	  mesh.set_radio_listener(&ledTracing);
 #endif
 
-  networkSerial.initSerial();
+	serialMessageListeners[0] = (SerialMessageAdapter::SerialMessageListener*) &serialMessageAdapter;
+	serialMessageAdapter.setListeners(serialMessageListeners);
+
+	networkSerial.initSerial();
 }
 
 SerialMessageAdapter::serialmsg_t msg;

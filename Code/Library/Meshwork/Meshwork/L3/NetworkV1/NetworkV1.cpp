@@ -99,9 +99,9 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	MW_LOG_DEBUG_VP_BYTES(MW_LOG_NETWORKV1, PSTR("L2 DATA TO SEND: "), toSend);
 	
 	for (int i = 0; i < attempts; i ++) {
-		#if MW_SUPPORT_DELIVERY_FLOOD
+#if MW_SUPPORT_DELIVERY_FLOOD
 			bool oneFloodACK = false;
-		#endif
+#endif
 
 		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, port, msg);
 
@@ -237,6 +237,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 			break;
 		}
 	}
+
 	if ( ack !=0 ) {
 		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_ACK_END(&reply_msg, result);
 	}
@@ -703,10 +704,13 @@ bool Meshwork::L3::NetworkV1::NetworkV1::begin(const void* config) {
 	if ( m_advisor != NULL && m_driver != NULL ) {
 		m_advisor->set_address(m_driver->get_device_address());
 	}
+	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkID=%d, NodeID=%d, NwkKeyLen=%d, NwkKeyPtr=d", getNetworkID(), getNodeID(), getNetworkKeyLen(), getNetworkKey());
+	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkChannel=%d, NwkCaps=%d, Delivery=%d", getChannel(), getNetworkCaps(), getDelivery());
 	return m_driver == NULL ? false : m_driver->begin();
 }
 
 bool Meshwork::L3::NetworkV1::NetworkV1::end() {
+	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[End]", NULL);
 	return m_driver == NULL ? false : m_driver->end();
 }
 #endif
