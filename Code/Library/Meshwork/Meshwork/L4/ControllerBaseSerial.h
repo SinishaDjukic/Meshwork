@@ -62,13 +62,13 @@ namespace Meshwork {
 			};
 			
 		protected:
-			ControllerBase* m_controllerBase;
 			SerialMessageAdapter* m_adapter;
+			ControllerBase* m_controllerBase;
 			
-			virtual bool processSetModeAnnounce(SerialMessageAdapter::serialmsg_t* msg);
-			virtual bool processGetNodeList(SerialMessageAdapter::serialmsg_t* msg);
-			virtual bool processAddNode(SerialMessageAdapter::serialmsg_t* msg);
-			virtual bool processRemoveNode(SerialMessageAdapter::serialmsg_t* msg);
+			virtual bool processSetModeAnnounce(SerialMessageAdapter::serialmsg_t* msg) = 0;
+			virtual bool processGetNodeList(SerialMessageAdapter::serialmsg_t* msg) = 0;
+			virtual bool processAddNode(SerialMessageAdapter::serialmsg_t* msg) = 0;
+			virtual bool processRemoveNode(SerialMessageAdapter::serialmsg_t* msg) = 0;
 
 		public:
 			ControllerBaseSerial(Meshwork::L3::Network* network, SerialMessageAdapter* adapter, ControllerBase* controllerBase):
@@ -77,7 +77,7 @@ namespace Meshwork {
 				m_controllerBase(controllerBase)
 			{ }
 			
-			virtual bool processOneMessageEx(SerialMessageAdapter::serialmsg_t* msg);
+			virtual bool processOneMessageEx(SerialMessageAdapter::serialmsg_t* msg) = 0;
 			
 		};
 	};
