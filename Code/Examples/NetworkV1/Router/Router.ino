@@ -58,7 +58,8 @@
 #endif
 
 #if ( MW_RF_SELECT == MW_RF_NRF24L01P )
-	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.cpp>
 #endif
 
 #if ( ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_RAM ) || ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT ) )
@@ -120,7 +121,7 @@ void setup()
 	mesh.setChannel(EX_NODE_CHANNEL_ID);
 	mesh.setNodeID(EX_NODE_ID);
 	
-	mesh.begin();
+	ASSERT(mesh.begin());
 }
 
 //Receive RF messages loop
@@ -132,7 +133,7 @@ void run_recv() {
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
-	while (true) {
+	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
 		if ( result != -1 ) {
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
@@ -140,8 +141,7 @@ void run_recv() {
 			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 		}
-		if ( RTC::since(start) >= duration )
-			break;
+		duration -= RTC::since(start);
 	} 
 	
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: done\n");

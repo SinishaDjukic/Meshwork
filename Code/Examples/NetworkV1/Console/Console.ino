@@ -48,7 +48,8 @@
 #define LOG_CONSOLE  true
 #endif
 
-#include "Cosa/Wireless/Driver/NRF24L01P.hh"
+#include <NRF24L01P/NRF24L01P.hh>
+#include <NRF24L01P/NRF24L01P.cpp>
 
 #include "StaticACKProvider.h"
 #include "StaticRouteProvider.h"
@@ -216,7 +217,7 @@ void run_recv() {
 	trace << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
-	while (true) {
+	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, &ackProvider);
 		if ( result != -1 ) {
 			trace << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
@@ -224,8 +225,7 @@ void run_recv() {
 			MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			trace.println();
 		}
-		if ( RTC::since(start) >= duration )
-			break;
+		duration -= RTC::since(start);
 	} 
 	
 	trace << PSTR("RECV: done\n");

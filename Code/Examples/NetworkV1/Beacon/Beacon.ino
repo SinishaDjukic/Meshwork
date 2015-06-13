@@ -58,7 +58,8 @@
 #endif
 
 #if ( MW_RF_SELECT == MW_RF_NRF24L01P )
-	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.cpp>
 #endif
 
 #if ( ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_RAM ) || ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT ) )
@@ -126,7 +127,7 @@ void setup()
 	mesh.setChannel(EX_NODE_CHANNEL_ID);
 	mesh.setNodeID(EX_NODE_ID);
 	
-	mesh.begin();
+	ASSERT(mesh.begin());
 }
 
 //Main loop

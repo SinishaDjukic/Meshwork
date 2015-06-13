@@ -42,6 +42,7 @@
 #endif
 			
 bool Meshwork::L4::ControllerBaseSerial::processSetModeAnnounce(SerialMessageAdapter::serialmsg_t* msg) {
+	UNUSED(msg);
 	bool result = false;
 //	if ( m_adapter->waitForBytes(sizeof(data_setmodeann_t), SerialMessageAdapter::TIMEOUT_RESPONSE) ) {
 //		data_setmodeann_t* setmodeann;
@@ -64,6 +65,7 @@ bool Meshwork::L4::ControllerBaseSerial::processSetModeAnnounce(SerialMessageAda
 }
 
 bool Meshwork::L4::ControllerBaseSerial::processGetNodeList(SerialMessageAdapter::serialmsg_t* msg) {
+	UNUSED(msg);
 //	BitSet<Meshwork::L3::Network::MAX_NODE_COUNT> nodeList;
 //	m_controllerBase->getNodeList(&nodeList);
 //	uint8_t nodeCount = 0;
@@ -80,6 +82,7 @@ bool Meshwork::L4::ControllerBaseSerial::processGetNodeList(SerialMessageAdapter
 }
 
 bool Meshwork::L4::ControllerBaseSerial::processAddNode(SerialMessageAdapter::serialmsg_t* msg) {
+	UNUSED(msg);
 	bool result = false;
 //	if ( m_serial->available() >= 1 ) {
 //		uint8_t desiredID = m_serial->getchar();
@@ -98,6 +101,7 @@ bool Meshwork::L4::ControllerBaseSerial::processAddNode(SerialMessageAdapter::se
 }
 
 bool Meshwork::L4::ControllerBaseSerial::processRemoveNode(SerialMessageAdapter::serialmsg_t* msg) {
+	UNUSED(msg);
 	bool result = false;
 //	if ( m_serial->available() >= 1 ) {
 //		uint8_t nodeID = m_serial->getchar();
@@ -116,6 +120,7 @@ bool Meshwork::L4::ControllerBaseSerial::processRemoveNode(SerialMessageAdapter:
 
 
 bool Meshwork::L4::ControllerBaseSerial::processOneMessageEx(SerialMessageAdapter::serialmsg_t* msg) {
+	UNUSED(msg);
 	bool result = true;
 //	switch ( msg->subcode ) {
 //		case CS_SUBCODE_SET_MODE_ANN: processSetModeAnnounce(msg); break;

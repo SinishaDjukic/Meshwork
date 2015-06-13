@@ -57,7 +57,8 @@
 #endif
 
 #if ( MW_RF_SELECT == MW_RF_NRF24L01P )
-	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.cpp>
 #endif
 
 #include <Utils/SerialMessageAdapter.h>

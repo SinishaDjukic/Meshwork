@@ -32,13 +32,13 @@
 //Network configuration is hardcoded here
 #define EX_NODE_NWK_ID				1
 #define EX_NODE_CHANNEL_ID			0
-#define EX_NODE_ID					200
+#define EX_NODE_ID					1
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
 #define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 
 //Enable/disable LED tracing for RF messages
-#define EX_LED_TRACING		true
+#define EX_LED_TRACING		false
 
 #if EX_LED_TRACING
 	#define EX_LED_TRACING_SEND	Board::D4

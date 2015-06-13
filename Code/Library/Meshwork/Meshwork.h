@@ -98,18 +98,18 @@ namespace Meshwork {
   
 #define MW_LOG_DEBUG_ARRAY(file_enable, msg, array, len)							\
   if (file_enable && MW_LOG_DEBUG_ENABLE) do {									\
-    trace.print_P(msg);					\
+    trace << msg;					\
     MW_LOG_ARRAY_BYTES(file_enable, array, len); \
 	trace << PSTR("\n"); \
   } while (0)
 
 #define	MW_LOG_DEBUG_VP_BYTES(file_enable, msg, msgvp) \
-	if (file_enable && MW_LOG_DEBUG_ENABLE) { \
-      trace.print_P(msg);					\
+	if (file_enable && MW_LOG_DEBUG_ENABLE) do { \
+      trace << msg;					\
 	  for (const iovec_t* vp = msgvp; vp->buf != 0; vp++) \
 		MW_LOG_ARRAY_BYTES(file_enable, (const void*)vp->buf, (uint8_t) vp->size); \
 	  trace << PSTR("\n"); \
-	}
+	} while (0)
 	
 #define MW_MACRO_VALUE_TO_STRING(x) 	#x
 #define MW_MACRO_VALUE(x) 				MW_MACRO_VALUE_TO_STRING(x)

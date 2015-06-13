@@ -382,6 +382,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 		univmsg_t send_msg;
 		send_msg.nwk_ctrl.seq = seq;
 
+		//TODO If RouteCache is supported and DELIVERY_ROUTED is set - fist check if Last Working Route is present for the destination node before other options
+
 		//try all set delivery methods, starting from LSB
 		if (deliv & DELIVERY_DIRECT) {
 			MW_LOG_INFO(MW_LOG_NETWORKV1, "Send DIRECT", NULL);
@@ -512,6 +514,8 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 //	srcA = src;
 //	portA = port;
 	
+	//TODO Update Last Working Route per node in RouteCache when receiving messages from any node
+
 	if (result > 0) { //not timeouted, no crc error
 		MW_LOG_INFO(MW_LOG_NETWORKV1, "Received data, len: %d", result);
 		MW_LOG_DEBUG(MW_LOG_NETWORKV1, "src=%d, port=%d", src, port);

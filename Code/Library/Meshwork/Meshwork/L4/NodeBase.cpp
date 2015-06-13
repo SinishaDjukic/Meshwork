@@ -56,8 +56,8 @@ int Meshwork::L4::NodeBase::setModeRequest(uint8_t mode, uint32_t timeout) {
 	if ( mode != MODE_NORMAL && mode != MODE_ADDING && mode != MODE_REMOVING )
 		return ERROR_UNKNOWN_MODE;
 	uint8_t nodeID = m_network->getNodeID();
-	if ( mode == MODE_ADDING && nodeID != 0 ||
-			mode == MODE_REMOVING && nodeID == 0 )
+	if ( (mode == MODE_ADDING && nodeID != 0) ||
+			(mode == MODE_REMOVING && nodeID == 0) )
 		return ERROR_ILLEGAL_MODE;
 	return setModeRequestImpl(mode, timeout);
 }

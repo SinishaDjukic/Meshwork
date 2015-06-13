@@ -25,11 +25,14 @@
 #include "Cosa/Types.h"
 
 #include "Meshwork.h"
-#include "Meshwork/L7/Endpoint.h"
+
+//#include "Meshwork/L7/Endpoint.h"
 
 namespace Meshwork {
 
 	namespace L7 {
+
+		class Endpoint;
 
 		class Cluster {
 
@@ -45,7 +48,7 @@ namespace Meshwork {
 				}
 
 			public:
-				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, const Endpoint** endpoints):
+				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint** endpoints):
 					m_type(type),
 					m_subtype(subtype),
 					m_endpoint_count(endpoint_count),
@@ -68,6 +71,10 @@ namespace Meshwork {
 
 				Endpoint** getEndpoints() {
 					return m_endpoints;
+				}
+
+				Endpoint* getEndpoint(uint8_t index) {
+					return m_endpoints[index];
 				}
 
 				int16_t getEndpointIndex(Endpoint* endpoint) {

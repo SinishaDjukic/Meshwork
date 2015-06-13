@@ -1,4 +1,3 @@
-
 /**
  * This file is part of the Meshwork project.
  *
@@ -26,9 +25,13 @@
 
 #include "Meshwork.h"
 
+//#include "Meshwork/L7/Cluster.h"
+
 namespace Meshwork {
 
 	namespace L7 {
+
+		class Cluster;
 
 		class Endpoint {
 

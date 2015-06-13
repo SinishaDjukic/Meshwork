@@ -57,7 +57,8 @@
 #endif
 
 #if ( MW_RF_SELECT == MW_RF_NRF24L01P )
-	#include <Cosa/Wireless/Driver/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.hh>
+	#include <NRF24L01P/NRF24L01P.cpp>
 #endif
 
 #if ( ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_RAM ) || ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT ) )
@@ -224,7 +225,7 @@ void run_recv() {
 	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
 	uint32_t start = RTC::millis();
-	while (true) {
+	while (duration > 0) {
 		trace << endl;
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
 		if ( result == Meshwork::L3::Network::OK ) {
@@ -237,8 +238,7 @@ void run_recv() {
 		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
 		MW_LOG_INFO(EX_LOG_ZEROCONFROUTER, "[Statistics] Received=%d", msgcounter);
 		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
-		if ( RTC::since(start) >= duration )
-			break;
+		duration -= RTC::since(start);
 	} 
 	
 	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
