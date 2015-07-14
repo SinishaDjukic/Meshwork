@@ -32,6 +32,8 @@
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
 
+using Meshwork::L3::Network;
+
 bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t hopPort, iovec_t* vp, uint8_t attempts) {
 	MW_LOG_INFO(MW_LOG_NETWORKV1, "Send to: %d:%d", dest, hopPort);
 	int sendCode = -1;
@@ -73,7 +75,7 @@ bool Meshwork::L3::NetworkV1::NetworkV1::sendWithoutACK(uint8_t dest, uint8_t ho
 }
 
 //dest should be the next immediate hop
-int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t attemptsDelay,
+Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t attemptsDelay,
 						uint8_t ack, uint32_t ackTimeout,
 						uint8_t dest, uint8_t port,
 						univmsg_t* msg,
@@ -89,7 +91,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "returnRoute=%d, returnRouteSize=%d", returnRoute, returnRouteSize);
 #endif
 	
-	int result = ack != 0 ? ERROR_ACK_NOT_RECEIVED : 0;
+	msg_l3_status_t result = ack != 0 ? ERROR_ACK_NOT_RECEIVED : 0;
 	
 	iovec_t toSend[MAX_IOVEC_MSG_SIZE];
 	iovec_t* vp = toSend;
@@ -256,11 +258,11 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t attempts, uint16_t a
 	return result;
 }
 
-int Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider, univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort) {
+Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider, univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort) {
 	MW_LOG_INFO(MW_LOG_NETWORKV1, "Send to: %d:%d", hopSrc, hopPort);
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "ackProvider=%d, msg=%d, msq.seq=%d", ackProvider, msg, msg->nwk_ctrl.seq);
 	
-	int result = -1;
+	msg_l3_status_t result = -1;
 	univmsg_t reply_msg;
 	reply_msg.msg_direct.nwk_ctrl.seq = msg->nwk_ctrl.seq;
 	reply_msg.msg_direct.nwk_ctrl.delivery = DELIVERY_DIRECT | ACK;
@@ -298,11 +300,11 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshwork::L3::Network::ACK
 }
 
 #if MW_SUPPORT_DELIVERY_ROUTED
-int Meshwork::L3::NetworkV1::NetworkV1::sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider, univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort) {
+Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider, univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort) {
 	MW_LOG_INFO(MW_LOG_NETWORKV1, "Send to: hopSrc=%d, hopPort=%d", hopSrc, hopPort);
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "ackProvider=%d, msg=%d", ackProvider, msg);
 	
-	int result = OK;
+	msg_l3_status_t result = OK;
 	univmsg_t reply_msg;
 	reply_msg.msg_routed.nwk_ctrl.seq = msg->nwk_ctrl.seq;
 	reply_msg.msg_routed.nwk_ctrl.delivery = msg->nwk_ctrl.delivery | ACK;
@@ -364,14 +366,14 @@ int Meshwork::L3::NetworkV1::NetworkV1::sendRoutedACK(Meshwork::L3::Network::ACK
 }
 #endif
 
-int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
+Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 					uint8_t dest, uint8_t port,
 					const void* buf, size_t len,
 					void* bufACK, size_t& lenACK) {
 	MW_LOG_INFO(MW_LOG_NETWORKV1, "Send: %d:%d, len=%d", dest, port, len);
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "deliv=%d, retry=%d, buf=%d, bufACK=%d, lenACK=%d", delivery, retry, buf, bufACK, lenACK);
 	
-	int result = -1;
+	msg_l3_status_t result = -1;
 	if (len <= PAYLOAD_MAX) {
 		seq++;
 		MW_LOG_INFO(MW_LOG_NETWORKV1, "New SEQ=%d", seq);
@@ -497,7 +499,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delivery, uint8_t retry,
 
 
 //receive a new message and call ackProvider to provide ACK payload. ACKs are ignored, since they are handled within send
-int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
+Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 		void* newData, size_t& newDataLenMax,
 		uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider) {
 	MW_LOG_INFO(MW_LOG_NETWORKV1, "Recv: timeout(ms)=%l, newDataLenMax=%d, ackProvider=%d", ms, newDataLenMax, ackProvider);
@@ -510,7 +512,7 @@ int Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, uint8_t& port,
 
 	int dataLen = m_driver->recv(src, port, &data, PAYLOAD_MAX, ms);
 
-	int result = dataLen;
+	msg_l3_status_t result = dataLen;
 //	srcA = src;
 //	portA = port;
 	

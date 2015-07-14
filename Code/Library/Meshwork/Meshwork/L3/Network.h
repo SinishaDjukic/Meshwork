@@ -148,6 +148,9 @@ namespace Meshwork {
 		/** Send aborted by the app. */
 		static const int8_t ERROR_DRIVER_SEND_ABORTED = -52;
 		
+		/** Last error code from the L3 range. */
+		static const int8_t ERROR_END_L3 = -63;
+
 		/** First possible node ID. */
 		static const uint8_t MIN_NODE_ID 	= 1;
 		/** Last possible node ID. */
@@ -288,27 +291,30 @@ namespace Meshwork {
 				m_sendAbort = true;
 			}
 			
+			//defining message send/receive status here for a clearer separation of results
+			typedef int msg_l3_status_t;
+
 			//main send method
-			virtual int send(uint8_t delivery, uint8_t retry,
+			virtual msg_l3_status_t send(uint8_t delivery, uint8_t retry,
 								uint8_t dest, uint8_t port,
 								const void* buf, size_t len,
 								void* bufACK, size_t& lenACK);
 
 			//convenience send method
-			int send(uint8_t dest, uint8_t port,
+			msg_l3_status_t send(uint8_t dest, uint8_t port,
 						const void* buf, size_t len,
 						void* bufACK, size_t& maxACKLen) {
 				return send(m_delivery, m_retry, dest, port, buf, len, bufACK, maxACKLen);
 			}
 			
 			//convenience broadcast method
-			virtual int broadcast(uint8_t port, const void* buf, size_t len) {
+			virtual msg_l3_status_t broadcast(uint8_t port, const void* buf, size_t len) {
 				size_t none = 0;
 				return send(DELIVERY_DIRECT, m_retry, Wireless::Driver::BROADCAST, port, buf, len, NULL, none);
 			}
 
 			//main recv method
-			virtual int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
+			virtual msg_l3_status_t recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
 					uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
 		
 		};//end of Meshwork::L3::Network

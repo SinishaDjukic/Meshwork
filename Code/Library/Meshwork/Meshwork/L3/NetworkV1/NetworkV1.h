@@ -408,7 +408,7 @@ namespace Meshwork {
 				bool sendWithoutACK(uint8_t dest, uint8_t hopPort, iovec_t* vp, uint8_t attempts);
 				bool sendWithoutACK(uint8_t dest, uint8_t hopPort, const void* buf, size_t len, uint8_t attempts);
 
-				int sendWithACK(uint8_t attempts, uint16_t attemptsDelay,
+				Network::msg_l3_status_t sendWithACK(uint8_t attempts, uint16_t attemptsDelay,
 					uint8_t ack, uint32_t ackTimeout,
 					uint8_t dest, uint8_t port,
 					univmsg_t* msg,
@@ -419,10 +419,10 @@ namespace Meshwork {
 					);
 
 #if MW_SUPPORT_DELIVERY_ROUTED
-				int sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider,
+				Network::msg_l3_status_t sendRoutedACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 									univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
 #endif
-				int sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider,
+				Network::msg_l3_status_t sendDirectACK(Meshwork::L3::Network::ACKProvider* ackProvider,
 									univmsg_t* msg, uint8_t hopSrc, uint8_t hopPort);
 
 			public:
@@ -498,12 +498,12 @@ namespace Meshwork {
 
 				bool begin(const void* config = NULL);
 				bool end();
-				int send(uint8_t delivery, uint8_t retry,
+				Network::msg_l3_status_t send(uint8_t delivery, uint8_t retry,
 									uint8_t dest, uint8_t port,
 									const void* buf, size_t len,
 									void* bufACK, size_t& lenACK);
 				
-				int recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
+				Network::msg_l3_status_t recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
 						uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
 
 			};
