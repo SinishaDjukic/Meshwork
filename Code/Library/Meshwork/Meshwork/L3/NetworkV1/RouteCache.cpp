@@ -169,6 +169,7 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 		//set initial value
 		result = calculate == Network::QOS_CALCULATE_BEST ? Network::QOS_LEVEL_MIN :
 					(calculate == Network::QOS_CALCULATE_WORST ? Network::QOS_LEVEL_MAX : 0);
+		bool firstRoute = true;
 		//yes, this looks weird, but single loop makes the code smaller
 		MW_LOG_DEBUG(MW_LOG_ROUTECACHE, "QoS for dst: %d, method: %d", dst, calculate);
 		if ( MW_LOG_ROUTECACHE )
@@ -181,21 +182,17 @@ int8_t RouteCache::get_QoS(uint8_t dst, int8_t calculate) {
 			if ( r.dst != 0 ) {//valid route
 				int8_t tmp = list->entries[i].qos;
 				MW_LOG_DEBUG(MW_LOG_ROUTECACHE, "Avg: %d, route QoS: %d", result, tmp);
-				/*
-				if ( calculate == Network::QOS_CALCULATE_BEST ) {
-					result = result < tmp ? tmp : result;
-				} else if ( calculate == Network::QOS_CALCULATE_WORST ) {
-					result = result > tmp ? tmp : result;
-				} if ( calculate == Network::QOS_CALCULATE_AVERAGE ) {
-					result = (result + tmp) >> 1;
-				} else {
-					MW_LOG_ERROR(MW_LOG_ROUTECACHE, "Unknown method: %d", calculate);
-					break;
-				}*/
 				switch ( calculate ) {
 					case Network::QOS_CALCULATE_BEST: result = result < tmp ? tmp : result; break;
 					case Network::QOS_CALCULATE_WORST: result = result > tmp ? tmp : result; break;
-					case Network::QOS_CALCULATE_AVERAGE: result = ((result + tmp) >> 1); break;
+					case Network::QOS_CALCULATE_AVERAGE:
+						if ( firstRoute ) {
+							firstRoute = false;
+							result = tmp;
+						} else {
+							result = ((result + tmp) / 2);
+						}
+						break;
 					default:
 						MW_LOG_DEBUG(MW_LOG_ROUTECACHE, "Unknown method: %d", calculate);
 						break;
