@@ -41,6 +41,7 @@ namespace Meshwork {
 				bool m_target_state;
 
 				virtual void setStateImpl(bool state, uint16_t millis) {
+					UNUSED(millis);
 					m_state = state;
 				}
 

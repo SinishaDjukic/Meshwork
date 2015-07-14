@@ -19,44 +19,39 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L7_CLUSTER_H__
-#define __MESHWORK_L7_CLUSTER_H__
+#ifndef __MESHWORK_L7_DEVICE_H__
+#define __MESHWORK_L7_DEVICE_H__
 
 #include "Cosa/Types.h"
 
 #include "Meshwork.h"
 
-//#include "Endpoint.h"
-//#include "Device.h"
-
 namespace Meshwork {
 
 	namespace L7 {
 
-//		class Endpoint;
-//
-//		class Device;
+		class Cluster;
 
-		class Cluster {
+		class Endpoint;
+
+		class Device {
 
 			protected:
 				uint8_t m_type;
 				uint8_t m_subtype;
-				uint8_t m_endpoint_count;
-				Endpoint** m_endpoints;
-				Device* m_device;
+				uint8_t m_cluster_count;
+				Cluster** m_clusters;
 
-				void initEndpoints();
+				void initClusters();
 
 			public:
-				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint** endpoints, Device* device):
+				Device(uint8_t type, uint8_t subtype, uint8_t cluster_count, Cluster** clusters):
 					m_type(type),
 					m_subtype(subtype),
-					m_endpoint_count(endpoint_count),
-					m_endpoints(endpoints),
-					m_device(device)
+					m_cluster_count(cluster_count),
+					m_clusters(clusters)
 					{
-						initEndpoints();
+						initClusters();
 					}
 
 				uint8_t getSubtype() {
@@ -67,35 +62,29 @@ namespace Meshwork {
 					return m_type;
 				}
 
-				uint8_t getEndpointCount() {
-					return m_endpoint_count;
+				uint8_t getClusterCount() {
+					return m_cluster_count;
 				}
 
-				Endpoint** getEndpoints() {
-					return m_endpoints;
+				Cluster** getClusters() {
+					return m_clusters;
 				}
 
-				Endpoint* getEndpoint(uint8_t index) {
-					return m_endpoints[index];
+				Cluster* getCluster(uint8_t index) {
+					return m_clusters[index];
 				}
 
-				int16_t getEndpointIndex(Endpoint* endpoint) {
-					for ( int i = 0; i < m_endpoint_count; i ++ )
-						if ( m_endpoints[i] == endpoint )
+				Endpoint* getEndpoint(uint8_t clusterID, uint8_t endpointID);
+
+				int16_t getClusterIndex(Cluster* cluster) {
+					for ( int i = 0; i < m_cluster_count; i ++ )
+						if ( m_clusters[i] == cluster )
 							return i;
 					return -1;
 				}
 
-				Device* getDevice() {
-					return m_device;
-				}
 
-				void setDevice(Device* device) {
-					m_device = device;
-				}
-
-
-		};//end of Meshwork::L7::Cluster
+		};//end of Meshwork::L7::Device
 
 	};//end of Meshwork::L7
 

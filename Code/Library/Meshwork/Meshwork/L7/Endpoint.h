@@ -25,13 +25,14 @@
 
 #include "Meshwork.h"
 
-//#include "Meshwork/L7/Cluster.h"
+//#include "Cluster.h"
+//#include "Device.h"
 
 namespace Meshwork {
 
 	namespace L7 {
 
-		class Cluster;
+//		class Cluster;
 
 		class Endpoint {
 
@@ -104,7 +105,7 @@ namespace Meshwork {
 				Cluster* m_cluster;
 
 			public:
-				Endpoint(uint8_t type, uint8_t unit_type,
+				Endpoint(uint16_t type, uint16_t unit_type,
 						EndpointListener* listener,
 						endpoint_reporting_configuration_t* reporting_configuration):
 					m_type(type),
@@ -114,7 +115,7 @@ namespace Meshwork {
 					m_cluster(NULL)
 					{}
 
-				virtual void getProperty(endpoint_value_t &value) = 0;
+				virtual void getProperty(endpoint_value_t* value) = 0;
 
 				virtual void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) = 0;
 				
