@@ -18,18 +18,21 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
+#ifndef __TESTS_ROUTECACHE_H__
+#define __TESTS_ROUTECACHE_H__
+
 #include <stdlib.h>
-#include "Cosa/Trace.hh"
-#include "Cosa/Types.h"
-#include "Cosa/IOStream.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
-#include "Cosa/Watchdog.hh"
-#include "Cosa/RTC.hh"
+#include <Cosa/Trace.hh>
+#include <Cosa/Types.h>
+#include <Cosa/IOStream.hh>
+#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/Watchdog.hh>
+#include <Cosa/RTC.hh>
 #include <Meshwork.h>
-#include "Meshwork/L3/Network.h"
-#include "Meshwork/L3/NetworkV1/NetworkV1.h"
-#include "Meshwork/L3/NetworkV1/RouteCache.h"
-#include "Meshwork/L3/NetworkV1/RouteCache.cpp"
+#include <Meshwork/L3/Network.h>
+#include <Meshwork/L3/NetworkV1/NetworkV1.h>
+#include <Meshwork/L3/NetworkV1/RouteCache.h>
+#include <Meshwork/L3/NetworkV1/RouteCache.cpp>
 
 using Meshwork::L3::Network;
 using Meshwork::L3::NetworkV1::NetworkV1;
@@ -346,26 +349,33 @@ bool testQoS(RouteCache* route_cache, void* route_ptr) {
 		for ( int j = 0; j < RouteCache::MAX_DST_ROUTES; j ++ )
 			route_cache->add_route_entry(&route[i][j], false);
 	//Setup: add QoS:
-	//	route[0]: reach max
-	//	route[1]: reach min
-	//	route[2]: stay at zero
+	//	route[0][0]: reach max
+	//	route[0][1]: reach min
+	//	route[0][2]: stay at zero
+	trace	<< PSTR("[testQoS] Adding route entry with QOS_LEVEL_MAX") << endl;
+	trace	<< PSTR("[testQoS] ... Adding QOS_LEVEL_MAX") << endl;
 	for ( int k = 0; k < Network::QOS_LEVEL_MAX + 10; k ++ )//exceeding max on purpose
 		result &= route_cache->update_QoS(&route[0][0], true);
-	trace	<< PSTR("[testQoS] Route entry with QOS_LEVEL_MAX: ");
+	trace	<< PSTR("[testQoS] ... Route entry: ");//+100
 	route_cache->print(trace, *route_cache->get_route_entry(route[0][0].dst, 0), 2);
 	trace << endl;
 	
+	trace	<< PSTR("[testQoS] Adding route entry with QOS_LEVEL_MIN") << endl;
+	trace	<< PSTR("[testQoS] ... Adding QOS_LEVEL_MIN") << endl;
 	for ( int k = 0; k > Network::QOS_LEVEL_MIN - 10; k -- )//exceeding min on purpose
 		result &= route_cache->update_QoS(&route[0][1], false);
-	trace	<< PSTR("[testQoS] Route entry with QOS_LEVEL_MIN: ");
+	trace	<< PSTR("[testQoS] ... Route entry: ");//-100
 	route_cache->print(trace, *route_cache->get_route_entry(route[0][1].dst, 1), 2);
 	trace << endl;
 	
+	trace	<< PSTR("[testQoS] Adding route entry with QOS_LEVEL_AVERAGE") << endl;
+	trace	<< PSTR("[testQoS] ... Adding QOS_LEVEL_MAX") << endl;
 	for ( int k = 0; k < Network::QOS_LEVEL_MAX + 10; k ++ )//exceeding max on purpose
 		result &= route_cache->update_QoS(&route[0][2], true);
+	trace	<< PSTR("[testQoS] ... Adding QOS_LEVEL_MIN") << endl;
 	for ( int k = 0; k < Network::QOS_LEVEL_MAX; k ++ )//should net to zero
 		result &= route_cache->update_QoS(&route[0][2], false);
-	trace	<< PSTR("[testQoS] Route entry with QOS_LEVEL_AVERAGE: ");
+	trace	<< PSTR("[testQoS] ... Route entry: ");//0
 	route_cache->print(trace, *route_cache->get_route_entry(route[0][2].dst, 2), 2);
 	trace << endl;
 	
@@ -374,24 +384,34 @@ bool testQoS(RouteCache* route_cache, void* route_ptr) {
 	
 	int8_t qos;
 	
+	trace << endl;
 	//Phase 1: check QoS calculation Network::QOS_CALCULATE_BEST
 	if ( (qos = route_cache->get_QoS(route[0][0].dst, Network::QOS_CALCULATE_BEST)) != Network::QOS_LEVEL_MAX ) {
 		trace	<< PSTR("[testQoS] QOS_CALCULATE_BEST wrong for dst: ") << route[0][0].dst << PSTR(", equals: ") << qos << endl;
 		result = false;
+	} else {
+		trace	<< PSTR("[testQoS] QOS_CALCULATE_BEST is correct") << endl;
 	}
 	
+	trace << endl;
 	//Phase 2: check QoS calculation Network::QOS_CALCULATE_WORST
 	if ( (qos = route_cache->get_QoS(route[0][1].dst, Network::QOS_CALCULATE_WORST)) != Network::QOS_LEVEL_MIN ) {
 		trace	<< PSTR("[testQoS] QOS_CALCULATE_WORST wrong for dst: ") << route[0][1].dst << PSTR(", equals: ") << qos << endl;
 		result = false;
+	} else {
+		trace	<< PSTR("[testQoS] QOS_CALCULATE_WORST is correct") << endl;
 	}
 	
+	trace << endl;
 	//Phase 3: check QoS calculation Network::QOS_CALCULATE_AVERAGE
 	if ( (qos = route_cache->get_QoS(route[0][2].dst, Network::QOS_CALCULATE_AVERAGE)) != Network::QOS_LEVEL_AVERAGE ) {
 		trace	<< PSTR("[testQoS] QOS_CALCULATE_AVERAGE wrong for dst: ") << route[0][2].dst << PSTR(", equals: ") << qos << endl;
 		result = false;
+	} else {
+		trace	<< PSTR("[testQoS] QOS_CALCULATE_AVERAGE is correct") << endl;
 	}
 	
+	trace << endl;
 	trace << PSTR("[testQoS] Finished: ") << (result ? PSTR("PASSED") : PSTR("FAILED")) << endl << endl;
 	printDelimiter2();
 	return result;
@@ -555,29 +575,35 @@ bool testStart() {
 	//Setup: default route data
 	setupDefaultRouteData((void*)routes, (void*)route_hops);
 	
-	//Test 1: verify that the route cache is empty by default
-	result &= testEmptyCache(&route_cache);
-	route_cache.remove_all();//ok, must assume that this works in order to use it as a cleanup
-	
-	//Test 2: add all routes, remove them, then verify route cache is empty
-	result &= testRemove(&route_cache, (void*)routes);
-	route_cache.remove_all();
-	
-	//Test 3: verify that getters1 return correct data
-	result &= testGetters1(&route_cache, (void*)routes);
-	route_cache.remove_all();
-	
-	//Test 4: verify that getters2 return correct data
-	result &= testGetters2(&route_cache, (void*)routes);
-	route_cache.remove_all();
+//	//Test 1: verify that the route cache is empty by default
+//	trace << PSTR("[TestSuite][Test_RouteCache] Test 1: verify that the route cache is empty by default") << endl;
+//	result &= testEmptyCache(&route_cache);
+//	route_cache.remove_all();//ok, must assume that this works in order to use it as a cleanup
+//
+//	//Test 2: add all routes, remove them, then verify route cache is empty
+//	trace << PSTR("[TestSuite][Test_RouteCache] Test 2: add all routes, remove them, then verify route cache is empty") << endl;
+//	result &= testRemove(&route_cache, (void*)routes);
+//	route_cache.remove_all();
+//
+//	//Test 3: verify that getters1 return correct data
+//	trace << PSTR("[TestSuite][Test_RouteCache] Test 3: verify that getters1 return correct data") << endl;
+//	result &= testGetters1(&route_cache, (void*)routes);
+//	route_cache.remove_all();
+//
+//	//Test 4: verify that getters2 return correct data
+//	trace << PSTR("[TestSuite][Test_RouteCache] Test 4: verify that getters2 return correct data") << endl;
+//	result &= testGetters2(&route_cache, (void*)routes);
+//	route_cache.remove_all();
 	
 	//Test 5: verify that QoS functions return correct data
+	trace << PSTR("[TestSuite][Test_RouteCache] Test 5: verify that QoS functions return correct data") << endl;
 	result &= testQoS(&route_cache, (void*)routes);
 	route_cache.remove_all();
 	
-	//Test 6: verify that add and replace works correctly
-	result &= testAddAndReplace(&route_cache, (void*)routes);
-	route_cache.remove_all();
+//	//Test 6: verify that add and replace works correctly
+//	trace << PSTR("[TestSuite][Test_RouteCache] Test 6: verify that add and replace works correctly") << endl;
+//	result &= testAddAndReplace(&route_cache, (void*)routes);
+//	route_cache.remove_all();
 	
 	////////////////////// END //////////////////////
 	
@@ -585,13 +611,14 @@ bool testStart() {
 	trace << PSTR("Run time (ms): ") << time << PSTR("\r\n");
 	trace << PSTR("[TestSuite][Test_RouteCache] Finished: ") << (result ? PSTR("PASSED") : PSTR("FAILED")) << endl;
 	printDelimiter1();
+
+	return result;
 }
 
 void setup()
 {
 	uart.begin(115200);
-	uint8_t mode = SLEEP_MODE_IDLE;
-	Watchdog::begin(16, mode);  
+	Watchdog::begin();
 	RTC::begin();
 	trace.begin(&uart, PSTR(__FILE__));
 
@@ -600,5 +627,7 @@ void setup()
 
 void loop()
 {
+	Watchdog::delay(60000);
 }
 
+#endif
