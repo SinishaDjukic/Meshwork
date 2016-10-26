@@ -103,6 +103,8 @@ namespace Meshwork {
 
 				void remove_all(bool notify);
 
+				void printTabs(IOStream& outs, uint8_t tabs);
+
 			public:
 				
 				RouteCache(RouteCacheListener* listener):

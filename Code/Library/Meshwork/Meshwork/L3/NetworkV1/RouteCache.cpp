@@ -292,7 +292,7 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 	return result;
 }
 
-void printTabs(IOStream& outs, uint8_t tabs) {
+void RouteCache::printTabs(IOStream& outs, uint8_t tabs) {
 	while ( tabs-- > 0 )
 		outs << PSTR("\t");
 }
