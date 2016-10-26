@@ -257,5 +257,11 @@ Code/Projects/Eclipse/Library/MW_Meshwork_orig/.ino.cpp
 Code/Projects/Eclipse/Library/MW_Meshwork_orig/MW_Meshwork.ino
 Code/Projects/Eclipse/Library/MW_Meshwork_orig/spec.d
 
-#Nested files for Cosa libraries
-**/CosaLibraries/**
+#Windows git clients don't like symlinked nested .git files in Cosa libraries, so ignore them
+**/PlatformIO/Examples/**/lib/CosaLibraries/**
+**/PlatformIO/Examples/**/lib/Meshwork/**
+
+#Symlinked Meshwork in examples should be ignored
+
+#Temp projects
+Code/Examples/NetworkV1/Temp/*
