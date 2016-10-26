@@ -32,9 +32,9 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
-#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
-#include <Cosa/RTC.hh>
+#include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
 
 #include <Meshwork.h>
@@ -66,7 +66,7 @@ void setup()
 {
 
   Watchdog::begin();
-  RTC::begin();
+  RTT::begin();
 
   uart.begin(115200);
 
@@ -216,7 +216,7 @@ void run_recv() {
 	uint8_t data[dataLenMax];
 	trace << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, &ackProvider);
 		if ( result != -1 ) {
@@ -225,7 +225,7 @@ void run_recv() {
 			MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			trace.println();
 		}
-		duration -= RTC::since(start);
+		duration -= RTT::since(start);
 	} 
 	
 	trace << PSTR("RECV: done\n");
@@ -271,10 +271,10 @@ void run_clearrx() {
 	size_t dataLenMax = Meshwork::L3::NetworkV1::NetworkV1::PAYLOAD_MAX;
 	uint8_t data[dataLenMax];
 	
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	while (true) {
 		int result = mesh.recv(src, port, data, dataLenMax, singleTimeout, &ackProvider);
-		if ( RTC::since(start) >= duration )
+		if ( RTT::since(start) >= duration )
 			break;
 	} 
 	trace << PSTR("Clear RX!\n");

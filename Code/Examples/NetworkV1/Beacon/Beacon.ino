@@ -42,10 +42,10 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
-#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
 #include <Cosa/OutputPin.hh>
-#include <Cosa/RTC.hh>
+#include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
 
 #include <Meshwork.h>
@@ -107,15 +107,15 @@ void setup()
 {
 	//Basic setup
 	Watchdog::begin();
-	RTC::begin();
+	RTT::begin();
 	
 	uart.begin(115200);
 	
 	trace.begin(&uart, PSTR("Beacon: started\n"));
 
-	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Network ID: ") << EX_NODE_NWK_ID << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Channel ID: ") << EX_NODE_CHANNEL_ID << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Node ID: ") << EX_NODE_ID << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Network ID: ") << TEST_RECEIVER_NODE_NWK_ID << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Channel ID: ") << TEST_RECEIVER_NODE_CHANNEL_ID << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Node ID: ") << TEST_RECEIVER_NODE_ID << endl;
 	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Bcast port: ") << BEACON_BCAST_PORT << endl;
 	MW_LOG_DEBUG_TRACE(EX_LOG_BEACON) << PSTR("Bcast msg len: ") << BEACON_BCAST_MSG_LEN << endl;
   
@@ -123,9 +123,9 @@ void setup()
 	mesh.set_radio_listener(&ledTracing);
 #endif
 
-	mesh.setNetworkID(EX_NODE_NWK_ID);
-	mesh.setChannel(EX_NODE_CHANNEL_ID);
-	mesh.setNodeID(EX_NODE_ID);
+	mesh.setNetworkID(TEST_RECEIVER_NODE_NWK_ID);
+	mesh.setChannel(TEST_RECEIVER_NODE_CHANNEL_ID);
+	mesh.setNodeID(TEST_RECEIVER_NODE_ID);
 	
 	ASSERT(mesh.begin());
 }

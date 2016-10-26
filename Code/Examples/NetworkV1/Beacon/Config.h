@@ -30,9 +30,9 @@
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
 
 //Network configuration is hardcoded here
-#define EX_NODE_NWK_ID				1
-#define EX_NODE_CHANNEL_ID			0
-#define EX_NODE_ID					200
+#define TEST_RECEIVER_NODE_NWK_ID				1
+#define TEST_RECEIVER_NODE_CHANNEL_ID			0
+#define TEST_RECEIVER_NODE_ID					200
 
 //Beacon message interval (ms)
 #define EX_BEACON_INTERVAL			3000
@@ -41,7 +41,7 @@
 #define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 
 //Enable/disable LED tracing for RF messages
-#define EX_LED_TRACING		false
+#define TEST_RECEIVER_LED_TRACING		false
 
 #if EX_LED_TRACING
 	#define EX_LED_TRACING_SEND	Board::D4
@@ -57,16 +57,17 @@
 #endif
 
 //Offset for storing Route Cache table in the EEPROM
-#define EX_ROUTECACHE_TABLE_EEPROM_OFFSET 128
+#define TEST_RECEIVER_ROUTECACHE_TABLE_EEPROM_OFFSET 128
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-//#define MW_FULL_DEBUG	true
+#define MW_FULL_DEBUG	false
+#define MW_LOG_DEBUG_ENABLE true
 
 //No need for rerouting here
 #define MW_SUPPORT_REROUTING	false
 
 //Our sketch's own debug
-#define EX_LOG_BEACON	MW_FULL_DEBUG
+#define EX_LOG_BEACON	true//MW_FULL_DEBUG
 
 #endif
