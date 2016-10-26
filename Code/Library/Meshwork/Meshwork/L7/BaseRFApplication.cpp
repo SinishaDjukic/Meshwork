@@ -72,7 +72,7 @@ int BaseRFApplication::returnACKPayload(uint8_t src, uint8_t port, void* buf, ui
 		getMessageFromData(&m_last_message, len, (uint8_t*) buf);
 
 		//3.1) update m_last_recv_request
-		m_last_recv_request_time = RTC::millis();
+		m_last_recv_request_time = RTT::millis();
 
 		//3.2) update m_recv_request_count
 		m_recv_request_count ++;
@@ -135,6 +135,8 @@ int BaseRFApplication::returnACKPayload(uint8_t src, uint8_t port, void* buf, ui
 			if ( handleCustomCommand(&m_last_message) == BASERF_CMD_ACK_STATUS_NOT_SUPPORTED ) {
 				MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("NOT_SUPPORTED: ") << m_last_message.msg_header.cmd_id << endl;
 				return prepareACKPayload(&m_last_message, BASERF_CMD_ACK_STATUS_NOT_SUPPORTED, NULL, 0, &bufACK, lenACK);
+			} else {//else no ACK
+				return 0;
 			}
 		}
 	}
@@ -155,7 +157,7 @@ void BaseRFApplication::pollMessage(uint32_t poll_timeout) {
 	uint8_t src, port;
 	size_t dataLen = BASERF_MESSAGE_PAYLOAD_MAXLEN;
 
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	while (true) {
 		trace << endl;
 		setLastMessageValid(false);
@@ -168,7 +170,7 @@ void BaseRFApplication::pollMessage(uint32_t poll_timeout) {
 			break;
 		}
 	//2) if result != OK then return, else continue
-		if ( RTC::since(start) >= MW_BASERF_POLLTIMEOUT ) {
+		if ( RTT::since(start) >= MW_BASERF_POLLTIMEOUT ) {
 			MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("[RECV] No valid message, return") << endl;
 			return;
 		}
@@ -215,7 +217,6 @@ Network::msg_l3_status_t BaseRFApplication::sendMetaReportDevice(univmsg_l7_any_
 
 	bool allClusters = flags & BASERF_CMD_METAFLAG_ALL_CLUSTERS;
 	uint8_t cluster_count = m_device->getClusterCount();
-	Cluster** clusters = m_device->getClusters();
 	Network::msg_l3_status_t result = ERROR_INVALID_DATA;
 
 	msg->data[2] = m_device->getType();
@@ -337,6 +338,25 @@ Network::msg_l3_status_t BaseRFApplication::sendMetaReportEndpoint(univmsg_l7_an
 #endif
 
 
+msg_l7_ack_status_t BaseRFApplication::sendPropertyGet(uint8_t nodeID, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID,
+														void* bufAck, size_t& bufAckLen) {
+	UNUSED(clusterID);UNUSED(endpointID);
+	univmsg_l7_any_t msg;
+	msg.msg_header.src = nodeID;
+	msg.msg_header.port = BASERF_MESSAGE_PORT;
+	msg.msg_header.cmd_id = BASERF_CMD_PROPERTY_SET;
+	msg.msg_header.cmd_mc = cmd_mc_last;
+	msg.msg_header.seq_meta = false;
+	msg.msg_header.dataLen = 2;
+	uint8_t cmd_data[2] = {clusterID, endpointID};
+	msg.data = cmd_data;
+
+	msg_l7_ack_status_t result = sendMessageWithACK(&msg, bufAck, bufAckLen);
+
+	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("Result: ") << result;
+	return result;
+}
+
 msg_l7_ack_status_t BaseRFApplication::sendPropertySet(uint8_t nodeID, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID,
 														size_t dataLen, uint8_t* data, void* bufAck, size_t& bufAckLen) {
 	//TODO range check: dataLen < BASERF_MESSAGE_PAYLOAD_MAXLEN - BASERF_MESSAGE_PAYLOAD_HEADERLEN - 2;//12
@@ -346,6 +366,8 @@ msg_l7_ack_status_t BaseRFApplication::sendPropertySet(uint8_t nodeID, bool cmd_
 	msg.msg_header.cmd_id = BASERF_CMD_PROPERTY_SET;
 	msg.msg_header.cmd_mc = cmd_mc_last;
 	msg.msg_header.seq_meta = false;
+
+	//TODO add the property set command params (cluster, endpoint, etc) - and then the data itself
 	msg.msg_header.dataLen = dataLen;
 	msg.data = data;
 
@@ -388,6 +410,7 @@ Network::msg_l3_status_t BaseRFApplication::sendPropertyReport(univmsg_l7_any_t*
 }
 
 void BaseRFApplication::prepareACK(univmsg_l7_any_t* msg, int ackStatus, void* statusData, size_t statusDataLen) {
+	UNUSED(ackStatus);
 	msg->msg_header.cmd_id = BASERF_CMD_ACK;
 	msg->msg_header.dataLen = statusDataLen;
 	msg->data = (uint8_t *) statusData;
@@ -417,7 +440,7 @@ Network::msg_l3_status_t BaseRFApplication::sendMessage(univmsg_l7_any_t* msg) {
 	int result = m_network->send(msg->msg_header.src, msg->msg_header.port, (const void*) &rawData, rawDataLen, (void*) NULL, bufAckLen);
 	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("result=") << result;
 	if ( result >= Meshwork::L3::Network::OK && isMessageReport(msg) ) {
-		m_last_sent_report_time = RTC::millis();
+		m_last_sent_report_time = RTT::millis();
 		m_sent_report_count ++;
 	}
 	return result;
@@ -451,7 +474,7 @@ msg_l7_ack_status_t BaseRFApplication::sendMessageWithACK(univmsg_l7_any_t* msg,
 	}
 	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("result=") << result;
 	if ( result >= Meshwork::L3::Network::OK && isMessageReport(msg) ) {
-		m_last_sent_report_time = RTC::millis();
+		m_last_sent_report_time = RTT::millis();
 		m_sent_report_count ++;
 	}
 	return result;

@@ -24,7 +24,7 @@
 #include "MeshworkConfiguration.h"
 #include "Cosa/Types.h"
 #include "Cosa/Memory.h"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Trace.hh"
 #include "Cosa/Watchdog.hh"
 
@@ -34,7 +34,7 @@ namespace Meshwork {
 	class Debug {
 		public: 
 			static void printTimestamp() {
-				trace << PSTR("[") << RTC::millis() << PSTR("]") << PSTR(" ");
+				trace << PSTR("[") << RTT::millis() << PSTR("]") << PSTR(" ");
 			}
 			static void printFreeMemory() {
 				trace << PSTR("Free mem: ") << free_memory() << endl;

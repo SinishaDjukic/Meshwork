@@ -23,10 +23,10 @@
 
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
+#include "Cosa/UART.hh"
 #include "Utils/SerialMessageAdapter.h"
 
 
@@ -53,13 +53,13 @@ void SerialMessageAdapter::writeMessage(uint8_t len, uint8_t* data, bool flush) 
 
 bool SerialMessageAdapter::waitForBytes(uint8_t count, uint16_t millis) {
 	bool result = false;
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	while (true) {
 		if ( m_serial->available() < count )//minimum response size
 			Meshwork::Time::delay(16);
 		else
 			result = true;
-		if ( result || Meshwork::Time::passed(RTC::since(start), millis) )
+		if ( result || Meshwork::Time::passed(RTT::since(start), millis) )
 			break;
 	}
 	return result;

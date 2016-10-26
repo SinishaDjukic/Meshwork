@@ -23,7 +23,7 @@
 
 #include "Cosa/Types.h"
 #include "Cosa/Memory.h"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Trace.hh"
 #include "Cosa/Watchdog.hh"
 

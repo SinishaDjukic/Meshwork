@@ -24,7 +24,7 @@
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
@@ -119,7 +119,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 			uint8_t reply_src, reply_port, reply_len;
 			int reply_result;
 			//the next recv may come with an irrelevant message/data, so recv some more until timeout is reached
-			uint32_t start = RTC::millis();
+			uint32_t start = RTT::millis();
 			uint8_t dataACK[ACK_PAYLOAD_MAX];
 			bool ignored = false;
 
@@ -166,7 +166,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 						}
 				}
 #if MW_SUPPORT_DELIVERY_FLOOD
-				if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && Meshwork::Time::passed(RTC::since(start), TIMEOUT_ACK_RECEIVE) && (!oneFloodACK) ) {
+				if ( (msg->nwk_ctrl.delivery & DELIVERY_FLOOD) && Meshwork::Time::passed(RTT::since(start), TIMEOUT_ACK_RECEIVE) && (!oneFloodACK) ) {
 					MW_LOG_NOTICE(MW_LOG_NETWORKV1, "Noone received our FLOOD ACK. Resend...", NULL);
 					//noone heard our FLOOD. re-send
 					result = FLOOD_NOT_RECEIVED_BY_NEIGHBOURS;
@@ -177,7 +177,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 				MW_LOG_DEBUG(MW_LOG_NETWORKV1, "Reply code=%d", reply_result);
 			} while ( !m_sendAbort &&
 						(reply_result < 0 || ignored) &&
-							(!Meshwork::Time::passed(RTC::since(start), ackTimeout)) );
+							(!Meshwork::Time::passed(RTT::since(start), ackTimeout)) );
 			MW_LOG_DEBUG(MW_LOG_NETWORKV1, "Out of loop w code: %d, reply len: %d, sendAbort: %d", reply_result, reply_len, m_sendAbort);
 			
 			if ( m_sendAbort ) { //user aborted; break the loop
@@ -449,7 +449,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delive
 				//node count is initially 0, since we don't have to count Src and Dst
 				send_msg.nwk_ctrl.delivery = DELIVERY_FLOOD;
 				send_msg.msg_flood.flood_info.route.hopCount = 0;
-				send_msg.msg_flood.flood_info.route.src = m_driver->get_device_address();
+				send_msg.msg_flood.flood_info.route.src = m_driver->device_address();
 				send_msg.msg_flood.flood_info.route.dst = dest;
 				send_msg.msg_flood.dataLen = 0;
 				send_msg.msg_flood.data = NULL;
@@ -544,7 +544,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 			}
 #if MW_SUPPORT_DELIVERY_ROUTED
 			else if (recv_msg.nwk_ctrl.delivery & DELIVERY_ROUTED) { //Routed Send
-				uint8_t devaddr = m_driver->get_device_address();
+				uint8_t devaddr = m_driver->device_address();
 				if (devaddr == recv_msg.msg_routed.route_info.route.dst) { //we are the route dest
 					MW_LOG_INFO(MW_LOG_NETWORKV1, "Received ROUTED to us", NULL);
 					if (recv_msg.msg_routed.route_info.route.hopCount > 0 && m_advisor != NULL)
@@ -561,7 +561,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 				} else {//re-route, but first check and update breadcrumbs. if ACK use reverse order to determine next dest
 	#if MW_SUPPORT_REROUTING
 					MW_LOG_INFO(MW_LOG_NETWORKV1, "Received ROUTED to reroute", NULL);
-					uint8_t myHop = 1 + get_msg_routed_hop_index(&recv_msg, m_driver->get_device_address());
+					uint8_t myHop = 1 + get_msg_routed_hop_index(&recv_msg, m_driver->device_address());
 					if (myHop > 0) {//offset by 1 since we use it for bitmask
 						if ( !(recv_msg.msg_routed.route_info.breadcrumbs & (1 << (myHop - 1))) ) {//our bit not set
 							//ok, modifyfing the buf directly instead of using recv_msg
@@ -619,6 +619,13 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 			if (recv_msg.nwk_ctrl.delivery & DELIVERY_DIRECT) {
 				MW_LOG_INFO(MW_LOG_NETWORKV1, "Received BROADCAST DIRECT, will not ACK", NULL);
 				//nothing to do, ACK not required with direct broadcast
+				uint8_t len = recv_msg.msg_direct.dataLen;
+				newDataLenMax = len;
+				if ( len > 0 )
+					memcpy(newData, recv_msg.msg_direct.data, len);
+				MW_LOG_INFO(MW_LOG_NETWORKV1, "Payload len: %d", len);
+				
+        result = OK;
 			}
 #if MW_SUPPORT_DELIVERY_ROUTED
 	#if MW_SUPPORT_DELIVERY_FLOOD
@@ -645,7 +652,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 				UNUSED(sent);
 		#endif
 
-				uint8_t devaddr = m_driver->get_device_address();
+				uint8_t devaddr = m_driver->device_address();
 				if (devaddr == recv_msg.msg_flood.flood_info.route.dst) {//we are the ultimate receiver, ask for payload and generate a routed ACK
 					//we could have optimized to check if hopCount == 0 and send direct ack
 					//but that would have increased the code at both sender and receiver side
@@ -661,7 +668,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 					result = result > 0 ? (len == 0 ? OK_MESSAGE_INTERNAL : OK ) : ERROR_ACK_SEND_FAILED;
 		#if MW_SUPPORT_REROUTING
 				} else if (routeHops < m_maxHops) {//rebroadcast the message
-					uint8_t myHop = 1 + get_msg_routed_hop_index(&recv_msg, m_driver->get_device_address());
+					uint8_t myHop = 1 + get_msg_routed_hop_index(&recv_msg, m_driver->device_address());
 					if (myHop == 0) {//not in the hop list, add us
 						MW_LOG_INFO(MW_LOG_NETWORKV1, "Will REBROADCAST", NULL);
 						uint8_t newHops[routeHops + 1];
@@ -708,7 +715,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 bool Meshwork::L3::NetworkV1::NetworkV1::begin(const void* config) {
 	UNUSED(config);
 	if ( m_advisor != NULL && m_driver != NULL ) {
-		m_advisor->set_address(m_driver->get_device_address());
+		m_advisor->set_address(m_driver->device_address());
 	}
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkID=%d, NodeID=%d, NwkKeyLen=%d, NwkKeyPtr=d", getNetworkID(), getNodeID(), getNetworkKeyLen(), getNetworkKey());
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkChannel=%d, NwkCaps=%d, Delivery=%d", getChannel(), getNetworkCaps(), getDelivery());
@@ -719,4 +726,5 @@ bool Meshwork::L3::NetworkV1::NetworkV1::end() {
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[End]", NULL);
 	return m_driver == NULL ? false : m_driver->end();
 }
+
 #endif

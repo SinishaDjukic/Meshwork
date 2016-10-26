@@ -24,7 +24,7 @@
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"

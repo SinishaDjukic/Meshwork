@@ -23,7 +23,7 @@
 
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
+#include "Cosa/UART.hh"
 
 #include "Meshwork.h"
 

@@ -177,6 +177,14 @@ namespace Meshwork {
 		/** Calculate best QoS level */
 		static const int8_t QOS_CALCULATE_BEST 		=  1;
 		
+		private:
+		//TODO pull out in a util and share with RouteCache
+			void printTabs(IOStream& outs, uint8_t tabs) {
+				while ( tabs-- > 0 )
+					outs << PSTR("\t");
+			}
+
+
 		//protected fields
 		protected:
 			Wireless::Driver* m_driver;
@@ -208,11 +216,11 @@ namespace Meshwork {
 			}
 
 			uint8_t getChannel() {
-				return m_driver->get_channel();
+				return m_driver->channel();
 			}
 			
 			void setChannel(uint8_t channel) {
-				m_driver->set_channel(channel);
+				m_driver->channel(channel);
 			}
 			
 			uint8_t getNetworkCaps() {
@@ -240,19 +248,19 @@ namespace Meshwork {
 			}
 			
 			int16_t getNetworkID() {
-				return m_driver->get_network_address();
+				return m_driver->network_address();
 			}
 			
 			void setNetworkID(int16_t networkID) {
-				m_driver->set_address(networkID, m_driver->get_device_address());
+				m_driver->address(networkID, m_driver->device_address());
 			}
 			
 			uint8_t getNodeID() {
-				return m_driver->get_device_address();
+				return m_driver->device_address();
 			}
 			
 			void setNodeID(uint8_t nodeID) {
-				m_driver->set_address(m_driver->get_network_address(), nodeID);
+				m_driver->address(m_driver->network_address(), nodeID);
 			}
 
 			char* getNetworkKey() {
@@ -317,6 +325,20 @@ namespace Meshwork {
 			virtual msg_l3_status_t recv(uint8_t& src, uint8_t& port, void* data, size_t& dataLenMax,
 					uint32_t ms, Meshwork::L3::Network::ACKProvider* ackProvider);
 		
+			virtual void print(IOStream& outs) {
+				  uint8_t tabs = 0;
+				  outs << PSTR("NetworkV1 { ") << endl;
+				  printTabs(outs, ++tabs); outs << PSTR("Network: ") << getNetworkID() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR(" Channel: ") << getChannel() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("    Node: ") << getNodeID() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("Delivery: ") << getDelivery() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("   Retry: ") << getRetry() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("Nwk Caps: ") << getNetworkCaps() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("Nwk Key: ") << getNetworkKey() << PSTR(",") << endl;
+				  printTabs(outs,   tabs); outs << PSTR("Key Len: ") << getNetworkKeyLen() << endl;
+				  printTabs(outs, --tabs);
+				  outs << PSTR("}") << endl;
+			}
 		};//end of Meshwork::L3::Network
 		
 	};//end of Meshwork::L3

@@ -24,7 +24,7 @@
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
 #include "Cosa/Wireless.hh"
-#include "Cosa/RTC.hh"
+#include "Cosa/RTT.hh"
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
@@ -268,14 +268,14 @@ uint8_t ZeroConfSerial::processOneMessage(SerialMessageAdapter::serialmsg_t* msg
 
 bool ZeroConfSerial::processConfigSequence(uint16_t initTimeout, uint16_t deinitTimeout, uint16_t nextMsgTimeout) {
 	UNUSED(nextMsgTimeout);
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	uint8_t state = 0;
 	uint32_t lastMessage = start;
 	uint8_t lastProcessCode;
 	bool connected = false;
 	SerialMessageAdapter::serialmsg_t msg;
-	while ( ( !connected && (RTC::since(start)       < initTimeout  ) ) ||
-			(  connected && (RTC::since(lastMessage) < deinitTimeout) ) ) {
+	while ( ( !connected && (RTT::since(start)       < initTimeout  ) ) ||
+			(  connected && (RTT::since(lastMessage) < deinitTimeout) ) ) {
 		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
 		lastProcessCode = m_adapter->processOneMessage(&msg);
 		if ( lastProcessCode != SerialMessageAdapter::SM_MESSAGE_NONE) {
@@ -286,7 +286,7 @@ bool ZeroConfSerial::processConfigSequence(uint16_t initTimeout, uint16_t deinit
 				state = ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 				break;
 			}
-			lastMessage = RTC::millis();
+			lastMessage = RTT::millis();
 		}
 	}
 	return state == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
