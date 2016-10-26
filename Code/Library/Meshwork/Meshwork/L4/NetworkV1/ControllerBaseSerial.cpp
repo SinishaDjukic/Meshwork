@@ -28,7 +28,7 @@
 #include "Cosa/Power.hh"
 #include "Cosa/Watchdog.hh"
 #include "Cosa/Trace.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
+#include "Cosa/UART.hh"
 #include "Utils/SerialMessageAdapter.h"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"

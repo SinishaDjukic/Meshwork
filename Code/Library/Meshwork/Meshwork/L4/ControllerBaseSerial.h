@@ -25,7 +25,7 @@
 #include "Cosa/Wireless.hh"
 #include "Cosa/Types.h"
 #include "Cosa/Power.hh"
-#include "Cosa/IOStream/Driver/UART.hh"
+#include "Cosa/UART.hh"
 #include "Meshwork/L3/Network.h"
 #include "Meshwork/L3/NetworkV1/NetworkSerial/NetworkSerial.h"
 #include "Utils/SerialMessageAdapter.h"

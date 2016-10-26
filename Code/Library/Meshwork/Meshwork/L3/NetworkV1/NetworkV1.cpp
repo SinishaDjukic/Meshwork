@@ -105,12 +105,12 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 			bool oneFloodACK = false;
 #endif
 
-		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, port, msg);
+		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->device_address(), dest, port, msg);
 
 		//Currently, we don't differentiate between regular fail and m_sendAbort within sendWithoutACK
 		bool sent = sendWithoutACK(dest, port, vp, attempts);
 
-		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, port, msg, sent);
+		MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->device_address(), dest, port, msg, sent);
 
 		if ( !sent ) {
 			result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_DRIVER_SEND_FAILED;
@@ -287,11 +287,11 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendDirectACK(Meshw
 	
 	MW_LOG_DEBUG_VP_BYTES(MW_LOG_NETWORKV1, PSTR("L2 DATA SEND DIRECT ACK: "), toSend);
 	
-	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, hopPort, &reply_msg);
+	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->device_address(), dest, hopPort, &reply_msg);
 
 	bool sent = sendWithoutACK(dest, hopPort, vp, m_retry+1);
 
-	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, hopPort, &reply_msg, sent);
+	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->device_address(), dest, hopPort, &reply_msg, sent);
 
 	result = sent ? OK : Meshwork::L3::NetworkV1::NetworkV1::ERROR_ACK_SEND_FAILED;
 	
@@ -353,11 +353,11 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendRoutedACK(Meshw
 	
 	MW_LOG_DEBUG_VP_BYTES(MW_LOG_NETWORKV1, PSTR("L2 DATA SEND ROUTED ACK: "), toSend);
 	
-	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), dest, hopPort, &reply_msg);
+	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->device_address(), dest, hopPort, &reply_msg);
 
 	bool sent = sendWithoutACK(dest, hopPort, vp, m_retry+1);
 
-	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), dest, hopPort, &reply_msg, sent);
+	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->device_address(), dest, hopPort, &reply_msg, sent);
 
 	result = sent ? OK : Meshwork::L3::NetworkV1::NetworkV1::ERROR_ACK_SEND_FAILED;
 	
@@ -641,13 +641,13 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 		#if MW_SUPPORT_RADIO_LISTENER
 				univmsg_t msg;
 				get_msg(&msg, floodACKMsg, sizeof(floodACKMsg));
-				MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->get_device_address(), src, port, &msg);
+				MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_BEGIN(m_driver->device_address(), src, port, &msg);
 		#endif
 
 				bool sent = sendWithoutACK(src, port, floodACKMsg, sizeof(floodACKMsg), m_retry+1);
 
 		#if MW_SUPPORT_RADIO_LISTENER
-				MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->get_device_address(), src, port, &msg, sent);
+				MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_SEND_END(m_driver->device_address(), src, port, &msg, sent);
 		#else
 				UNUSED(sent);
 		#endif
