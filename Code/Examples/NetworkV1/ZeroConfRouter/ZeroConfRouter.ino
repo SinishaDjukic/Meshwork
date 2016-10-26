@@ -187,7 +187,13 @@ void setup()
 #else
 	trace.begin(&null_device, NULL);
 #endif
-	
+//
+//	for ( int i = 0; i < 100 ; i ++ ) {
+//		uartHC.putchar('c');
+//		uart.putchar('c');
+//		sleep(1);
+//	}
+
 	serialMessageListeners[0] = &zeroConfSerial;
 	serialMessageAdapter.setListeners(serialMessageListeners);
 

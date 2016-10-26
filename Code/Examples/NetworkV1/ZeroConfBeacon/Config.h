@@ -62,18 +62,19 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-//#define MW_FULL_DEBUG	true
+#define MW_FULL_DEBUG	false
+#define MW_LOG_DEBUG_ENABLE true
 
 //Our sketch's own debug
-#define EX_LOG_ZEROCONFBEACON		MW_FULL_DEBUG
+#define EX_LOG_ZEROCONFBEACON		true//MW_FULL_DEBUG
 
 //Timeout for arrival of new serial messages
 #define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
 
 //Incoming connection timeout for serial autoconfig init
-#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 5000)
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 10000)
 
 //Timeout after last incoming serial autoconfig message before autodeinit
-#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 10000 : 1000)
+#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 60000)
 
 #endif

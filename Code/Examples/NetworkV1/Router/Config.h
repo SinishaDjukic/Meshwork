@@ -58,9 +58,10 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-//#define MW_FULL_DEBUG	true
+#define MW_FULL_DEBUG	false
+#define MW_LOG_DEBUG_ENABLE true
 
 //Our sketch's own debug
-#define EX_LOG_ROUTER	MW_FULL_DEBUG
+#define EX_LOG_ROUTER	true//MW_FULL_DEBUG
 
 #endif
