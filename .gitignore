@@ -256,3 +256,6 @@ Code/Projects/Eclipse/Library/MW_Meshwork/spec.d
 Code/Projects/Eclipse/Library/MW_Meshwork_orig/.ino.cpp
 Code/Projects/Eclipse/Library/MW_Meshwork_orig/MW_Meshwork.ino
 Code/Projects/Eclipse/Library/MW_Meshwork_orig/spec.d
+
+#Nested files for Cosa libraries
+**/CosaLibraries/**
