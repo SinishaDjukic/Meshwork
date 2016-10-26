@@ -103,6 +103,7 @@ namespace Meshwork {
 				EndpointListener* m_listener;
 				endpoint_reporting_configuration_t* m_reporting_configuration;
 				Cluster* m_cluster;
+				Device* m_device;
 
 			public:
 				Endpoint(uint16_t type, uint16_t unit_type,
@@ -112,7 +113,8 @@ namespace Meshwork {
 					m_unit_type(unit_type),
 					m_listener(listener),
 					m_reporting_configuration(reporting_configuration),
-					m_cluster(NULL)
+					m_cluster(NULL),
+					m_device(NULL)
 					{}
 
 				virtual void getProperty(endpoint_value_t* value) = 0;
@@ -134,6 +136,15 @@ namespace Meshwork {
 				void setCluster(Cluster* cluster) {
 					m_cluster = cluster;
 				}
+
+				Device* getDevice() {
+					return m_device;
+				}
+
+				void setDevice(Device* device) {
+					m_device = device;
+				}
+
 
 		};//end of Meshwork::L7::Endpoint
 

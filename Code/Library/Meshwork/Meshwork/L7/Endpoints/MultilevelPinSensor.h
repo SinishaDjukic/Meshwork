@@ -23,10 +23,13 @@
 #define __MESHWORK_L7_ENDPOINTS_MULTILEVELPINSENSOR_H__
 
 #include "Cosa/Types.h"
+#include "Cosa/AnalogPin.hh"
 
 #include "Meshwork.h"
 #include "Meshwork/L7/Endpoint.h"
 #include "Meshwork/L7/Unit.h"
+
+#include "Meshwork/L7/Endpoints/MultilevelSensor.h"
 
 using namespace Meshwork::L7;
 
@@ -34,28 +37,29 @@ namespace Meshwork {
 
 	namespace L7 {
 
-		class MultilevelPinSensor: public MultilevelSensor {
+		namespace Endpoints {
 
-			protected:
-				AnalogPin* m_pin;
+			class MultilevelPinSensor: public MultilevelSensor {
 
-			public:
-				MultilevelPinSensor(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						uint8_t initial_state,
-						AnalogPin* pin):
-					MultilevelSensor(listener, reporting_configuration, initial_state),
-					m_pin(pin)
-					{}
+				protected:
+					AnalogPin* m_pin;
 
-				void poll() {
-					//scale 16 bit to 8 bit endpoint value, per spec
-					setState(m_pin->get_value() >> 8);
-				}
+				public:
+					MultilevelPinSensor(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							uint8_t initial_state,
+							AnalogPin* pin):
+						MultilevelSensor(listener, reporting_configuration, initial_state),
+						m_pin(pin)
+						{}
 
-		};//end of Meshwork::L7::MultilevelPinSensor
+					void poll() {
+						//scale 16 bit to 8 bit endpoint value, per spec
+						setState(m_pin->get_value() >> 8);
+					}
 
+			};//end of Meshwork::L7::Endpoints::MultilevelPinSensor
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif

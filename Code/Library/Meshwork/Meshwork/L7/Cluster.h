@@ -49,12 +49,12 @@ namespace Meshwork {
 				void initEndpoints();
 
 			public:
-				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint** endpoints, Device* device):
+				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint** endpoints):
 					m_type(type),
 					m_subtype(subtype),
 					m_endpoint_count(endpoint_count),
 					m_endpoints(endpoints),
-					m_device(device)
+					m_device(NULL)
 					{
 						initEndpoints();
 					}
@@ -90,9 +90,7 @@ namespace Meshwork {
 					return m_device;
 				}
 
-				void setDevice(Device* device) {
-					m_device = device;
-				}
+				void setDevice(Device* device);
 
 
 		};//end of Meshwork::L7::Cluster

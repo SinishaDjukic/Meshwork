@@ -132,7 +132,7 @@ namespace Meshwork {
 		};
 
 		//Union of L7 structures
-		union univmsg_l7_any_t {
+		struct univmsg_l7_any_t {
 			msg_l7_header_t msg_header;
 			uint8_t* data;
 		};
@@ -281,10 +281,19 @@ namespace Meshwork {
 
 			void pollMessage();
 
-			Network::msg_l3_status_t sendPropertyReport(univmsg_l7_any_t* msg, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID);
+#ifdef MW_SUPPORT_BASERF_SUPPORTED_META
+			//TODO add sendMetaDeviceGet
+			//TODO add sendMetaClusterGet
+			//TODO add sendMetaEndpointGet
+#endif
+
+			msg_l7_ack_status_t sendPropertyGet(uint8_t nodeID, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID,
+												void* bufAck, size_t& bufAckLen);
 
 			msg_l7_ack_status_t sendPropertySet(uint8_t nodeID, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID,
 												size_t dataLen, uint8_t* data, void* bufAck, size_t& bufAckLen);
+
+			Network::msg_l3_status_t sendPropertyReport(univmsg_l7_any_t* msg, bool cmd_mc_last, uint8_t clusterID, uint8_t endpointID);
 
 			int16_t getClusterIndex(Cluster* cluster) {
 				for ( int i = 0; i < m_device->getClusterCount(); i ++ )

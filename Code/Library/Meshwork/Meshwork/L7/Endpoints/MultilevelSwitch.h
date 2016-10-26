@@ -34,77 +34,78 @@ namespace Meshwork {
 
 	namespace L7 {
 
-		class MultilevelSwitch: public Meshwork::L7::Endpoint {
+		namespace Endpoints {
 
-			protected:
-				uint8_t m_state;
-				uint8_t m_target_state;
-				uint8_t m_lastreported_state;
+			class MultilevelSwitch: public Meshwork::L7::Endpoint {
 
-				virtual void setStateImpl(uint8_t state, uint16_t millis) = 0;
+				protected:
+					uint8_t m_state;
+					uint8_t m_target_state;
+					uint8_t m_lastreported_state;
 
-			public:
-				MultilevelSwitch(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						uint8_t initial_state):
-					Endpoint(Endpoint::TYPE_SWITCH_MULTILEVEL, Unit::UNIT_PERCENTAGE_BYTE, listener, reporting_configuration),
-					m_state(initial_state),
-					m_target_state(initial_state),
-					m_lastreported_state(initial_state)
-					{}
+					virtual void setStateImpl(uint8_t state, uint16_t millis) = 0;
 
-				void getProperty(endpoint_value_t &value) {
-					uint8_t* val = (uint8_t*) value.pvalue;
-					val[0] = m_state;
-					val[1] = m_target_state;
-					value.len = 2;
-				}
+				public:
+					MultilevelSwitch(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							uint8_t initial_state):
+						Endpoint(Endpoint::TYPE_SWITCH_MULTILEVEL, Unit::UNIT_PERCENTAGE_BYTE, listener, reporting_configuration),
+						m_state(initial_state),
+						m_target_state(initial_state),
+						m_lastreported_state(initial_state)
+						{}
 
-				void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
-					uint8_t* val = (uint8_t*) value->pvalue;
-					uint16_t millis = val[1] << 8 || val[2];
+					void getProperty(endpoint_value_t* value) {
+						uint8_t* val = (uint8_t*) value->pvalue;
+						val[0] = m_state;
+						val[1] = m_target_state;
+						value->len = 2;
+					}
 
-					setState(val[0], millis);
+					void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
+						uint8_t* val = (uint8_t*) value->pvalue;
+						uint16_t millis = val[1] << 8 || val[2];
 
-					status->status = Endpoint::STATUS_SET_PROCESSED;
-					status->len = 0;
-				}
+						setState(val[0], millis);
 
-				uint8_t getState() const {
-					return m_state;
-				}
+						status->status = Endpoint::STATUS_SET_PROCESSED;
+						status->len = 0;
+					}
 
-				uint8_t getTargetState() const {
-					return m_target_state;
-				}
+					uint8_t getState() const {
+						return m_state;
+					}
 
-				void setState(uint8_t state, uint16_t millis) {
-					if ( state != m_target_state ) {
-						//target state changes immediately
-						m_target_state = state;
+					uint8_t getTargetState() const {
+						return m_target_state;
+					}
 
-						//sub-class defines when m_state changes
-						setStateImpl(state, millis);
+					void setState(uint8_t state, uint16_t millis) {
+						if ( state != m_target_state ) {
+							//target state changes immediately
+							m_target_state = state;
 
-						m_state = state;
+							//sub-class defines when m_state changes
+							setStateImpl(state, millis);
 
-						//notify the listener
-						if ( m_listener != NULL &&
-								report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state)) ) {
-							endpoint_value_t value;
-							uint8_t val[2];
-							value.pvalue = &val;
-							value.len = 2;
-							getProperty(value);
-							m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
-							m_lastreported_state = m_state;
+							m_state = state;
+
+							//notify the listener
+							if ( m_listener != NULL &&
+									report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state)) ) {
+								endpoint_value_t value;
+								uint8_t val[2];
+								value.pvalue = &val;
+								value.len = 2;
+								getProperty(&value);
+								m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
+								m_lastreported_state = m_state;
+							}
 						}
 					}
-				}
 
-		};//end of Meshwork::L7::MultilevelSwitch
-
+			};//end of Meshwork::L7::Endpoints::MultilevelSwitch
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif

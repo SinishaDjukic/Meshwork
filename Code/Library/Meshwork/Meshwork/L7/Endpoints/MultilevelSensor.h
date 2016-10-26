@@ -34,58 +34,59 @@ namespace Meshwork {
 
 	namespace L7 {
 
-		class MultilevelSensor: public Meshwork::L7::Endpoint {
+		namespace Endpoints {
 
-			protected:
-				uint8_t m_state;
-				uint8_t m_lastreported_state;
+			class MultilevelSensor: public Meshwork::L7::Endpoint {
 
-			public:
-				MultilevelSensor(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						uint8_t initial_state):
-					Endpoint(Endpoint::TYPE_SENSOR_MULTILEVEL, Unit::UNIT_PERCENTAGE_BYTE, listener, reporting_configuration),
-					m_state(initial_state),
-					m_lastreported_state(initial_state)
-					{}
+				protected:
+					uint8_t m_state;
+					uint8_t m_lastreported_state;
 
-				void getProperty(endpoint_value_t &value) {
-					uint8_t* val = (uint8_t*) value.pvalue;
-					val[0] = m_state;
-					value.len = 1;
-				}
+				public:
+					MultilevelSensor(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							uint8_t initial_state):
+						Endpoint(Endpoint::TYPE_SENSOR_MULTILEVEL, Unit::UNIT_PERCENTAGE_BYTE, listener, reporting_configuration),
+						m_state(initial_state),
+						m_lastreported_state(initial_state)
+						{}
 
-				void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
-					status->status = Endpoint::STATUS_SET_INVALID;
-					status->len = 0;
-				}
+					void getProperty(endpoint_value_t* value) {
+						uint8_t* val = (uint8_t*) value->pvalue;
+						val[0] = m_state;
+						value->len = 1;
+					}
 
-				uint8_t getState() const {
-					return m_state;
-				}
+					void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
+						status->status = Endpoint::STATUS_SET_INVALID;
+						status->len = 0;
+					}
 
-				void setState(uint8_t state) {
-					if ( state != m_state ) {
-						//set the new value
-						m_state = state;
+					uint8_t getState() const {
+						return m_state;
+					}
 
-						//notify the listener
-						if ( m_listener != NULL &&
-								report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state)) ) {
-							endpoint_value_t value;
-							uint8_t val[1];
-							value.pvalue = &val;
-							value.len = 1;
-							getProperty(value);
-							m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
-							m_lastreported_state = m_state;
+					void setState(uint8_t state) {
+						if ( state != m_state ) {
+							//set the new value
+							m_state = state;
+
+							//notify the listener
+							if ( m_listener != NULL &&
+									report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state)) ) {
+								endpoint_value_t value;
+								uint8_t val[1];
+								value.pvalue = &val;
+								value.len = 1;
+								getProperty(&value);
+								m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
+								m_lastreported_state = m_state;
+							}
 						}
 					}
-				}
 
-		};//end of Meshwork::L7::MultilevelSensor
-
+			};//end of Meshwork::L7::Endpoints::MultilevelSensor
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif

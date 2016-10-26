@@ -29,33 +29,36 @@
 #include "Meshwork/L7/Endpoint.h"
 #include "Meshwork/L7/Unit.h"
 
+#include "Meshwork/L7/Endpoints/BinarySensor.h"
+
 using namespace Meshwork::L7;
 
 namespace Meshwork {
 
 	namespace L7 {
 
-		class BinaryPinSensor: public BinarySensor {
+		namespace Endpoints {
 
-			protected:
-				InputPin* m_pin;
+			class BinaryPinSensor: public BinarySensor {
 
-			public:
-				BinaryPinSensor(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						bool initial_state,
-						InputPin* pin):
-					BinarySensor(listener, reporting_configuration, initial_state),
-					m_pin(pin)
-					{}
+				protected:
+					InputPin* m_pin;
 
-				void poll() {
-					setState(m_pin->is_high() ? 255 : 0);
-				}
+				public:
+					BinaryPinSensor(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							bool initial_state,
+							InputPin* pin):
+						BinarySensor(listener, reporting_configuration, initial_state),
+						m_pin(pin)
+						{}
 
-		};//end of Meshwork::L7::BinaryPinSensor
+					void poll() {
+						setState(m_pin->is_high() ? 255 : 0);
+					}
 
+			};//end of Meshwork::L7::Endpoints::BinaryPinSensor
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif

@@ -29,33 +29,37 @@
 #include "Meshwork/L7/Endpoint.h"
 #include "Meshwork/L7/Unit.h"
 
+#include "Meshwork/L7/Endpoints/BinarySwitch.h"
+
 using namespace Meshwork::L7;
 
 namespace Meshwork {
 
 	namespace L7 {
 
-		class BinaryPinSwitch: public BinarySwitch {
+		namespace Endpoints {
 
-			protected:
-				OutputPin* m_pin;
+			class BinaryPinSwitch: public BinarySwitch {
 
-				virtual void setStateImpl(bool state, uint16_t millis) {
-					m_pin->set(state);
-				}
+				protected:
+					OutputPin* m_pin;
 
-			public:
-				BinaryPinSwitch(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						bool initial_state,
-						OutputPin* pin):
-					BinarySwitch(listener, reporting_configuration, initial_state),
-					m_pin(pin)
-					{}
+					virtual void setStateImpl(bool state, uint16_t millis) {
+						UNUSED(millis);
+						m_pin->set(state);
+					}
 
-		};//end of Meshwork::L7::BinaryPinSwitch
+				public:
+					BinaryPinSwitch(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							bool initial_state,
+							OutputPin* pin):
+						BinarySwitch(listener, reporting_configuration, initial_state),
+						m_pin(pin)
+						{}
 
+			};//end of Meshwork::L7::Endpoints::BinaryPinSwitch
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif

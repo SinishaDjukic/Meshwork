@@ -32,4 +32,10 @@ void Cluster::initEndpoints() {
 		m_endpoints[i]->setCluster(this);
 }
 
+void Cluster::setDevice(Device* device) {
+	m_device = device;
+	for ( int i = 0; i < m_endpoint_count; i ++ )
+		m_endpoints[i]->setDevice(device);
+}
+
 #endif

@@ -34,54 +34,55 @@ namespace Meshwork {
 
 	namespace L7 {
 
-		class BinarySensor: public Meshwork::L7::Endpoint {
+		namespace Endpoints {
 
-			protected:
-				bool m_state;
+			class BinarySensor: public Meshwork::L7::Endpoint {
 
-			public:
-				BinarySensor(EndpointListener* listener,
-						endpoint_reporting_configuration_t* reporting_configuration,
-						bool initial_state):
-					Endpoint(Endpoint::TYPE_SENSOR_BINARY, Unit::UNIT_BINARY_BYTE, listener, reporting_configuration),
-					m_state(initial_state)
-					{}
+				protected:
+					bool m_state;
 
-				void getProperty(endpoint_value_t &value) {
-					uint8_t* val = (uint8_t*) value.pvalue;
-					val[0] = m_state ? 255 : 0;
-					value.len = 1;
-				}
+				public:
+					BinarySensor(EndpointListener* listener,
+							endpoint_reporting_configuration_t* reporting_configuration,
+							bool initial_state):
+						Endpoint(Endpoint::TYPE_SENSOR_BINARY, Unit::UNIT_BINARY_BYTE, listener, reporting_configuration),
+						m_state(initial_state)
+						{}
 
-				void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
-					status->status = Endpoint::STATUS_SET_INVALID;
-					status->len = 0;
-				}
+					void getProperty(endpoint_value_t* value) {
+						uint8_t* val = (uint8_t*) value->pvalue;
+						val[0] = m_state ? 255 : 0;
+						value->len = 1;
+					}
 
-				bool getState() const {
-					return m_state;
-				}
+					void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
+						status->status = Endpoint::STATUS_SET_INVALID;
+						status->len = 0;
+					}
 
-				void setState(bool state) {
-					if ( state != m_state ) {
-						//set the new value
-						m_state = state;
+					bool getState() const {
+						return m_state;
+					}
 
-						//notify the listener
-						if ( m_listener != NULL && report_discrete(m_reporting_configuration) ) {
-							endpoint_value_t value;
-							uint8_t val[2];
-							value.pvalue = &val;
-							value.len = 1;
-							getProperty(value);
-							m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
+					void setState(bool state) {
+						if ( state != m_state ) {
+							//set the new value
+							m_state = state;
+
+							//notify the listener
+							if ( m_listener != NULL && report_discrete(m_reporting_configuration) ) {
+								endpoint_value_t value;
+								uint8_t val[2];
+								value.pvalue = &val;
+								value.len = 1;
+								getProperty(&value);
+								m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
+							}
 						}
 					}
-				}
 
-		};//end of Meshwork::L7::BinarySensor
-
+			};//end of Meshwork::L7::Endpoints::BinarySensor
+		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
-
 };//end of Meshwork
 #endif
