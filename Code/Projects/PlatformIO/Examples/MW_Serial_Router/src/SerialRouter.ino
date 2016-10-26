@@ -41,10 +41,10 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
-#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
 #include <Cosa/OutputPin.hh>
-#include <Cosa/RTC.hh>
+#include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
 
 #include <Meshwork.h>
@@ -110,7 +110,7 @@ void setup()
 {
 	//Basic setup
 	Watchdog::begin();
-	RTC::begin();
+	RTT::begin();
 
 	uart.begin(115200);
 
@@ -142,9 +142,9 @@ void run_recv() {
 	last_message_processed = networkSerial.processOneMessage(&msg);
 #if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
 	if ( last_message_processed != SerialMessageAdapter::SM_MESSAGE_NONE )
-		last_message_timestamp = RTC::millis();
-	else if ( RTC::since(last_message_timestamp) > EX_SERIAL_NEXT_MSG_TIMEOUT ) {
-		last_message_timestamp = RTC::millis();
+		last_message_timestamp = RTT::millis();
+	else if ( RTT::since(last_message_timestamp) > EX_SERIAL_NEXT_MSG_TIMEOUT ) {
+		last_message_timestamp = RTT::millis();
 		MW_LOG_WARNING(EX_LOG_SERIALROUTER, "No serial messages processed for %d ms", EX_SERIAL_NEXT_MSG_TIMEOUT);
 	}
 #endif

@@ -42,10 +42,10 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
-#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
 #include <Cosa/OutputPin.hh>
-#include <Cosa/RTC.hh>
+#include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
 
 #include <Meshwork.h>
@@ -103,7 +103,7 @@ void setup()
 {
 	//Basic setup
 	Watchdog::begin();
-	RTC::begin();
+	RTT::begin();
 	
 	uart.begin(115200);
 	
@@ -132,7 +132,7 @@ void run_recv() {
 	uint8_t data[dataLenMax];
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
 	
-	uint32_t start = RTC::millis();
+	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
 		if ( result != -1 ) {
@@ -141,7 +141,7 @@ void run_recv() {
 			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 		}
-		duration -= RTC::since(start);
+		duration -= RTT::since(start);
 	} 
 	
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: done\n");

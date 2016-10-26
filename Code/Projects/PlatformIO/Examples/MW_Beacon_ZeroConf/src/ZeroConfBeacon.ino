@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __EXAMPLES_ZEROCONFROUTER_H__
-#define __EXAMPLES_ZEROCONFROUTER_H__
+#ifndef __EXAMPLES_ZEROCONFBEACON_H__
+#define __EXAMPLES_ZEROCONFBEACON_H__
 
 //First, include the configuration constants file
 #include "MeshworkConfiguration.h"
@@ -41,10 +41,10 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
-#include <Cosa/IOStream/Driver/UART.hh>
+#include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
 #include <Cosa/OutputPin.hh>
-#include <Cosa/RTC.hh>
+#include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
 
 #include <Meshwork.h>
@@ -139,6 +139,10 @@ SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 	#define LED_BLINK(state, x)	(void) (state)
 #endif
 
+static const uint8_t 	BEACON_BCAST_PORT 	= 128;//0-127 are reserved for MW
+static const char 		BEACON_BCAST_MSG[] 	= "*BEACON*";//some message
+static const uint8_t	BEACON_BCAST_MSG_LEN = sizeof(BEACON_BCAST_MSG) -1;//without null termination
+
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////// SECTION: BUSINESS LOGIC/CODE ///////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -153,7 +157,7 @@ void readConfig() {
 	mesh.setNetworkID(zeroConfConfiguration.nwkconfig.nwkid);
 	mesh.setNodeID(zeroConfConfiguration.nwkconfig.nodeid);
 	mesh.setNetworkKeyLen(zeroConfConfiguration.nwkconfig.nwkkeylen);
-	mesh.setNetworkKey((char*)(&zeroConfConfiguration.nwkconfig.nwkkey));
+	mesh.setNetworkKey(zeroConfConfiguration.nwkconfig.nwkkey);
 	mesh.setChannel(zeroConfConfiguration.nwkconfig.channel);
 	mesh.setNetworkCaps(zeroConfConfiguration.devconfig.m_nwkcaps);
 	mesh.setDelivery(zeroConfConfiguration.devconfig.m_delivery);
@@ -172,7 +176,7 @@ void setup()
 {
 	//Basic setup
 	Watchdog::begin();
-	RTC::begin();
+	RTT::begin();
 	
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
@@ -182,20 +186,16 @@ void setup()
 	//Trace debugs only supported on Mega, since it has extra UARTs
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	trace.begin(&uart, NULL);
-	trace << PSTR("ZeroConf Router: started") << endl;
+	trace << PSTR("ZeroConf Beacon: started") << endl;
 	uartHC.begin(115200);
 #else
 	trace.begin(&null_device, NULL);
 #endif
-//
-//	for ( int i = 0; i < 100 ; i ++ ) {
-//		uartHC.putchar('c');
-//		uart.putchar('c');
-//		sleep(1);
-//	}
-
+	
+	//Begin: Init some structures
 	serialMessageListeners[0] = &zeroConfSerial;
 	serialMessageAdapter.setListeners(serialMessageListeners);
+	//End: Init some structures
 
 	readConfig();
 
@@ -221,39 +221,26 @@ void setup()
 	mesh.begin();
 }
 
-//Receive RF messages loop
-void run_recv() {
-	uint32_t duration = (uint32_t) 10 * 1000L;
-	uint8_t src, port;
-	size_t dataLenMax = NetworkV1::PAYLOAD_MAX;
-	uint8_t data[dataLenMax];
-	static uint16_t msgcounter = 0;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
-	
-	uint32_t start = RTC::millis();
-	while (duration > 0) {
-		trace << endl;
-		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
-		if ( result == Meshwork::L3::Network::OK ) {
-			msgcounter ++;
-			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
-			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(EX_LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
-			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
-		}
-		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
-		MW_LOG_INFO(EX_LOG_ZEROCONFROUTER, "[Statistics] Received=%d", msgcounter);
-		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
-		duration -= RTC::since(start);
-	} 
-	
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
-}
-
 //Main loop
 void loop()
 {
-	run_recv();
+	static size_t replySize = 0;
+	static uint16_t msgcounter = 0;
+	static uint16_t failcounter = 0;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl << PSTR("*** Beacon: Start ***") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("Target Node ID: ") << zeroConfConfiguration.reporting.targetnodeid << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("Delivery flags: ") << zeroConfConfiguration.devconfig.m_delivery << endl;
+	int result = mesh.send(zeroConfConfiguration.devconfig.m_delivery, -1, zeroConfConfiguration.reporting.targetnodeid, BEACON_BCAST_PORT,
+			BEACON_BCAST_MSG, BEACON_BCAST_MSG_LEN, (void*) NULL, replySize);
+	if ( result == Meshwork::L3::Network::OK )
+		msgcounter ++;
+	else
+		failcounter ++;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("*** Beacon: End ***") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl;
+	MW_LOG_INFO(EX_LOG_ZEROCONFBEACON, "[Statistics] Send success=%d, failures=%d", msgcounter, failcounter);
+	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl;
+	Watchdog::delay(EX_BEACON_INTERVAL);
 }
 
 #endif
