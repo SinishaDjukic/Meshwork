@@ -265,3 +265,4 @@ Code/Projects/Eclipse/Library/MW_Meshwork_orig/spec.d
 
 #Temp projects
 Code/Examples/NetworkV1/Temp/*
+*.clang_complete
