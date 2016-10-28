@@ -25,6 +25,8 @@
 #include "Cosa/Types.h"
 
 #include "Meshwork.h"
+#include "Cluster.h"
+#include "Endpoint.h"
 
 namespace Meshwork {
 

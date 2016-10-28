@@ -25,17 +25,17 @@
 #include "Cosa/Types.h"
 
 #include "Meshwork.h"
-
-//#include "Endpoint.h"
-//#include "Device.h"
+#include "Meshwork/L3/Network.h"
+#include "Endpoint.h"
+#include "Device.h"
 
 namespace Meshwork {
 
 	namespace L7 {
 
-//		class Endpoint;
-//
-//		class Device;
+		class Endpoint;
+
+		class Device;
 
 		class Cluster {
 

@@ -25,14 +25,16 @@
 
 #include "Meshwork.h"
 
-//#include "Cluster.h"
-//#include "Device.h"
+#include "Cluster.h"
+#include "Device.h"
 
 namespace Meshwork {
 
 	namespace L7 {
 
-//		class Cluster;
+		class Cluster;
+
+		class Device;
 
 		class Endpoint {
 
@@ -120,7 +122,7 @@ namespace Meshwork {
 				virtual void getProperty(endpoint_value_t* value) = 0;
 
 				virtual void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) = 0;
-				
+
 				uint16_t getUnitType() {
 					return m_unit_type;
 				}
@@ -128,7 +130,7 @@ namespace Meshwork {
 				uint16_t getType() {
 					return m_type;
 				}
-				
+
 				Cluster* getCluster() {
 					return m_cluster;
 				}
