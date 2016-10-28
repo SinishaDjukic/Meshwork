@@ -44,39 +44,34 @@ lib_dirs = env.get("LIBSOURCE_DIRS")
 
 project_lib_dir = util.get_projectlib_dir()
 for _, subdirs, _ in walk(project_lib_dir):
+#  print "Adding project libraries:"
   for dir in subdirs:
     lib_dirs.append(join(project_lib_dir, dir))
+#    print join(project_lib_dir, dir)
+  break
 
-lib_dirs.append(
-	join(PLATFORMFW_DIR, "cores", BOARD_CORELIBDIRNAME)
-)
+# Cosa
+PLATFORMFW_LIBRARIES_DIR = join(PLATFORMFW_DIR, "libraries")
+lib_dirs.append(PLATFORMFW_LIBRARIES_DIR)
+lib_dirs.append(join(PLATFORMFW_DIR, "cores", BOARD_CORELIBDIRNAME))
+lib_dirs.append(join(PLATFORMFW_DIR, "variants", BOARD_VARIANTLIBDIRNAME))
 
-lib_dirs.append(
-	join(PLATFORMFW_DIR, "variants", BOARD_VARIANTLIBDIRNAME)
-)
-
-lib_dirs.append(
-	join(PLATFORMFW_DIR, "libraries")
-)
-
-lib_dirs.append(
-	join(TOOLCHAIN_DIR, "avr", "include")
-)
-
-cosa_lib_dir = join(env.subst("$PLATFORMFW_DIR"), "libraries")
-for _, subdirs, _ in walk(cosa_lib_dir):
+for _, subdirs, _ in walk(PLATFORMFW_LIBRARIES_DIR):
+#  print "Adding Cosa libraries:"
   for dir in subdirs:
-    lib_dirs.append(dir)
+    lib_dirs.append(join(PLATFORMFW_LIBRARIES_DIR, dir))
+#    print join(PLATFORMFW_LIBRARIES_DIR, dir)
+  break
 
-env.Replace(
-	LIBSOURCE_DIRS=lib_dirs
-)
+# AVR
+lib_dirs.append(join(TOOLCHAIN_DIR, "avr", "include"))
+
+env.Replace(PLATFORMFW_DIR=PLATFORMFW_DIR)
+env.Replace(LIBSOURCE_DIRS=lib_dirs)
 
 print "LIBSOURCE_DIRS"
 print lib_dirs
 
-
-env.Replace(PLATFORMFW_DIR=PLATFORMFW_DIR)
 
 #
 # Base

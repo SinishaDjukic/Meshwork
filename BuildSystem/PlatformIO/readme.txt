@@ -21,5 +21,9 @@ II. Project Configuration
 In order to compile Meshwork projects their "lib" folder is expected to have an extra folder, which is to be created for your system:
     <project root>/lib/Meshwork -> <Meshwork project root>\Code\Library\Meshwork>
 
+Further, make sure you have the following values for your target board (env) in the project's platformio.ini file:
+    platform = cosa
+    framework = cosa
+
 
 NOTE: The build system has so far been tested only on Windows, so some glitches may be expected on Linux, althouth it is supposed to be cross-platform.
