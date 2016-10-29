@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -29,11 +29,42 @@
 //Select your RF chip. Currently, only NRF24L01P is supported
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
 
+//0-127 used by apps, 128-255 reserved for system
+#ifndef EX_PORT
+	#define EX_PORT					127
+#endif
+
+#ifndef EX_TEMP_DISABLE
+	//Pin connections of DS18B20. Default:
+	//  D4: GND
+	//  D5: DATA <---------|
+	//  D6: VCC --- 4.7K --|
+	#ifndef EX_TEMP_GND
+		#define EX_TEMP_GND		Board::D4
+	#endif
+
+	#ifndef EX_TEMP_VCC
+		#define EX_TEMP_VCC		Board::D6
+	#endif
+
+	#ifndef EX_TEMP_DATA
+		#define EX_TEMP_DATA		Board::D5
+	#endif
+#endif
+
 //Beacon message interval (ms)
-#define EX_BEACON_INTERVAL			1000
+#ifndef EX_BEACON_INTERVAL
+	#define EX_BEACON_INTERVAL			60000
+#endif
+//Beacon watchdog granularity interval (ms)
+#ifndef EX_BEACON_WATCHDOG_INTERVAL
+	#define EX_BEACON_WATCHDOG_INTERVAL		1024*8
+#endif
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
-#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
+#ifndef MW_ROUTECACHE_SELECT
+	#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
+#endif
 
 //Enable/disable LED tracing for RF messages
 #define EX_LED_TRACING		false
@@ -57,8 +88,12 @@
 //Offset for storing ZC device configuration in the EEPROM
 #define EX_ZC_CONFIGURATION_EEPROM_OFFSET  64
 
-//Offset for storing Route Cache table in the EEPROM
-#define EX_ROUTECACHE_TABLE_EEPROM_OFFSET 128
+//TODO Add support for raw sketch-specific settings (byte[]) to be configured via serial
+
+#if MW_ROUTECACHE_SELECT != MW_ROUTECACHE_RAM
+	//Offset for storing Route Cache table in the EEPROM
+	#define EX_ROUTECACHE_TABLE_EEPROM_OFFSET 128
+#endif
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
@@ -66,7 +101,9 @@
 #define MW_LOG_DEBUG_ENABLE true
 
 //Our sketch's own debug
-#define EX_LOG_ZEROCONFBEACON		true//MW_FULL_DEBUG
+#ifndef EX_LOG
+	#define EX_LOG	true//MW_FULL_DEBUG
+#endif
 
 //Timeout for arrival of new serial messages
 #define EX_SERIAL_NEXT_MSG_TIMEOUT	5000

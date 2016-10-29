@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -43,9 +43,18 @@
 #include <Cosa/IOStream.hh>
 #include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
+#include <Cosa/AnalogPin.hh>
 #include <Cosa/OutputPin.hh>
 #include <Cosa/RTT.hh>
 #include <Cosa/Wireless.hh>
+
+#include <Cosa/IOPin.hh>
+#include <Cosa/ExternalInterrupt.hh>
+
+#include <OWI.h>
+#include <OWI.cpp>
+#include <DS18B20.h>
+#include <DS18B20.cpp>
 
 #include <Meshwork.h>
 #include <Meshwork/L3/Network.h>
@@ -109,8 +118,8 @@ MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, E
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	#include "Cosa/IOBuffer.hh"
 	// Create buffer for HC UART
-	static IOBuffer<UART::BUFFER_MAX> ibuf;
-	static IOBuffer<UART::BUFFER_MAX> obuf;
+	static IOBuffer<UART::RX_BUFFER_MAX> ibuf;
+	static IOBuffer<UART::TX_BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
 	SerialMessageAdapter serialMessageAdapter(&uartHC);
@@ -139,9 +148,25 @@ SerialMessageAdapter::SerialMessageListener* serialMessageListeners[1];
 	#define LED_BLINK(state, x)	(void) (state)
 #endif
 
-static const uint8_t 	BEACON_BCAST_PORT 	= 128;//0-127 are reserved for MW
-static const char 		BEACON_BCAST_MSG[] 	= "*BEACON*";//some message
-static const uint8_t	BEACON_BCAST_MSG_LEN = sizeof(BEACON_BCAST_MSG) -1;//without null termination
+static const uint8_t 	BEACON_PORT 	= EX_PORT;
+static uint8_t seq_counter = 0;
+
+#ifndef EX_TEMP_DISABLE
+	OWI sensor_data(EX_TEMP_DATA);
+	DS18B20 sensor_temperature(&sensor_data);
+	OutputPin sensor_gnd(EX_TEMP_GND);
+	OutputPin sensor_vcc(EX_TEMP_VCC);
+#endif
+
+// Message from the device; just a sequence number
+struct dt_msg_t {
+  uint8_t nr;
+	int16_t temperature;
+  uint16_t battery;
+};
+
+dt_msg_t msg;
+size_t replySize = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////// SECTION: BUSINESS LOGIC/CODE ///////////////////////
@@ -150,7 +175,7 @@ static const uint8_t	BEACON_BCAST_MSG_LEN = sizeof(BEACON_BCAST_MSG) -1;//withou
 
 //Read stored configuration
 void readConfig() {
-	trace << PSTR("[Config] Reading ZeroConf EEPROM...") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("[Config] Reading ZeroConf EEPROM...") << endl;
 	zeroConfPersistent.init();
 	zeroConfPersistent.read_configuration();
 
@@ -163,12 +188,12 @@ void readConfig() {
 	mesh.setDelivery(zeroConfConfiguration.devconfig.m_delivery);
 
 #if ( MW_ROUTECACHE_SELECT == MW_ROUTECACHE_PERSISTENT )
-	trace << PSTR("[Config] Reading RouteCache EEPROM...") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("[Config] Reading RouteCache EEPROM...") << endl;
 	routecache_routeprovider.init();
 	routecache_routeprovider.read_routes();
 #endif
 
-	trace << PSTR("[Config] Done") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("[Config] Done") << endl;
 }
 
 //Setup sequence
@@ -177,70 +202,150 @@ void setup()
 	//Basic setup
 	Watchdog::begin();
 	RTT::begin();
-	
+
+#ifndef EX_TEMP_DISABLE
+	sensor_gnd.off();
+	sensor_vcc.off();
+#endif
+
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
 	LED(true);
+
 	uart.begin(115200);
-	
+
 	//Trace debugs only supported on Mega, since it has extra UARTs
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	trace.begin(&uart, NULL);
-	trace << PSTR("ZeroConf Beacon: started") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("ZeroConf Beacon: started") << endl;
 	uartHC.begin(115200);
 #else
 	trace.begin(&null_device, NULL);
 #endif
-	
-	//Begin: Init some structures
+
+	//Init listeners
 	serialMessageListeners[0] = &zeroConfSerial;
 	serialMessageAdapter.setListeners(serialMessageListeners);
-	//End: Init some structures
 
+	//Read current configuration from EEPROM
 	readConfig();
 
-	trace << PSTR("Waiting for ZeroConfSerial connection...") << endl;
-	//Allow some time for initial configuration
+	//Wait for boot-time reconfiguration via serial
+	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("Waiting for ZeroConfSerial connection...") << endl;
 	bool reconfigured = zeroConfSerial.processConfigSequence(EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT, EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT, EX_SERIAL_NEXT_MSG_TIMEOUT);
-	
+
 	readConfig();
 
-	trace << (reconfigured ? PSTR("New configuration applied") : PSTR("Previous configuration used")) << endl;// << PSTR("Closing serial") << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG) << (reconfigured ? PSTR("New configuration applied") : PSTR("Previous configuration used")) << endl;
+
+	RTT::end();
 
 	//Flush all chars
 	uart.flush();
-	//Don't disable the UART - for debugging purposes. Blink differently if reconfigured
-	//uart.end();
+
+#if MW_BOARD_SELECT != MW_BOARD_MEGA
+  #if !EX_LOG
+	  //Don't disable the UART when debugging
+	  uart.end();
+  #endif
+#endif
+
+  //Blink differently if reconfigured
 	LED_BLINK(false, reconfigured ? 2000 : 500);
 	LED(false);
-	
+
 #if EX_LED_TRACING
 	mesh.set_radio_listener(&ledTracing);
 #endif
 
-	mesh.begin();
+	ASSERT(mesh.begin());
+	rf.powerdown();
 }
 
 //Main loop
 void loop()
 {
-	static size_t replySize = 0;
-	static uint16_t msgcounter = 0;
-	static uint16_t failcounter = 0;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl << PSTR("*** Beacon: Start ***") << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("Target Node ID: ") << zeroConfConfiguration.reporting.targetnodeid << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("Delivery flags: ") << zeroConfConfiguration.devconfig.m_delivery << endl;
-	int result = mesh.send(zeroConfConfiguration.devconfig.m_delivery, -1, zeroConfConfiguration.reporting.targetnodeid, BEACON_BCAST_PORT,
-			BEACON_BCAST_MSG, BEACON_BCAST_MSG_LEN, (void*) NULL, replySize);
-	if ( result == Meshwork::L3::Network::OK )
-		msgcounter ++;
-	else
-		failcounter ++;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << PSTR("*** Beacon: End ***") << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl;
-	MW_LOG_INFO(EX_LOG_ZEROCONFBEACON, "[Statistics] Send success=%d, failures=%d", msgcounter, failcounter);
-	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFBEACON) << endl;
-	Watchdog::delay(EX_BEACON_INTERVAL);
+	Watchdog::end();
+  Watchdog::begin(16);
+
+	// Turn on necessary hardware modules
+	Power::all_enable();
+	Watchdog::delay(32);//TODO check if required
+
+  msg.nr = seq_counter ++;
+	msg.battery = AnalogPin::bandgap(1100);
+
+  Watchdog::delay(16);
+  rf.powerup();
+
+	#ifndef EX_TEMP_DISABLE
+		//Wait for the temperature sensor
+		sensor_vcc.on();
+		Watchdog::delay(16);//TODO check if the sensor needs less time
+
+		MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("Enter: sensor_temperature.connect") << endl;
+
+		if ( sensor_temperature.connect(0) ) {
+			MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("Enter: DS18B20.covert_request") << endl;
+			// Make a conversion request and read the temperature (scratchpad)
+			DS18B20::convert_request(&sensor_data, 12, true);
+			MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("Enter: sensor_temperature.read_scratchpad") << endl;
+			sensor_temperature.read_scratchpad();
+	    sensor_vcc.off();
+	    msg.temperature = sensor_temperature.temperature();//12.4 fp
+	  } else {
+			MW_LOG_ERROR(EX_LOG, "*** Temperature Sensor not found", NULL);
+			msg.temperature = -1000 << 4;
+	  }
+	#else
+		msg.temperature = -1000 << 4;
+	#endif
+
+	MW_LOG_INFO(EX_LOG, "***   Message:\r\n        Seq #: %d\r\n  Temperature: %d.%d C\r\n      Battery: %d mV\r\n", msg.nr, (msg.temperature >> 4), (msg.temperature & 0x15), msg.battery);
+
+	MW_LOG_DEBUG_ARRAY(EX_LOG, PSTR("Raw bytes: "), (char*) &msg, sizeof(msg));
+
+  MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("Enter: RTT, Mesh and RF start") << endl;
+
+	RTT::begin();
+  Watchdog::delay(16);
+  rf.powerup();
+
+  uint16_t time = RTT::millis();
+	//NodeID==255 means we are broadcasting, otherwise sending unicast
+	if ( zeroConfConfiguration.reporting.targetnodeid != 255 ) {
+	  MW_LOG_INFO(EX_LOG, "*** Sending: NodeID=%d, Delivery=%d",
+			zeroConfConfiguration.reporting.targetnodeid,
+			zeroConfConfiguration.devconfig.m_delivery);
+	  int result = mesh.send(zeroConfConfiguration.devconfig.m_delivery, -1,
+			BEACON_PORT, zeroConfConfiguration.reporting.targetnodeid,
+			 &msg, sizeof(msg), (void*) NULL, replySize);
+  } else {
+		MW_LOG_INFO(EX_LOG, "*** Broadcasting", NULL);
+		mesh.broadcast(BEACON_PORT, &msg, sizeof(msg));
+	}
+  time = RTT::since(time);
+  MW_LOG_INFO(EX_LOG, "*** Sending: End *** Time spent: %d ms", time);
+
+  rf.powerdown();
+  RTT::end();
+
+#if !EX_LOG
+  //Power down messes up the UART, so don't do it unless debugging
+  //We change the watchdog granularity to sleep more efficiently
+  Watchdog::end();
+  Watchdog::begin(EX_BEACON_WATCHDOG_INTERVAL);
+
+	Power::all_disable();
+  //Deep sleep
+  uint8_t mode = Power::set(SLEEP_MODE_PWR_DOWN);
+  Watchdog::delay(EX_BEACON_INTERVAL);//will be rounded to ~64s by Cosa to be a multiple of 1024*8
+  //Restore mode
+  Power::set(mode);
+#else
+  //Normal sleep
+  Watchdog::delay(EX_BEACON_INTERVAL);
+#endif
 }
 
 #endif
