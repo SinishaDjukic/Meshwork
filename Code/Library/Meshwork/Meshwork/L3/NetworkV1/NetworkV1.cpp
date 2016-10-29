@@ -400,8 +400,8 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delive
 									);
 			result = result > 0 ? OK : result;
 		}
-		if ( result != Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED ) {
 #if MW_SUPPORT_DELIVERY_ROUTED
+		if ( result != Meshwork::L3::Network::ERROR_DRIVER_SEND_ABORTED ) {
 			if ( (result <= 0) && (deliv & DELIVERY_ROUTED) ) {
 				MW_LOG_INFO(MW_LOG_NETWORKV1, "Send ROUTED", NULL);
 				if ( dest == Wireless::Driver::BROADCAST ) {
@@ -486,9 +486,9 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::send(uint8_t delive
 					MW_LOG_NOTICE(MW_LOG_NETWORKV1, "No routes to: %d", dest);
 				}
 			}
-	#endif
-		}//abort send check
-#endif
+	#endif // MW_SUPPORT_DELIVERY_FLOOD
+		} //abort send check
+#endif // MW_SUPPORT_DELIVERY_ROUTED
 	} else {
 		result = Meshwork::L3::NetworkV1::NetworkV1::ERROR_PAYLOAD_TOO_LONG;
 	}
@@ -714,9 +714,11 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 
 bool Meshwork::L3::NetworkV1::NetworkV1::begin(const void* config) {
 	UNUSED(config);
+#if MW_SUPPORT_DELIVERY_ROUTED
 	if ( m_advisor != NULL && m_driver != NULL ) {
 		m_advisor->set_address(m_driver->device_address());
 	}
+#endif
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkID=%d, NodeID=%d, NwkKeyLen=%d, NwkKeyPtr=d", getNetworkID(), getNodeID(), getNetworkKeyLen(), getNetworkKey());
 	MW_LOG_DEBUG(MW_LOG_NETWORKV1, "[Begin] NwkChannel=%d, NwkCaps=%d, Delivery=%d", getChannel(), getNetworkCaps(), getDelivery());
 	return m_driver == NULL ? false : m_driver->begin();

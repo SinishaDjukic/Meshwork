@@ -28,20 +28,6 @@
 
 #include "Meshwork.h"
 
-
-#ifndef MW_SUPPORT_DELIVERY_ROUTED
-	#define MW_SUPPORT_DELIVERY_ROUTED	true
-#endif
-
-#ifndef MW_SUPPORT_DELIVERY_FLOOD
-	#define MW_SUPPORT_DELIVERY_FLOOD	true
-#endif
-
-#ifndef MW_SUPPORT_REROUTING
-	#define MW_SUPPORT_REROUTING		true
-#endif
-
-
 namespace Meshwork {
 
 	namespace L3 {

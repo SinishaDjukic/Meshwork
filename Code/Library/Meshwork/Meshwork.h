@@ -65,6 +65,17 @@ namespace Meshwork {
 	};
 };
 
+#ifndef MW_SUPPORT_DELIVERY_ROUTED
+	#define MW_SUPPORT_DELIVERY_ROUTED	true
+#endif
+
+#ifndef MW_SUPPORT_DELIVERY_FLOOD
+	#define MW_SUPPORT_DELIVERY_FLOOD	true
+#endif
+
+#ifndef MW_SUPPORT_REROUTING
+	#define MW_SUPPORT_REROUTING		true
+#endif
 
 //Set the MW_LOG_XXX debug states based on the current configuration
 //ALL: includes ASSERT, EMERG, ALERT, CRIT, ERROR, WARNING, NOTICE and INFO
@@ -145,6 +156,7 @@ namespace Meshwork {
 			Board::DigitalPin(MW_NRF24L01P_CE), 			\
 			Board::ExternalInterruptPin(MW_NRF24L01P_IRQ));
 
+#if MW_SUPPORT_DELIVERY_ROUTED
 //Don't forget to include before using:
 //#include <Meshwork/L3/NetworkV1/RouteCache.h>
 #define MW_DECLP_ROUTEPROVIDER_ROUTECACHE_NONE(routeprovider)					\
@@ -173,6 +185,7 @@ namespace Meshwork {
 			Meshwork::L3::NetworkV1::CachingRouteProvider::UPDATE_REMOVE_ON_QOS_MIN |				\
 			Meshwork::L3::NetworkV1::CachingRouteProvider::UPDATE_REPLACE_ON_QOS_WORST);				\
 	Meshwork::L3::NetworkV1::NetworkV1::RouteProvider* routeprovider = &p_routeprovider;
+#endif
 
 //Don't forget to include before using:
 //#include <Cosa/OutputPin.hh>
