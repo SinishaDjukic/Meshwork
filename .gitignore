@@ -233,36 +233,12 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 Code/Host/JMeshwork/pguilf.properties
-Code/Projects/Eclipse/Examples/MW_Beacon/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Beacon/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Beacon/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Beacon/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Beacon/spec.d
-Code/Projects/Eclipse/Examples/MW_Console/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Console/spec.d
-Code/Projects/Eclipse/Examples/MW_Router/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Router/spec.d
-Code/Projects/Eclipse/Examples/MW_SerialRouter/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_SerialRouter/spec.d
-Code/Projects/Eclipse/Examples/MW_Temp/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_Temp/MW_Temp.ino
-Code/Projects/Eclipse/Examples/MW_Temp/spec.d
-Code/Projects/Eclipse/Examples/MW_ZeroConfBeacon/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_ZeroConfBeacon/spec.d
-Code/Projects/Eclipse/Examples/MW_ZeroConfRouter/.ino.cpp
-Code/Projects/Eclipse/Examples/MW_ZeroConfRouter/spec.d
-Code/Projects/Eclipse/Library/MW_Meshwork/.ino.cpp
-Code/Projects/Eclipse/Library/MW_Meshwork/spec.d
-Code/Projects/Eclipse/Library/MW_Meshwork_orig/.ino.cpp
-Code/Projects/Eclipse/Library/MW_Meshwork_orig/MW_Meshwork.ino
-Code/Projects/Eclipse/Library/MW_Meshwork_orig/spec.d
 
-#Windows git clients don't like symlinked nested .git files in Cosa libraries, so ignore them
-**/PlatformIO/Examples/**/lib/CosaLibraries/**
-**/PlatformIO/Examples/**/lib/Meshwork/**
+#Ignore symlinked Meshwork as a library
+Code/Projects/PlatformIO/Examples/**/lib/Meshwork/**
+Code/Projects/PlatformIO/Tests/**/lib/Meshwork/**
 
 #Symlinked Meshwork in examples should be ignored
 
 #Temp projects
-Code/Examples/NetworkV1/Temp/*
 *.clang_complete
