@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -87,8 +87,8 @@ NetworkV1 mesh(&rf, NULL, NetworkV1::NWKCAPS_ROUTER | NetworkV1::NWKCAPS_GATEWAY
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	#include "Cosa/IOBuffer.hh"
 	// Create buffer for HC UART
-	static IOBuffer<UART::BUFFER_MAX> ibuf;
-	static IOBuffer<UART::BUFFER_MAX> obuf;
+	static IOBuffer<UART::RX_BUFFER_MAX> ibuf;
+	static IOBuffer<UART::TX_BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
 	SerialMessageAdapter serialMessageAdapter(&uartHC);
@@ -140,12 +140,12 @@ uint32_t last_message_timestamp = 0;
 //Receive RF messages
 void run_recv() {
 	last_message_processed = networkSerial.processOneMessage(&msg);
-#if EXAMPLE_BOARD == EXAMPLE_BOARD_MEGA
+#if MW_BOARD_SELECT == MW_BOARD_MEGA
 	if ( last_message_processed != SerialMessageAdapter::SM_MESSAGE_NONE )
 		last_message_timestamp = RTT::millis();
 	else if ( RTT::since(last_message_timestamp) > EX_SERIAL_NEXT_MSG_TIMEOUT ) {
 		last_message_timestamp = RTT::millis();
-		MW_LOG_WARNING(EX_LOG_SERIALROUTER, "No serial messages processed for %d ms", EX_SERIAL_NEXT_MSG_TIMEOUT);
+		MW_LOG_WARNING(EX_LOG, "No serial messages processed for %d ms", EX_SERIAL_NEXT_MSG_TIMEOUT);
 	}
 #endif
 }
