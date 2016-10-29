@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -109,8 +109,8 @@ MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, E
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	#include "Cosa/IOBuffer.hh"
 	// Create buffer for HC UART
-	static IOBuffer<UART::BUFFER_MAX> ibuf;
-	static IOBuffer<UART::BUFFER_MAX> obuf;
+	static IOBuffer<UART::RX_BUFFER_MAX> ibuf;
+	static IOBuffer<UART::TX_BUFFER_MAX> obuf;
 	// HC UART will be used for Host-Controller communication
 	UART uartHC(3, &ibuf, &obuf);
 	SerialMessageAdapter serialMessageAdapter(&uartHC);
@@ -173,12 +173,12 @@ void setup()
 	//Basic setup
 	Watchdog::begin();
 	RTT::begin();
-	
+
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
 	LED(true);
 	uart.begin(115200);
-	
+
 	//Trace debugs only supported on Mega, since it has extra UARTs
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	trace.begin(&uart, NULL);
@@ -202,7 +202,7 @@ void setup()
 	trace << PSTR("Waiting for ZeroConfSerial connection...") << endl;
 	//Allow some time for initial configuration
 	bool reconfigured = zeroConfSerial.processConfigSequence(EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT, EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT, EX_SERIAL_NEXT_MSG_TIMEOUT);
-	
+
 	readConfig();
 
 	trace << (reconfigured ? PSTR("New configuration applied") : PSTR("Previous configuration used")) << endl;// << PSTR("Closing serial") << endl;
@@ -213,7 +213,7 @@ void setup()
 	//uart.end();
 	LED_BLINK(false, reconfigured ? 2000 : 500);
 	LED(false);
-	
+
 #if EX_LED_TRACING
 	mesh.set_radio_listener(&ledTracing);
 #endif
@@ -229,7 +229,7 @@ void run_recv() {
 	uint8_t data[dataLenMax];
 	static uint16_t msgcounter = 0;
 	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
-	
+
 	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		trace << endl;
@@ -245,8 +245,8 @@ void run_recv() {
 		MW_LOG_INFO(EX_LOG_ZEROCONFROUTER, "[Statistics] Received=%d", msgcounter);
 		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
 		duration -= RTT::since(start);
-	} 
-	
+	}
+
 	MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("RECV: done\n");
 }
 
