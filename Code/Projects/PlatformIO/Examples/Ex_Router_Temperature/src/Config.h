@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -42,12 +42,13 @@
 	#define EX_NODE_ID					250
 #endif
 
+//0-127 used by apps, 128-255 reserved for system
 #ifndef EX_PORT
-	#define EX_PORT					200
+	#define EX_PORT					127
 #endif
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
-#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_NONE//MW_ROUTECACHE_RAM
+#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 
 //Enable/disable LED tracing for RF messages
 #define EX_LED_TRACING		false

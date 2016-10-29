@@ -7,12 +7,12 @@
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General
  * Public License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
@@ -113,15 +113,15 @@ void setup()
 	//Basic setup
 	Watchdog::begin();
 	RTT::begin();
-	
+
 	uart.begin(115200);
-	
+
 	trace.begin(&uart, PSTR("Router: started\n"));
 
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Network ID: ") << EX_NWK_ID << endl;
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Channel ID: ") << EX_CHANNEL_ID << endl;
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Node ID: ") << EX_NODE_ID << endl;
-	
+
 #if EX_LED_TRACING
 	mesh.set_radio_listener(&ledTracing);
 #endif
@@ -129,7 +129,7 @@ void setup()
 	mesh.setNetworkID(EX_NWK_ID);
 	mesh.setChannel(EX_CHANNEL_ID);
 	mesh.setNodeID(EX_NODE_ID);
-	
+
 	ASSERT(mesh.begin());
 }
 
@@ -141,7 +141,7 @@ void run_recv() {
 	uint8_t data[dataLenMax];
 	static uint16_t msgcounter = 0;
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: dur=") << duration << PSTR(", dataLenMax=") << dataLenMax << PSTR("\n");
-	
+
 	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		trace << endl;
@@ -152,6 +152,8 @@ void run_recv() {
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
 			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
+			//TODO dataLenMax should be checked instead of result
+			//and verified that it is at least the size of the dt_msg_t structure
       if ( port == EX_PORT && result > 0 ) {
         dt_msg_t& msg = (dt_msg_t&) data;
         MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Message >>>") << endl;
@@ -162,8 +164,8 @@ void run_recv() {
       MW_LOG_INFO(EX_LOG_ROUTER, "[Statistics] Received=%d", msgcounter);
 		}
 		duration -= RTT::since(start);
-	} 
-	
+	}
+
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("RECV: done\n");
 }
 
