@@ -19,8 +19,8 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA  02111-1307  USA
  */
-#ifndef __MESHWORK_L7_ENDPOINTS_MULTILEVELSWITCH_H__
-#define __MESHWORK_L7_ENDPOINTS_MULTILEVELSWITCH_H__
+#ifndef __MESHWORK_L7_ENDPOINTS_TEMPERATURESENSOR_H__
+#define __MESHWORK_L7_ENDPOINTS_TEMPERATURESENSOR_H__
 
 #include "Cosa/Types.h"
 
@@ -36,62 +36,48 @@ namespace Meshwork {
 
 		namespace Endpoints {
 
-			class MultilevelSwitch: public Meshwork::L7::Endpoint {
+			class TemperatureSensor: public Meshwork::L7::Endpoint {
 
 				protected:
-					uint8_t m_state;
-					uint8_t m_target_state;
-					uint8_t m_lastreported_state;
+					//Values are always in signed Q16.16 fixed point format
+					//https://en.wikipedia.org/wiki/Q_(number_format)
+					int32_t m_state;
+					int32_t m_lastreported_state;
 					bool m_dirty;
 
 					void notify() {
+						//notify the listener
 						if ( m_listener != NULL
-//								&& report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state))
+//								&& report_threshold(m_reporting_configuration, calculate_threshold_u32(m_lastreported_state, m_state))
 						) {
+							endpoint_value_t value;
+							uint8_t val[sizeof(m_state)];
+							value.pvalue = &val[0];
+							value.len = membersof(val);
+							getProperty(&value);
 							m_listener->propertyChanged((Endpoint*) this);
 							m_lastreported_state = m_state;
 						}
 					}
 
-					virtual void setStateImpl(uint8_t state, uint16_t millis) {
-						UNUSED(millis);
-						m_state = state;
-					}
-
-					void setState(uint8_t state, uint16_t millis) {
-						//target state changes immediately
-						m_target_state = state;
-						//sub-class defines when m_state changes
-						setStateImpl(state, millis);
-						//mark dirty to notify
-						m_dirty = report_all(m_reporting_configuration) || state != m_target_state && report_discrete(m_reporting_configuration);
-					}
-
 				public:
-					MultilevelSwitch(EndpointListener* listener,
+					TemperatureSensor(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
-							uint8_t initial_state):
-						Endpoint(Endpoint::TYPE_SWITCH_MULTILEVEL, Unit::UNIT_8D_PERCENTAGE, listener, reporting_configuration),
+							int32_t initial_state):
+						Endpoint(Endpoint::TYPE_SENSOR_TEMPERATURE, Unit::UNIT_16Q16_KELVIN, listener, reporting_configuration),
 						m_state(initial_state),
-						m_target_state(initial_state),
 						m_lastreported_state(initial_state),
 						m_dirty(true)
 						{}
 
 					virtual void getProperty(endpoint_value_t* value) {
-						uint8_t* val = (uint8_t*) value->pvalue;
+						int32_t* val = (int32_t*) value->pvalue;
 						val[0] = m_state;
-						val[1] = m_target_state;
-						value->len = 2;
+						value->len = sizeof(m_state);
 					}
 
 					virtual void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
-						uint8_t* val = (uint8_t*) value->pvalue;
-						uint16_t millis = val[1] << 8 || val[2];
-
-						setState(val[0], millis);
-
-						status->status = Endpoint::STATUS_SET_PROCESSED;
+						status->status = Endpoint::STATUS_SET_INVALID;
 						status->len = 0;
 					}
 
@@ -99,11 +85,15 @@ namespace Meshwork {
 						return m_state;
 					}
 
-					//target (new) state to be reached
-					uint8_t getTargetState() const {
-						return m_target_state;
+					//This should be called directly only if you want to avoid subclassing and writing custom logic
+					//E.g. useful when you have other means of reading the current value and want to use this only
+					//as a data store
+					void setState(int32_t state) {
+						//set the new value
+						m_state = state;
+						m_dirty = report_all(m_reporting_configuration) || state != m_state && report_discrete(m_reporting_configuration);
 					}
-
+          
 					virtual void poll() {
 						if ( m_dirty ) {
 							notify();
@@ -111,7 +101,7 @@ namespace Meshwork {
 						}
 					}
 
-			};//end of Meshwork::L7::Endpoints::MultilevelSwitch
+			};//end of Meshwork::L7::Endpoints::TemperatureSensor
 		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
 };//end of Meshwork

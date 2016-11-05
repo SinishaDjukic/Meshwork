@@ -24,6 +24,7 @@
 
 #include "Cosa/Types.h"
 #include "Cosa/InputPin.hh"
+#include "Cosa/PinChangeInterrupt.hh"
 
 #include "Meshwork.h"
 #include "Meshwork/L7/Endpoint.h"
@@ -40,29 +41,54 @@ namespace Meshwork {
 		namespace Endpoints {
 
 			//This flavor only handles polling
-			class BinaryPinSensor: public BinarySensor {
+			class BinaryPinChangeSensor: public Endpoints::BinarySensor, public PinChangeInterrupt {
 
 				protected:
 					InputPin* m_pin;
+					bool m_last;
 
 				public:
-					BinaryPinSensor(EndpointListener* listener,
+					BinaryPinChangeSensor(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
-							InputPin* pin):
+							InputPin* pin, InterruptMode mode = ON_CHANGE_MODE, bool pullup = true):
 						BinarySensor(listener, reporting_configuration, pin->is_set()),
-						m_pin(pin)
-						{}
-
-					//In this Endpoint the state updated only during poll while reading the pin
-					virtual void poll() {
-						setState(m_pin->is_set() ? 255 : 0);
-						if ( m_dirty ) {
-							notify();
-							m_dirty = false;
+						PinChangeInterrupt((Board::InterruptPin) pin->pin(), mode, pullup),
+						m_pin(pin),
+						m_last(m_state)
+						{
 						}
-					}
 
-			};//end of Meshwork::L7::Endpoints::BinaryPinSensor
+						void on_interrupt(uint16_t arg) {
+							if ( m_listener != NULL )
+								m_listener->wakeup(this);
+							//check if change report is already pending
+							if ( !m_dirty )
+								setState(m_pin->is_set());
+						}
+
+						//Tricky stuff: in case of a quick on/off switch we can't simply send
+						//the latest state. We guarg against this by checking m_dirty in the
+						//ISR, but here we need to check again if the latest state differs
+						virtual void poll() {
+							if ( m_dirty ) {
+								notify();
+								bool state = m_pin->is_set();
+								if ( state != m_state ) {
+									setState(state);
+									notify();
+								}
+								m_dirty = false;
+							}
+						}
+
+						void setInterrupts(bool state) {
+							if ( state ) {
+								enable();
+							} else {
+								disable();
+							}
+						}
+			};//end of Meshwork::L7::Endpoints::BinaryPinChangeSensor
 		};//end of Meshwork::L7::Endpoints
 	};//end of Meshwork::L7
 };//end of Meshwork

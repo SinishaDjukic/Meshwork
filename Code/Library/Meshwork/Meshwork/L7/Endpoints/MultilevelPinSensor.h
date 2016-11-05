@@ -47,15 +47,18 @@ namespace Meshwork {
 				public:
 					MultilevelPinSensor(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
-							uint8_t initial_state,
+							int32_t initial_state, uint8_t initial_state_precision,
 							AnalogPin* pin):
-						MultilevelSensor(listener, reporting_configuration, initial_state),
+						MultilevelSensor(listener, reporting_configuration, initial_state, initial_state_precision),
 						m_pin(pin)
 						{}
 
 					void poll() {
-						//scale 16 bit to 8 bit endpoint value, per spec
-						setState(m_pin->get_value() >> 8);
+						setState(m_pin->sample(), 0);
+						if ( m_dirty ) {
+							notify();
+							m_dirty = false;
+						}
 					}
 
 			};//end of Meshwork::L7::Endpoints::MultilevelPinSensor

@@ -52,11 +52,10 @@ namespace Meshwork {
 				public:
 					BinaryPinSwitch(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
-							bool initial_state,
 							OutputPin* pin):
-						BinarySwitch(listener, reporting_configuration, initial_state),
+						BinarySwitch(listener, reporting_configuration, pin->is_on()),
 						m_pin(pin)
-						{}
+						{ }
 
 			};//end of Meshwork::L7::Endpoints::BinaryPinSwitch
 		};//end of Meshwork::L7::Endpoints

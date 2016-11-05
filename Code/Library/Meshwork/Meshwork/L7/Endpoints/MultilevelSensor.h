@@ -39,25 +39,48 @@ namespace Meshwork {
 			class MultilevelSensor: public Meshwork::L7::Endpoint {
 
 				protected:
-					uint8_t m_state;
-					uint8_t m_lastreported_state;
+					int32_t m_state;
+					int32_t m_lastreported_state;
+					int8_t m_precision;
+					int8_t m_lastreported_precision;
+					bool m_dirty;
+
+					void notify() {
+						//notify the listener
+						if ( m_listener != NULL
+//								&& report_threshold(m_reporting_configuration, calculate_threshold_u32(m_lastreported_state, m_state))
+						) {
+							endpoint_value_t value;
+							uint8_t val[4 + 1];
+							value.pvalue = &val[0];
+							value.len = 4;
+							getProperty(&value);
+							m_listener->propertyChanged((Endpoint*) this);
+							m_lastreported_state = m_state;
+							m_lastreported_precision = m_precision;
+						}
+					}
 
 				public:
 					MultilevelSensor(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
-							uint8_t initial_state):
-						Endpoint(Endpoint::TYPE_SENSOR_MULTILEVEL, Unit::UNIT_PERCENTAGE_BYTE, listener, reporting_configuration),
+							int32_t initial_state, uint8_t initial_state_precision):
+								//TODO different unit to be specified here
+						Endpoint(Endpoint::TYPE_SENSOR_MULTILEVEL, Unit::UNIT_UNSPECIFIED, listener, reporting_configuration),
 						m_state(initial_state),
-						m_lastreported_state(initial_state)
+						m_lastreported_state(initial_state),
+						m_precision(initial_state_precision),
+						m_lastreported_precision(initial_state_precision),
+						m_dirty(true)
 						{}
 
-					void getProperty(endpoint_value_t* value) {
-						uint8_t* val = (uint8_t*) value->pvalue;
+					virtual void getProperty(endpoint_value_t* value) {
+						int32_t* val = (int32_t*) value->pvalue;
 						val[0] = m_state;
-						value->len = 1;
+						value->len = sizeof(m_state);
 					}
 
-					void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
+					virtual void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) {
 						status->status = Endpoint::STATUS_SET_INVALID;
 						status->len = 0;
 					}
@@ -66,22 +89,27 @@ namespace Meshwork {
 						return m_state;
 					}
 
-					void setState(uint8_t state) {
-						if ( state != m_state ) {
-							//set the new value
-							m_state = state;
-
-							//notify the listener
-							if ( m_listener != NULL &&
-									report_threshold(m_reporting_configuration, calculate_threshold_u8(m_lastreported_state, m_state)) ) {
-								endpoint_value_t value;
-								uint8_t val[1];
-								value.pvalue = &val;
-								value.len = 1;
-								getProperty(&value);
-								m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
-								m_lastreported_state = m_state;
-							}
+					//This should be called directly only if you want to avoid subclassing and writing custom logic
+					//E.g. useful when you have other means of reading the current value and want to use this only
+					//as a data store
+					void setState(uint32_t state, uint8_t precision) {
+						//set the new value
+						m_state = state;
+						m_precision = precision;
+						m_dirty = true;
+						//TODO must add precision to the comparison and the threshold check
+						m_dirty = report_all(m_reporting_configuration) ||
+								(state != m_state || precision != m_precision) && report_discrete(m_reporting_configuration);
+					}
+          
+					uint8_t getPrecision() {
+						return m_precision;
+					}
+          
+					virtual void poll() {
+						if ( m_dirty ) {
+							notify();
+							m_dirty = false;
 						}
 					}
 

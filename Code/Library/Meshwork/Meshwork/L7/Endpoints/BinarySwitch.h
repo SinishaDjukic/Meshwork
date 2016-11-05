@@ -41,20 +41,30 @@ namespace Meshwork {
 				protected:
 					bool m_state;
 					bool m_target_state;
+					bool m_dirty;
 
 					virtual void setStateImpl(bool state, uint16_t millis) {
 						UNUSED(millis);
 						m_state = state;
 					}
 
+					void notify() {
+						if ( m_listener != NULL
+//								&& report_discrete(m_reporting_configuration)
+						) {
+							m_listener->propertyChanged((Endpoint*) this);
+						}
+					}
+
 				public:
 					BinarySwitch(EndpointListener* listener,
 							endpoint_reporting_configuration_t* reporting_configuration,
 							bool initial_state):
-						Endpoint(Endpoint::TYPE_SWITCH_BINARY, Unit::UNIT_BINARY_BYTE, listener, reporting_configuration),
+						Endpoint(Endpoint::TYPE_SWITCH_BINARY, Unit::UNIT_8D_BINARY, listener, reporting_configuration),
 						m_state(initial_state),
-						m_target_state(initial_state)
-						{}
+						m_target_state(initial_state),
+						m_dirty(false)
+						{ }
 
 
 					virtual void getProperty(endpoint_value_t* value) {
@@ -78,30 +88,25 @@ namespace Meshwork {
 						return m_state;
 					}
 
+					//target (new) state to be reached
 					bool getTargetState() const {
 						return m_target_state;
 					}
 
-					void setState(bool state, uint16_t millis) {
-						if ( state != m_target_state ) {
-							//target state changes immediately
-							m_target_state = state;
-
-							//sub-class defines when m_state changes
-							setStateImpl(state, millis);
-
-							m_state = state;
-
-							//notify the listener
-							if ( m_listener != NULL && report_discrete(m_reporting_configuration) ) {
-								endpoint_value_t value;
-								uint8_t val[2];
-								value.pvalue = &val;
-								value.len = 2;
-								getProperty(&value);
-								m_listener->propertyChanged((Endpoint*) this, (const endpoint_value_t*) &value);
-							}
+					virtual void poll() {
+						if ( m_dirty ) {
+							notify();
+							m_dirty = false;
 						}
+					}
+
+					void setState(bool state, uint16_t millis) {
+						//target state changes immediately
+						m_target_state = state;
+						//sub-class defines when m_state changes
+						setStateImpl(state, millis);
+						//mark dirty to notify
+						m_dirty = report_all(m_reporting_configuration) || state != m_target_state && report_discrete(m_reporting_configuration);
 					}
 
 			};//end of Meshwork::L7::Endpoints::BinarySwitch
