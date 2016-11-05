@@ -437,7 +437,9 @@ Network::msg_l3_status_t BaseRFApplication::sendMessage(univmsg_l7_any_t* msg) {
 	uint8_t rawData[rawDataLen];
 	rawDataLen = getDataFromMessage(rawDataLen, rawData, msg);
 	size_t bufAckLen = 0;
-	int result = m_network->send(msg->msg_header.src, msg->msg_header.port, (const void*) &rawData, rawDataLen, (void*) NULL, bufAckLen);
+	int result = msg->msg_header.src == 255 ?
+			m_network->broadcast(msg->msg_header.port, (const void*) &rawData, rawDataLen):
+			m_network->send(msg->msg_header.src, msg->msg_header.port, (const void*) &rawData, rawDataLen, (void*) NULL, bufAckLen);
 	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("result=") << result;
 	if ( result >= Meshwork::L3::Network::OK && isMessageReport(msg) ) {
 		m_last_sent_report_time = RTT::millis();

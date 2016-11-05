@@ -49,7 +49,7 @@ namespace Meshwork {
 				void initEndpoints();
 
 			public:
-				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint** endpoints):
+				Cluster(uint8_t type, uint8_t subtype, uint8_t endpoint_count, Endpoint* endpoints[]):
 					m_type(type),
 					m_subtype(subtype),
 					m_endpoint_count(endpoint_count),
@@ -73,6 +73,12 @@ namespace Meshwork {
 
 				Endpoint** getEndpoints() {
 					return m_endpoints;
+				}
+
+				void setEndpoints(Endpoint* endpoints[], uint8_t endpoint_count) {
+					m_endpoint_count = endpoint_count;
+					m_endpoints = endpoints;
+					initEndpoints();
 				}
 
 				Endpoint* getEndpoint(uint8_t index) {

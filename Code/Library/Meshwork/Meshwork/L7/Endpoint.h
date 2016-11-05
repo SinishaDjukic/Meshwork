@@ -50,8 +50,10 @@ namespace Meshwork {
 					void* pvalue;
 				} endpoint_set_status_t;
 
-				const static uint8_t REPORTING_MASK_DISCRETE	= 0x01;
+				const static uint8_t REPORTING_VALUE_ALL		= 0x00;
+				const static uint8_t REPORTING_MASK_ADD_REMOVE	= 0x01;
 				const static uint8_t REPORTING_MASK_THRESHOLD	= 0x02;
+				const static uint8_t REPORTING_MASK_DISCRETE	= 0x04;
 
 				typedef struct {
 					uint16_t reporting_flags;//discrete, threshold
@@ -66,13 +68,34 @@ namespace Meshwork {
 					return (rep->reporting_flags & REPORTING_MASK_THRESHOLD) && (rep->max_threshold <= threshold);
 				}
 
-				//Calculate difference between two unsigned bytes, return as percentage range [0-100]
+				static bool report_all(endpoint_reporting_configuration_t* rep) {
+					return rep->reporting_flags == REPORTING_VALUE_ALL;
+				}
+
+				//TODO move to utils
+
+				//Calculate difference between two unsigned bytes, return as a percentage range [0-100]
 				static uint8_t calculate_threshold_u8(uint8_t value1, uint8_t value2) {
 					uint8_t a = value1 >= value2 ? value1 : value2;
 					uint8_t b = value1 < value2 ? value1 : value2;
 					return ( (uint16_t) (a - b) * 100 ) >> 8;
 				}
 
+				//Calculate difference between two unsigned ints, return as a percentage range [0-100]
+				static uint8_t calculate_threshold_u16(uint16_t value1, uint16_t value2) {
+					uint16_t a = value1 >= value2 ? value1 : value2;
+					uint16_t b = value1 < value2 ? value1 : value2;
+					return ( (uint32_t) (a - b) * 100 ) >> 16;
+				}
+
+				//Calculate difference between two unsigned longs, return as a percentage range [0-100]
+				//Clamp if more than 100%. Positive/negative difference treated equally
+				static uint8_t calculate_threshold_u32(uint32_t value1, uint32_t value2) {
+					uint32_t bigger = value1 >= value2 ? value1 : value2;
+					uint32_t lesser = value1 < value2 ? value1 : value2;
+					return (uint8_t) ( (bigger - lesser) / bigger );
+				}
+        
 				const static uint8_t STATUS_SET_PROCESSED		= 0;
 				const static uint8_t STATUS_SET_INVALID			= 1;
 				const static uint8_t STATUS_SET_FORBIDDEN		= 2;
@@ -91,12 +114,17 @@ namespace Meshwork {
 				//BinarySensor
 				const static uint16_t TYPE_SENSOR_BINARY		= 0x2000;
 				//MultilevelSensor
-				const static uint16_t TYPE_SENSOR_MULTILEVEL	= 0x2001;
+				const static uint16_t TYPE_SENSOR_MULTILEVEL	= 0x2100;
+				//VoltageSensor
+				const static uint16_t TYPE_SENSOR_VOLTAGE		= 0x2200;
+				//TemperatureSensor
+				const static uint16_t TYPE_SENSOR_TEMPERATURE	= 0x2300;
 
 				//Callback for value changes, which will send RF messages
 				class EndpointListener {
 					public:
-						virtual void propertyChanged(const Endpoint* endpoint, const endpoint_value_t* value) = 0;
+						virtual void propertyChanged(Endpoint* endpoint) = 0;
+						virtual void wakeup(Endpoint* endpoint) = 0;
 				};
 
 			protected:
@@ -119,9 +147,22 @@ namespace Meshwork {
 					m_device(NULL)
 					{}
 
+				//get the current value; to be used in RF handling loop
 				virtual void getProperty(endpoint_value_t* value) = 0;
 
+				//get the current value; to be used in RF handling loop or directly by the app logic
 				virtual void setProperty(const endpoint_value_t* value, endpoint_set_status_t* status) = 0;
+
+				//Poll the state and update it, if needed.
+				//This function is called by the app whenever it is ready to process
+				//outgoing RF messages for endpoints that have changes.
+				//E.g. a sleeping device would wake up periodically (or upon interrupt)
+				//and call poll() on all endpoints, which would trigger listener notifications,
+				//which would then send property change messages
+				//If woken during an interrupt the new value would be written into the field
+				//and the Endpoint would be marked dirty, so that upon next poll()
+				//the listener would be notified
+				virtual void poll() = 0;
 
 				uint16_t getUnitType() {
 					return m_unit_type;
@@ -145,6 +186,22 @@ namespace Meshwork {
 
 				void setDevice(Device* device) {
 					m_device = device;
+				}
+
+				EndpointListener* getListener() {
+					return m_listener;
+				}
+
+				void setListener(EndpointListener* listener) {
+					m_listener = listener;
+				}
+
+				endpoint_reporting_configuration_t* getReportingConfiguration() {
+					return m_reporting_configuration;
+				}
+
+				void setReportingConfiguration(endpoint_reporting_configuration_t* reporting_configuration) {
+					m_reporting_configuration = reporting_configuration;
 				}
 
 

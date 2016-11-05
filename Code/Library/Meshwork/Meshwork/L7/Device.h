@@ -1,4 +1,3 @@
-
 /**
  * This file is part of the Meshwork project.
  *
@@ -47,7 +46,7 @@ namespace Meshwork {
 				void initClusters();
 
 			public:
-				Device(uint8_t type, uint8_t subtype, uint8_t cluster_count, Cluster** clusters):
+				Device(uint8_t type, uint8_t subtype, uint8_t cluster_count, Cluster* clusters[]):
 					m_type(type),
 					m_subtype(subtype),
 					m_cluster_count(cluster_count),
@@ -66,6 +65,12 @@ namespace Meshwork {
 
 				uint8_t getClusterCount() {
 					return m_cluster_count;
+				}
+
+				void setClusters(Cluster* clusters[], uint8_t cluster_count) {
+					m_clusters = clusters;
+					m_cluster_count = cluster_count;
+					initClusters();
 				}
 
 				Cluster** getClusters() {
