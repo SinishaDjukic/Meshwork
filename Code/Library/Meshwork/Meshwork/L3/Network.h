@@ -134,6 +134,13 @@ namespace Meshwork {
 		/** Send aborted by the app. */
 		static const int8_t ERROR_DRIVER_SEND_ABORTED = -52;
 		
+		//Receive errors code group
+		/** Receive timeout expired */
+		static const int8_t ERROR_RECV_TIMEOUT = -56;
+		/** Received message too long */
+		static const int8_t ERROR_RECV_TOO_LONG = -57;
+
+
 		/** Last error code from the L3 range. */
 		static const int8_t ERROR_END_L3 = -63;
 
@@ -170,7 +177,6 @@ namespace Meshwork {
 					outs << PSTR("\t");
 			}
 
-
 		//protected fields
 		protected:
 			Wireless::Driver* m_driver;
@@ -197,7 +203,7 @@ namespace Meshwork {
 			  m_sendAbort(false)
 			  {}
 
-			Wireless::Driver* get_driver() {
+			Wireless::Driver* getDriver() {
 			  return m_driver;
 			}
 

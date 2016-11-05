@@ -129,6 +129,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 				ignored = false;
 				
 				reply_result = m_driver->recv(reply_src, reply_port, &dataACK, ACK_PAYLOAD_MAX, TIMEOUT_ACK_RECEIVE); //no ack received
+				convertError(reply_result);
 				reply_len = reply_result >= 0 ? (uint8_t) reply_result : 0;
 				MW_LOG_DEBUG(MW_LOG_NETWORKV1, "Reply byte count=%d", reply_len);
 				
@@ -226,6 +227,7 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::sendWithACK(uint8_t
 				maxACKLen = reply_len;
 				break;
 			} else { //some other error happened
+				//TODO handle ERROR_RECV_TOO_LONG and ERROR_RECV_TIMEOUT better
 				if ( reply_result == -1 ) {//lenACK or RF RCV buffer overflow; break loop
 					result = ERROR_ACK_TOO_LONG;
 					break;
@@ -511,6 +513,8 @@ Network::msg_l3_status_t Meshwork::L3::NetworkV1::NetworkV1::recv(uint8_t& src, 
 	MW_DECL_IF_SUPPORT_RADIO_LISTENER NOTIFY_RECV_BEGIN();
 
 	int dataLen = m_driver->recv(src, port, &data, PAYLOAD_MAX, ms);
+
+	convertError(dataLen);
 
 	msg_l3_status_t result = dataLen;
 //	srcA = src;
