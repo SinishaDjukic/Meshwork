@@ -30,9 +30,15 @@
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
 
 //Network configuration is hardcoded here
-#define EX_NODE_NWK_ID				1
-#define EX_NODE_CHANNEL_ID			0
-#define EX_NODE_ID					1
+#ifndef EX_NWK_ID
+	#define EX_NWK_ID				1
+#endif
+#ifndef EX_CHANNEL_ID
+	#define EX_CHANNEL_ID			0
+#endif
+#ifndef EX_NODE_ID
+	#define EX_NODE_ID					1
+#endif
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
 #define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM

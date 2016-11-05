@@ -109,16 +109,16 @@ void setup()
 	
 	trace.begin(&uart, PSTR("Router: started\n"));
 
-	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Network ID: ") << EX_NODE_NWK_ID << endl;
-	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Channel ID: ") << EX_NODE_CHANNEL_ID << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Network ID: ") << EX_NWK_ID << endl;
+	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Channel ID: ") << EX_CHANNEL_ID << endl;
 	MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Node ID: ") << EX_NODE_ID << endl;
 	
 #if EX_LED_TRACING
 	mesh.set_radio_listener(&ledTracing);
 #endif
 
-	mesh.setNetworkID(EX_NODE_NWK_ID);
-	mesh.setChannel(EX_NODE_CHANNEL_ID);
+	mesh.setNetworkID(EX_NWK_ID);
+	mesh.setChannel(EX_CHANNEL_ID);
 	mesh.setNodeID(EX_NODE_ID);
 	
 	ASSERT(mesh.begin());
@@ -135,11 +135,17 @@ void run_recv() {
 	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, NULL);
-		if ( result != -1 ) {
+		if ( result >= 0 ) {
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
 			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
+		} else if ( result == NetworkV1::ERROR_RECV_TIMEOUT ) {
+			//do nothing
+		} else if ( result == NetworkV1::ERROR_RECV_TOO_LONG ) {
+			//do nothing. convertError will log an error anyway
+		} else {
+			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Error code: ") << result << endl;
 		}
 		duration -= RTT::since(start);
 	} 
