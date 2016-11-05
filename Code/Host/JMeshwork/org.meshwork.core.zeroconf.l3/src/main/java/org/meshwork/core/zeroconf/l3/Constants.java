@@ -39,11 +39,11 @@ public interface Constants {
 
     //TODO same as in host.l3.Constants - pull to a common place
     /** First possible node ID. */
-    public static final byte MIN_NODE_ID 	= 1;
+    public static final char MIN_NODE_ID 	= 1;
     /** Last possible node ID. */
-    public static final byte MAX_NODE_ID 	= (byte) 254;
+    public static final char MAX_NODE_ID 	= 255;
     /** Maximum node count in the network. */
-    public static final byte MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID;
+    public static final char MAX_NODE_COUNT = MAX_NODE_ID - MIN_NODE_ID;
 
     /** Maximum length of a network key. */
     public static final byte MAX_NETWORK_KEY_LEN 	= 8;

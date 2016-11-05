@@ -28,10 +28,17 @@ public class SerialMessageTransport implements AbstractMessageTransport, SerialP
     }
 
     public void deinit() throws Exception {
-        port.closePort();
+        System.out.println("########## Closing port: "+portName);
+        while (!port.closePort());
         port.removeEventListener();
         port = null;
         portName = null;
+        System.out.println("########## Closed");
+    }
+    
+    public boolean isOpen() {
+    	SerialPort temp = port;
+    	return temp != null && temp.isOpened();
     }
 
     //port assumed to be set up with correct settings, opened by the caller before calling this method, and having no other event listener added

@@ -68,7 +68,7 @@ public class ReportingPanel extends PTitledPanel implements AbstractElement, Act
     public Object getData() {
         ReportingData data = new ReportingData();
         data.reportingFlags = getMask();
-        data.reportingNodeID = getNodeID();
+        data.reportingNodeID = (byte) getNodeID();
         return data;
     }
 
@@ -77,7 +77,7 @@ public class ReportingPanel extends PTitledPanel implements AbstractElement, Act
     }
 
     public void setNodeID(byte value) {
-        nodeIDField.setValue(value);
+        nodeIDField.setValue((char) value);
     }
 
     @Override

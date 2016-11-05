@@ -13,4 +13,6 @@ public interface AbstractMessageTransport {
     public MessageData readMessage(int timeout) throws TransportTimeoutException, IOException;
 
     public int sendMessage(MessageData message) throws IOException;
+    
+    public boolean isOpen();
 }

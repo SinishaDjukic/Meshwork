@@ -40,7 +40,7 @@ public abstract class AbstractDeviceTask extends AbstractTask {
             } catch (TransportTimeoutException e) {
                 hasMessages = false;
             } catch (Exception e) {
-
+                hasMessages = false;//jssc.SerialPortException
             }
         }
     }
@@ -78,8 +78,8 @@ public abstract class AbstractDeviceTask extends AbstractTask {
         while (count < MAX_READ_MSG_COUNT_PER_CALL) {
             try {
                 count++;
-                temp = transport.readMessage(readTimeout);
                 boolean breakout = false;
+                temp = transport.readMessage(readTimeout);
                 if (temp != null) {//shouldn't happen?
                     if (temp.seq == seq) {
                         result = temp;
@@ -95,6 +95,11 @@ public abstract class AbstractDeviceTask extends AbstractTask {
                 GUILogger.error("*** Transport timeout error: " + e.getMessage(), e);
             } catch (Exception e) {
                 GUILogger.error("*** Read error: " + e.getMessage(), e);
+                if ( !transport.isOpen() ) {
+                    GUILogger.error("*** Transport closed!", null);
+                    result = null;
+                    break;
+                }
             }
             //invoked here to ensure at least one read in case readTimeout is really low or zero
             if (System.currentTimeMillis() - start >= readTimeout)
@@ -131,7 +136,10 @@ public abstract class AbstractDeviceTask extends AbstractTask {
      */
     protected void doMZCDeinit() throws Exception {
         MZCDeinit msg = new MZCDeinit(nextSeq());
+        int oldConsoleReadTimeout = consoleReadTimeout; 
+        consoleReadTimeout = 1000;
         AbstractMessage result = sendMessageAndReceive(msg);
+        consoleReadTimeout = oldConsoleReadTimeout;
         GUILogger.info("[MZCDeinit] Response: "+result);
         if ( result == null || !(result instanceof MOK) )
             throw new Exception("Error sending MZCDeinit");

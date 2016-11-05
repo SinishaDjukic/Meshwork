@@ -17,10 +17,13 @@ public class DisconnectDeviceTask extends AbstractDeviceTask {
 
     @Override
     public ArrayList<AbstractData> runImpl() throws Throwable {
-        doMZCDeinit();
-        //We deinit here to avoid hanging the UI... to be fixed
-        if ( transport instanceof SerialMessageTransport )
-            ((SerialMessageTransport)transport).deinit();
+    	try {
+    		doMZCDeinit();
+    	} finally {
+	        //We deinit here to avoid hanging the UI... to be fixed
+	        if ( transport instanceof SerialMessageTransport )
+	            ((SerialMessageTransport)transport).deinit();
+    	}
         //TODO update connection state in the GUI?
         return null;
     }
