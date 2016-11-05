@@ -58,7 +58,7 @@ namespace Meshwork {
 	namespace L7 {
 
 		//Network port for BaseRF L7 messages
-		static const uint8_t BASERF_MESSAGE_PORT		= 70;
+		static const uint8_t BASERF_MESSAGE_PORT		= 0x88;//136 dec
 
 		//L7 message headers length
 		static const uint8_t BASERF_MESSAGE_PAYLOAD_HEADERLEN	= 2;
@@ -184,6 +184,7 @@ namespace Meshwork {
 			Meshwork::L3::Network* m_network;
 			Device* m_device;
 			BaseRFReportListener* m_base_rf_report_listener;
+			uint8_t m_seq;
 			uint32_t m_poll_timeout;
 			uint32_t m_last_sent_report_time;
 			uint32_t m_last_recv_request_time;
@@ -265,15 +266,20 @@ namespace Meshwork {
 				m_network(network),
 				m_device(device),
 				m_base_rf_report_listener(base_rf_report_listener),
+				m_seq(0),
 				m_poll_timeout(poll_timeout),
 				m_last_sent_report_time(0),
 				m_last_recv_request_time(0),
 				m_sent_report_count(0),
-				m_recv_request_count(0)
+				m_recv_request_count(0),
+				m_last_message_valid(false)
 				{
-					setLastMessageValid(false);
 				}
 
+			uint8_t nextSeq() {
+			  m_seq = m_seq < 127 ? m_seq + 1 : 0;
+			  return m_seq;
+			}
 
 			//TODO Add REP notification function to reporting node. Update m_last_sent_report
 
