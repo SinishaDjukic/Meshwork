@@ -13,9 +13,9 @@ before_install:
   - mv Cosa-master ~/sketchbook/hardware/Cosa/avr
 install:
   - mkdir -p /usr/local/share/arduino/libraries/Meshwork
+  - cp $PWD/Code/Library/library.properties /usr/local/share/arduino/libraries/Meshwork/library.properties
   - ln -s $PWD/Code/Library/Meshwork /usr/local/share/arduino/libraries/Meshwork/src
   - ln -s $PWD/Code/Library/Projects/Examples /usr/local/share/arduino/libraries/Meshwork/examples
-  - arduino --install-library "Meshwork"
 script:
   - arduino --verify --board arduino:avr:uno $PWD/Code/Library/Projects/Examples/Beacon/Beacon.ino
 notifications:
