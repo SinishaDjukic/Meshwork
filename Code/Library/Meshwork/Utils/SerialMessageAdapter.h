@@ -76,14 +76,14 @@ class SerialMessageAdapter {
 
 
 	protected:
-		UART* m_serial;
+		IOStream::Device* m_serial;
 		SerialMessageListener** m_listeners;
 		serialmsg_t* m_currentMsg;
 		uint8_t m_lastSerialMsgLen;
 		uint8_t m_timeout;
 
 	public:
-		SerialMessageAdapter(UART* serial, uint16_t timeout = TIMEOUT_RESPONSE):
+		SerialMessageAdapter(IOStream::Device* serial, uint16_t timeout = TIMEOUT_RESPONSE):
 			m_serial(serial),
 			m_listeners(NULL),
 			m_currentMsg(NULL),
