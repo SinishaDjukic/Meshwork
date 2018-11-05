@@ -16,8 +16,9 @@ install:
   - cp $PWD/Code/Library/library.properties /usr/local/share/arduino/libraries/Meshwork/library.properties
   - ln -s $PWD/Code/Library/Meshwork /usr/local/share/arduino/libraries/Meshwork/src
   - ln -s $PWD/Code/Library/Projects/Examples /usr/local/share/arduino/libraries/Meshwork/examples
+  - ls -laR
 script:
-  - arduino --verify --board arduino:avr:uno $PWD/Code/Library/Projects/Examples/Beacon/Beacon.ino
+  - arduino --verify --board cosa:avr:uno $PWD/Code/Library/Projects/Examples/Beacon/Beacon.ino
 notifications:
   email:
     on_success: change
