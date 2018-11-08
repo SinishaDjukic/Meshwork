@@ -17,8 +17,12 @@ install:
   - ln -s $PWD/Code/Library/Meshwork /usr/local/share/arduino/libraries/Meshwork/src
   - ln -s $PWD/Code/Library/Projects/Examples /usr/local/share/arduino/libraries/Meshwork/examples
   - ls -laR ~/
+  
 script:
-  - arduino --verify --board arduino:cosa:uno $PWD/Code/Library/Projects/Examples/Beacon/Beacon.ino
+  - rm -rf ~/.build
+  - mkdir -p ~/.build
+  - cp ~/.build
+  - /usr/local/share/arduino/arduino-builder -compile -logger=machine -hardware ~/sketchbook/hardware -tools /usr/local/share/arduino/tools-builder -tools /usr/local/share/arduino/hardware\tools\avr -built-in-libraries /usr/local/share/arduino/libraries -libraries /usr/local/share/arduino/libraries/ -fqbn=Cosa:avr:uno -vid-pid=0X2341_0X0010 -ide-version=10613 -build-path ~/.build -warnings=none -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.avr-gcc.path=/usr/local/share/arduino/hardware/tools/avr -prefs=runtime.tools.avrdude.path=/usr/local/share/arduino/hardware/tools/avr -verbose $PWD/Code/Library/Projects/Examples/Beacon/Beacon.ino
 notifications:
   email:
     on_success: change
