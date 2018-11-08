@@ -14,8 +14,8 @@ before_install:
 install:
   - mkdir -p /usr/local/share/arduino/libraries/Meshwork
   - cp $PWD/Code/Library/library.properties /usr/local/share/arduino/libraries/Meshwork/library.properties
-  - ln -s $PWD/Code/Library/Meshwork /usr/local/share/arduino/libraries/Meshwork/src
-  - ln -s $PWD/Code/Library/Projects/Examples /usr/local/share/arduino/libraries/Meshwork/examples
+  - ln -s $PWD/Code/Library/src /usr/local/share/arduino/libraries/Meshwork/src
+  - ln -s $PWD/Code/Library/examples /usr/local/share/arduino/libraries/Meshwork/examples
 script:
   - rm -rf ~/.build
   - mkdir -p ~/.build
