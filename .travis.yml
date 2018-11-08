@@ -19,18 +19,18 @@ install:
 script:
   - rm -rf ~/.build
   - mkdir -p ~/.build
-  - export COMPILECMD=/usr/local/share/arduino/arduino-builder -compile -logger=humantags -hardware ~/sketchbook/hardware -tools /usr/local/share/arduino/tools-builder -tools /usr/local/share/arduino/hardware/tools/avr -built-in-libraries /usr/local/share/arduino/libraries -libraries /usr/local/share/arduino/libraries -vid-pid=0X2341_0X0010 -ide-version=10613 -build-path ~/.build -warnings=none -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.avr-gcc.path=/usr/local/share/arduino/hardware/tools/avr -prefs=runtime.tools.avrdude.path=/usr/local/share/arduino/hardware/tools/avr -verbose
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_RouteCache/Test_RouteCache.ino
-#  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_BaseRF_BaseCommands_DUT/Test_BaseRF_BaseCommands_DUT.ino
-#  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_BaseRF_BaseCommands_Receiver/Test_BaseRF_BaseCommands_Receiver.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Beacon_ZeroConf/Beacon_ZeroConf.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Beacon_ZeroConf_L7/Beacon_ZeroConf_L7.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Console/Console.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router/Router.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_L7/Router_L7.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_Temperature/Router_Temperature.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_ZeroConf/Router_ZeroConf.ino
-  - $COMPILECMD -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Serial_Router/Serial_Router.ino
+  - export COMPILEPARAMS=-compile -logger=humantags -hardware ~/sketchbook/hardware -tools /usr/local/share/arduino/tools-builder -tools /usr/local/share/arduino/hardware/tools/avr -built-in-libraries /usr/local/share/arduino/libraries -libraries /usr/local/share/arduino/libraries -vid-pid=0X2341_0X0010 -ide-version=10613 -build-path ~/.build -warnings=none -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.avr-gcc.path=/usr/local/share/arduino/hardware/tools/avr -prefs=runtime.tools.avrdude.path=/usr/local/share/arduino/hardware/tools/avr -verbose
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_RouteCache/Test_RouteCache.ino
+#  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_BaseRF_BaseCommands_DUT/Test_BaseRF_BaseCommands_DUT.ino
+#  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Test_BaseRF_BaseCommands_Receiver/Test_BaseRF_BaseCommands_Receiver.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Beacon_ZeroConf/Beacon_ZeroConf.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Beacon_ZeroConf_L7/Beacon_ZeroConf_L7.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Console/Console.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router/Router.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_L7/Router_L7.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_Temperature/Router_Temperature.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Router_ZeroConf/Router_ZeroConf.ino
+  - /usr/local/share/arduino/arduino-builder $COMPILEPARAMS -fqbn=Cosa:avr:uno $PWD/Code/Library/examples/Serial_Router/Serial_Router.ino
 notifications:
   email:
     on_success: change
