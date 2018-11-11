@@ -53,15 +53,15 @@
 	//  EX_TEMP_DATA: DATA <---------|
 	//  EX_TEMP_VCC: VCC --- 4.7K --|
 	#ifndef EX_TEMP_GND
-		#define EX_TEMP_GND		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D14 : Board:D4)
+		#define EX_TEMP_GND		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D14 : Board::D4)
 	#endif
 
 	#ifndef EX_TEMP_VCC
-		#define EX_TEMP_VCC		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D16 : Board:D6)
+		#define EX_TEMP_VCC		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D16 : Board::D6)
 	#endif
 
 	#ifndef EX_TEMP_DATA
-		#define EX_TEMP_DATA		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D15 : Board:D5)
+		#define EX_TEMP_DATA		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D15 : Board::D5)
 	#endif
 #endif
 
