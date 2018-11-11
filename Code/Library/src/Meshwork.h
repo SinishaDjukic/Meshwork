@@ -139,6 +139,10 @@ namespace Meshwork {
 		#define MW_NRF24L01P_CSN 	Board::D10
 		#define MW_NRF24L01P_CE 	Board::D3
 		#define MW_NRF24L01P_IRQ 	Board::EXT0
+	#elif (MW_BOARD_SELECT == MW_BOARD_LEONARDO)
+		#define MW_NRF24L01P_CSN 	Board::D10
+		#define MW_NRF24L01P_CE 	Board::D3
+		#define MW_NRF24L01P_IRQ 	Board::EXT1 //Leonardo EXT1=SDA=D2
 	#else
 		#pragma message("[Meshwork] Unknown MW_BOARD_SELECT value: ")
 		#pragma message(MW_MACRO_VAR_NAME_VALUE(MW_BOARD_SELECT))

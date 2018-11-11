@@ -32,16 +32,20 @@
 #define MW_BOARD_RBBB				1
 #define MW_BOARD_MEGA				2
 #define MW_BOARD_UNO				3
+#define MW_BOARD_LEONARDO			4
 
-//Auto-detect the board. Currently, only Mega and Uno are handled
+//Auto-detect the board. Currently, only Mega, Uno and Leonardo are handled
 #if !defined(MW_BOARD_SELECT) || (MW_BOARD_SELECT == MW_BOARD_AUTO)
 	#pragma message "[Meshwork] Board: autodetection..."
 	//Avoid compiled warning
 	#undef MW_BOARD_SELECT
 
-	#if defined (BOARD_ATMEGA2560) || defined (__ARDUINO_MEGA__) || defined (ARDUINO_MEGA2560)
+	#if defined (COSA_BOARD_ARDUINO_MEGA_HH)
 		#pragma message "[Meshwork] Board: Arduino Mega detected"
 		#define MW_BOARD_SELECT		MW_BOARD_MEGA
+	#elif defined (COSA_BOARD_ARDUINO_LEONARDO_HH)
+		#pragma message "[Meshwork] Board: Arduino Leonardo detected"
+		#define MW_BOARD_SELECT		MW_BOARD_LEONARDO
 	#else
 		#pragma message "[Meshwork] Board: Arduino Uno detected"
 		#define MW_BOARD_SELECT		MW_BOARD_UNO
