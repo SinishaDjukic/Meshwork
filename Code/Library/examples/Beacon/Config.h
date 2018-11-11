@@ -49,19 +49,19 @@
 
 #ifndef EX_TEMP_DISABLE
 	//Pin connections of DS18B20. Default:
-	//  D4: GND
-	//  D5: DATA <---------|
-	//  D6: VCC --- 4.7K --|
+	//  EX_TEMP_GND: GND
+	//  EX_TEMP_DATA: DATA <---------|
+	//  EX_TEMP_VCC: VCC --- 4.7K --|
 	#ifndef EX_TEMP_GND
-		#define EX_TEMP_GND		Board::D14//Leonardo A0/D14
+		#define EX_TEMP_GND		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D14 : Board:D4)
 	#endif
 
 	#ifndef EX_TEMP_VCC
-		#define EX_TEMP_VCC		Board::D16//Leonardo A2/D16
+		#define EX_TEMP_VCC		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D16 : Board:D6)
 	#endif
 
 	#ifndef EX_TEMP_DATA
-		#define EX_TEMP_DATA		Board::D15//Leonardo A1/D15
+		#define EX_TEMP_DATA		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D15 : Board:D5)
 	#endif
 #endif
 

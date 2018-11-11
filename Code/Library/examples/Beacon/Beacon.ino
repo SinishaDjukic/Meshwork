@@ -24,11 +24,6 @@
 #ifndef __EXAMPLES_BEACON_H__
 #define __EXAMPLES_BEACON_H__
 
-#define MW_NRF24L01P_CSN 	Board::D10 //Uno: D10
-#define MW_NRF24L01P_CE 	Board::D3   //Uno: D3 // ALSO VCC!
-#define MW_NRF24L01P_IRQ 	Board::EXT1 //Uno: EXT0=D2 ... Leonardo EXT1=SDA=D2
-
-
 //First, include the configuration constants file
 #include "MeshworkConfiguration.h"
 
