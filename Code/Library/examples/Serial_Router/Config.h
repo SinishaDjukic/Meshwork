@@ -50,10 +50,11 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-//#define MW_FULL_DEBUG	true
+#define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
+#define MW_LOG_DEBUG_ENABLE true
 
 //Our sketch's own debug
-#define EX_LOG		MW_FULL_DEBUG
+#define EX_LOG		true
 
 //Timeout for arrival of new serial messages
 #define EX_SERIAL_NEXT_MSG_TIMEOUT	5000

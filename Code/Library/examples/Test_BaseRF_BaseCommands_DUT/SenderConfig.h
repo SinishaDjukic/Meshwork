@@ -50,13 +50,13 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-//#define MW_FULL_DEBUG	false
-//#define MW_LOG_DEBUG_ENABLE true
+#define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
+#define MW_LOG_DEBUG_ENABLE true
 
 //No need for rerouting here
 #define MW_SUPPORT_REROUTING	false
 
 //Our sketch's own debug
-#define TEST_LOG_SENDER			MW_FULL_DEBUG
+#define EX_LOG		true
 
 #endif

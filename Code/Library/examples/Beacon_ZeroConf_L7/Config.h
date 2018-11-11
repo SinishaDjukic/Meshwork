@@ -107,20 +107,11 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-#ifndef MW_FULL_DEBUG
-	#define MW_FULL_DEBUG	false
-#endif
-#ifndef MW_LOG_ALL_ENABLE
-	#define MW_LOG_ALL_ENABLE	true
-#endif
-#ifndef MW_LOG_DEBUG_ENABLE
-	#define MW_LOG_DEBUG_ENABLE true
-#endif
+#define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
+#define MW_LOG_DEBUG_ENABLE true
 
 //Our sketch's own debug
-#ifndef EX_LOG
-	#define EX_LOG	true//MW_FULL_DEBUG
-#endif
+#define EX_LOG		true
 
 //Enables boot-time debug info on non-Mega boards
 #ifndef EX_BOOT_DEBUG

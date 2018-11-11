@@ -24,6 +24,10 @@
 #ifndef __EXAMPLES_BEACON_H__
 #define __EXAMPLES_BEACON_H__
 
+#define MW_NRF24L01P_CSN 	Board::D10 //Uno: D10
+#define MW_NRF24L01P_CE 	Board::D3   //Uno: D3 // ALSO VCC!
+#define MW_NRF24L01P_IRQ 	Board::EXT1 //Uno: EXT0=D2 ... Leonardo EXT1=SDA=D2
+
 
 //First, include the configuration constants file
 #include "MeshworkConfiguration.h"
@@ -117,6 +121,8 @@ static uint8_t seq_counter = 0;
 	OutputPin sensor_vcc(EX_TEMP_VCC);
 #endif
 
+OutputPin radio_vcc(Board::D9);
+
 // Message from the device; temperatures and voltage reading
 struct dt_msg_t {
   uint8_t nr;
@@ -134,6 +140,8 @@ dt_msg_t msg;
 void setup()
 {
 	Watchdog::begin();
+	
+	radio_vcc.on();
 
 #ifndef EX_TEMP_DISABLE
 	sensor_gnd.off();
@@ -192,6 +200,7 @@ void loop()
   } else {
 		MW_LOG_ERROR(EX_LOG, "*** Temperature Sensor not found", NULL);
     msg.temperature = -1000 << 4;
+	  trace << PSTR("... Temperature Sensor not found: ") << msg.temperature << endl;
   }
 #else
 	msg.temperature = -1000 << 4;
@@ -207,11 +216,13 @@ void loop()
   Watchdog::delay(16);
   rf.powerup();
 
-  MW_LOG_INFO(EX_LOG, "*** Broadcasting: Start", NULL);
+//  MW_LOG_INFO(EX_LOG, "*** Broadcasting: Start", NULL);
+MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("*** Broadcasting: Start") << endl;
   uint16_t time = RTT::millis();
   mesh.broadcast(BEACON_PORT, &msg, sizeof(msg));
   time = RTT::since(time);
-  MW_LOG_INFO(EX_LOG, "*** Broadcasting: End *** Time spent: %d ms", time);
+//  MW_LOG_INFO(EX_LOG, "*** Broadcasting: End *** Time spent: %d ms", time);
+MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("*** Broadcasting: End *** Time spent: ") << time << endl;
 
   rf.powerdown();
   RTT::end();
@@ -225,12 +236,12 @@ void loop()
 	Power::all_disable();
   //Deep sleep
   uint8_t mode = Power::set(SLEEP_MODE_PWR_DOWN);
-  Watchdog::delay(EX_BEACON_INTERVAL);//will be rounded to ~64s by Cosa to be a multiple of 1024*8
+//  Watchdog::delay(EX_BEACON_INTERVAL);//will be rounded to ~64s by Cosa to be a multiple of 1024*8
   //Restore mode
   Power::set(mode);
 #else
   //Normal sleep
-  Watchdog::delay(EX_BEACON_INTERVAL);
+//  Watchdog::delay(EX_BEACON_INTERVAL);
 #endif
 }
 

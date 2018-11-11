@@ -53,15 +53,15 @@
 	//  D5: DATA <---------|
 	//  D6: VCC --- 4.7K --|
 	#ifndef EX_TEMP_GND
-		#define EX_TEMP_GND		Board::D4
+		#define EX_TEMP_GND		Board::D14//Leonardo A0/D14
 	#endif
 
 	#ifndef EX_TEMP_VCC
-		#define EX_TEMP_VCC		Board::D6
+		#define EX_TEMP_VCC		Board::D16//Leonardo A2/D16
 	#endif
 
 	#ifndef EX_TEMP_DATA
-		#define EX_TEMP_DATA		Board::D5
+		#define EX_TEMP_DATA		Board::D15//Leonardo A1/D15
 	#endif
 #endif
 
@@ -102,15 +102,13 @@
 
 //Uncomment to enforce true/false. Otherwise it will be automatically
 //set to true for more powerful boards, like the Mega
-#define MW_FULL_DEBUG	false
+#define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
 #define MW_LOG_DEBUG_ENABLE true
 
 //No need for rerouting here
 #define MW_SUPPORT_REROUTING	false
 
 //Our sketch's own debug
-#ifndef EX_LOG
-	#define EX_LOG	true//MW_FULL_DEBUG
-#endif
+#define EX_LOG	true
 
 #endif

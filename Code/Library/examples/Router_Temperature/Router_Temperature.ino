@@ -153,14 +153,14 @@ void run_recv() {
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 			//TODO dataLenMax should be checked instead of result
 			//and verified that it is at least the size of the dt_msg_t structure
-      if ( port == EX_PORT && result > 0 ) {
-        dt_msg_t& msg = (dt_msg_t&) data;
-        MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Message >>>") << endl;
-        MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("        Seq #: ") << msg.nr << endl;
-        MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("  Temperature: ") << (msg.temperature >> 4) << PSTR(".") << (msg.temperature & 0x15) << PSTR(" C") << endl;
-        MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("      Battery: ") << msg.battery << PSTR(" mV") << endl;
-      }
-      MW_LOG_INFO(EX_LOG_ROUTER, "[Statistics] Received=%d", msgcounter);
+			if ( port == EX_PORT && result > 0 ) {
+				dt_msg_t& msg = (dt_msg_t&) data;
+				MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("Message >>>") << endl;
+				MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("        Seq #: ") << msg.nr << endl;
+				MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("  Temperature: ") << (msg.temperature >> 4) << PSTR(".") << (msg.temperature & 0x15) << PSTR(" C") << endl;
+				MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("      Battery: ") << msg.battery << PSTR(" mV") << endl;
+			}
+			MW_LOG_INFO(EX_LOG_ROUTER, "[Statistics] Received=%d", msgcounter);
 		}
 		duration -= RTT::since(start);
 	}
