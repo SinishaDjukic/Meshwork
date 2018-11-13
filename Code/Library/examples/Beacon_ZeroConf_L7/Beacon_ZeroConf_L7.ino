@@ -198,14 +198,14 @@ void setup()
 	Watchdog::begin();
 	RTT::begin();
 
-	uart.begin(EX_UART_BAUD);
+	uart.begin(115200);
 	LED_BLINK(true, 1000);
 	boardTraceEnable(EX_BOOT_DEBUG);
 	LED_BLINK(false, 1000);
 	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("ZeroConf Beacon: Started") << endl;
 	
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
-	uartHC.begin(EX_UART_BAUD);
+	uartHC.begin(115200);
 #endif
 	
 	

@@ -34,10 +34,6 @@
 //	#define EX_PORT					127
 //#endif
 
-#ifndef EX_UART_BAUD
-	#define EX_UART_BAUD	9600
-#endif
-
 #ifndef EX_TEMP_DISABLE
 	//Pin connections of DS18B20. Default:
 	//  EX_TEMP_GND: GND
@@ -57,7 +53,7 @@
 #endif
 
 #ifndef EX_BINARY_PININT
-	#define EX_BINARY_PININT		Board::D15 //328p/Uno: D15 = A1 = PC1/ADC1. Pin change interrupt only
+	#define EX_BINARY_PININT		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D19 : Board::D15) // Pin change interrupt only
 #endif
 
 //Beacon message interval (ms)
