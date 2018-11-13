@@ -65,7 +65,8 @@ namespace Meshwork {
 		namespace NetworkV1 {
 		
 			class NetworkSerial : public Meshwork::L3::Network::ACKProvider,
-										 Meshwork::L3::NetworkV1::NetworkV1::RouteProvider {
+										 Meshwork::L3::NetworkV1::NetworkV1::RouteProvider,
+										 SerialMessageAdapter::SerialMessageListener {
 
 			public:
 				
