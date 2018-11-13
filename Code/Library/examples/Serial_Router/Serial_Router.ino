@@ -126,7 +126,7 @@ void setup()
 	  mesh.set_radio_listener(&ledTracing);
 #endif
 
-	serialMessageListeners[0] = (SerialMessageAdapter::SerialMessageListener*) &serialMessageAdapter;
+	serialMessageListeners[0] = (SerialMessageAdapter::SerialMessageListener*) &networkSerial;
 	serialMessageAdapter.setListeners(serialMessageListeners);
 
 	networkSerial.initSerial();
@@ -138,7 +138,7 @@ uint32_t last_message_timestamp = 0;
 
 //Receive RF messages
 void run_recv() {
-	last_message_processed = networkSerial.processOneMessage(&msg);
+	last_message_processed = serialMessageAdapter.processOneMessage(&msg);
 #if MW_BOARD_SELECT == MW_BOARD_MEGA
 	if ( last_message_processed != SerialMessageAdapter::SM_MESSAGE_NONE )
 		last_message_timestamp = RTT::millis();
