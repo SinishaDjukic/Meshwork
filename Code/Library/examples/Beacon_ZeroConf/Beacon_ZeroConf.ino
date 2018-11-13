@@ -122,7 +122,6 @@ MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, E
 	SerialMessageAdapter serialMessageAdapter(&uartHC);
 #else
 	SerialMessageAdapter serialMessageAdapter(&uart);
-	IOStream::Device null_device;
 #endif
 
 //ZeroConf Serial support
@@ -217,7 +216,7 @@ void setup()
 	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("ZeroConf Beacon: started") << endl;
 	uartHC.begin(115200);
 #else
-	trace.begin(&null_device, NULL);
+	trace.begin(NULL, NULL);
 #endif
 
 	//Init listeners
@@ -256,7 +255,7 @@ void setup()
 #endif
 
 	ASSERT(mesh.begin());
-	rf.powerdown();
+//	rf.powerdown();//Note: seems to cause problems on Leonardo Beetle
 }
 
 //Main loop
