@@ -137,7 +137,7 @@ void run_recv() {
 		if ( result >= 0 ) {
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 		} else if ( result == NetworkV1::ERROR_RECV_TIMEOUT ) {
 			//do nothing

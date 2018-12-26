@@ -21,6 +21,18 @@
 #ifndef __EXAMPLES_CONSOLE_H__
 #define __EXAMPLES_CONSOLE_H__
 
+//The full sketch is too big for Leonardo, so opt out some stuff here
+//LOGGING
+//#define MW_FULL_DEBUG true
+#define MW_LOG_NETWORKV1 true
+#define MW_LOG_ALL_ENABLE  true
+#define MW_LOG_TIMESTAMP_ENABLE false
+//#define MW_LOG_DEBUG_ENABLE  true
+
+//FUNCTIONS
+#define LOG_CONSOLE_SUPPORT_SEND true
+#define LOG_CONSOLE_SUPPORT_RECV true
+
 #include <MeshworkConfiguration.h>
 //Select your RF chip. Currently, only NRF24L01P is supported
 #define MW_RF_SELECT 				MW_RF_NRF24L01P
@@ -44,10 +56,6 @@
 
 #include "Utils/LineReader.h"
 
-#ifndef LOG_CONSOLE
-#define LOG_CONSOLE  true
-#endif
-
 #include <NRF24L01P.h>
 
 #include "StaticACKProvider.h"
@@ -57,7 +65,7 @@
 MW_DECL_NRF24L01P(rf)
 
 StaticRouteProvider advisor;
-Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, NULL);//&advisor);
+Meshwork::L3::NetworkV1::NetworkV1 mesh(&rf, &advisor);
 LineReader<64> console(&uart);
 StaticACKProvider ackProvider;
 
@@ -70,8 +78,7 @@ void setup()
   uart.begin(115200);
 
   trace.begin(&uart, PSTR("Interactive Serial Console: started"));
-  trace << PSTR("Board: ") << MW_BOARD_SELECT;
-  trace.println();
+  trace << PSTR("Board: ") << MW_BOARD_SELECT << endl;
 }
 
 bool equals(char s1[], char s2[]) {
@@ -134,7 +141,7 @@ void print_message(char * msg, uint8_t len) {
 }
 
 void run_nop(uint8_t address, uint8_t port) {
-	trace << PSTR("NOP to ") << address << PSTR(":") << port << PSTR("\n");
+	trace << PSTR("NOP to ") << address << PSTR(":") << port << endl;
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
 	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
@@ -151,25 +158,27 @@ void run_nop(uint8_t address, uint8_t port) {
 	
 }
 
+#if LOG_CONSOLE_SUPPORT_SEND
 void run_send(uint8_t address, uint8_t port, char * pStart, char * pEnd) {
 	size_t dataLen = pEnd - pStart;
-	trace << dataLen << PSTR(" CHARS to ") << address << PSTR(":") << port;
-	trace << PSTR("\nChars: ");
+//	trace << dataLen << PSTR(" CHARS to ") << address << PSTR(":") << port;
+//	trace << PSTR("\nChars: ");
+	trace.printf(PSTR("%d CHARS to %d: %d\nChars:"), dataLen, address, port);
+
 	print_message((char *)pStart, dataLen);
 	trace.println();
 	size_t ackLen = 5;
 	uint8_t ack[ackLen];
 	for ( size_t i = 0; i < ackLen; i ++ ) ack[i] = 0;
 	int res = mesh.send(delivery, -1, address, port, pStart, dataLen, ack, ackLen);
-	trace << PSTR("Res code: ") << res;
-	trace << PSTR("\nAck len: ") << ackLen;
-	trace << PSTR("\nAck: \t");
+	trace.printf(PSTR("Res code: %d\nAck len: %d\nAck: \t"), res, ackLen);
 	print_message((char *)ack, ackLen);
-	//MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("Ack: "), ack, ackLen);
+	//MW_LOG_ARRAY(true, PSTR("Ack: "), ack, ackLen);
 //	trace.print(ack, ackLen, IOStream::hex, NetworkV1::PAYLOAD_MAX);
 	trace.println();
 	
 }
+#endif
 
 void run_setup(uint16_t network, uint8_t address, uint8_t channel) {
 	mesh.setNetworkID(network);
@@ -180,7 +189,7 @@ void run_setup(uint16_t network, uint8_t address, uint8_t channel) {
 bool running = false;
 
 void printRFRunning() {
-	trace << PSTR("\nRF Running: ") << running;
+	trace << PSTR("\nRF on: ") << running;
 }
 
 void run_begin() {
@@ -194,7 +203,8 @@ void run_end() {
 }
 
 void run_info() {
-	trace << PSTR("Network: ") << mesh.getNetworkID() << PSTR("\nAddress: ") << mesh.getNodeID() << PSTR("\nChannel: ") << mesh.getChannel() << PSTR("\n");
+	trace.printf(PSTR("Network: %d\nAddress: %d\nChannel: %d\n"), mesh.getNetworkID(), mesh.getNodeID(), mesh.getChannel());
+//	trace << PSTR("Network: ") << mesh.getNetworkID() << PSTR("\nAddress: ") << mesh.getNodeID() << PSTR("\nChannel: ") << mesh.getChannel() << PSTR("\n");
 	set_delivery(delivery);//will print out the status
 	printRFRunning();
 }
@@ -204,6 +214,7 @@ void run_routereset() {
 	advisor.route_reset();
 }
 
+#if LOG_CONSOLE_SUPPORT_RECV
 void run_recv() {
 	if ( !running ) {
 		printRFRunning();
@@ -218,21 +229,22 @@ void run_recv() {
 	uint32_t start = RTT::millis();
 	while (duration > 0) {
 		int result = mesh.recv(src, port, data, dataLenMax, duration, &ackProvider);
-		if ( result != -1 ) {
-			trace << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
-			trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(LOG_CONSOLE, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
-			trace.println();
-		}
+		
+		trace.printf(PSTR("RECV: res=%d, src=%d, port=%d, dataLen=%d, data=\n"), result, src, port, dataLenMax);
+//		trace << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
+//		trace << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
+		MW_LOG_ARRAY(true, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+		trace.println();
+		
 		duration -= RTT::since(start);
 	} 
 	
 	trace << PSTR("RECV: done\n");
 }
+#endif
 
 void run_routeadd(char* line) {
 	bool ok = false;
-	//format: routeIndex index src dst [hop, ...]
 	char * pEnd = line + 9;//cmd len plus space
 	uint8_t index = strtol(pEnd, &pEnd, 10);
 	uint8_t maxRoutes = advisor.get_max_routes();
@@ -264,6 +276,7 @@ void run_routeadd(char* line) {
 }
 
 void run_clearrx() {
+	trace << PSTR("RX clear\n");
 	uint32_t duration = (uint32_t) 1 * 1000L;
 	uint32_t singleTimeout = (uint32_t) 100L;
 	uint8_t src, port;
@@ -276,7 +289,7 @@ void run_clearrx() {
 		if ( RTT::since(start) >= duration )
 			break;
 	} 
-	trace << PSTR("Clear RX!\n");
+	trace << PSTR("RX cleared\n");
 }
 
 void loop()
@@ -285,11 +298,27 @@ void loop()
 	uint8_t len = console.readline();
 	if ( len > 0 ) {
 		char* line = console.get_line();
-		trace << PSTR("Command: ") << line;
-		trace.println();
+    trace.printf(PSTR("Command: '%s'\n"), line);
 		Meshwork::Debug::printFreeMemory();
-		if ( equals(line, (char*) "?") || equals(line, (char*) "help") ) {
-			trace << PSTR("Usage:\ninfo\nsetup <network> <address> <channel>\nbegin\nend\nclearrx\nrecv\nnop <dest> <port>\nsend <dest> <port> <chars>\ndeliv <delivery flags>\nroutereset\nrouteadd\nclearrx\nValues in DEC\n");
+		if ( equals(line, (char*) "?") ) {
+			trace << PSTR("Usage:"
+			              "\n ?"
+			              "\n info"
+			              "\n setup <network> <address> <channel>"
+			              "\n begin"
+			              "\n end"
+			              "\n clearrx"
+#if LOG_CONSOLE_SUPPORT_RECV
+			              "\n recv"
+#endif
+			              "\n nop <dest> <port>"
+#if LOG_CONSOLE_SUPPORT_SEND
+			              "\n send <dest> <port> <chars>"
+#endif
+			              "\n deliv <flags>"
+			              "\n routereset"
+			              "\n routeadd <index> <src> <dst> [hop, ...]"
+			              "\n...values in DEC\n");
 		} else if ( equals(line, (char*) "info") ) {
 			run_info();
 		} else if ( equals(line, (char*) "setup") ) {
@@ -302,8 +331,10 @@ void loop()
 			run_begin();
 		} else if ( equals(line, (char*) "end") ) {
 			run_end();
+#if LOG_CONSOLE_SUPPORT_RECV
 		} else if ( equals(line, (char*) "recv") ) {
 			run_recv();
+#endif
 		} else if ( startsWith(0, line, (char*) "deliv") ) {
 			char * pEnd = line + 6;//cmd len plus space
 			uint8_t temp1 = strtol(pEnd, &pEnd, 10);
@@ -320,6 +351,7 @@ void loop()
 			uint8_t dest = strtol(pEnd, &pEnd, 10);
 			uint8_t port = strtol(pEnd, &pEnd, 10);
 			run_nop(dest, port);
+#if LOG_CONSOLE_SUPPORT_SEND
 		} else if ( startsWith(0, line, (char*) "send") ) {
 			run_clearrx();
 			char * pEnd = line + 4;//cmd len plus space
@@ -331,12 +363,12 @@ void loop()
 			if ( pLast > pEnd )
 				run_send(dest, port, pEnd, pLast);
 			else
-				trace << PSTR("No data!");
+				trace << PSTR("No data!\n");
+#endif
 		} else {
-			trace << PSTR("Unknown: ") << line;
+      trace << PSTR("Unknown cmd\n");
 		}
-		trace.println();
-		trace.println();
+    trace << endl << endl;
 		//
 		console.clear();
 	} else if ( len == -1 ) {

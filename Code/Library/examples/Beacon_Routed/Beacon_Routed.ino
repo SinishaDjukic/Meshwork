@@ -214,7 +214,12 @@ void loop()
 //  MW_LOG_INFO(EX_LOG, "*** Broadcasting: Start", NULL);
 MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("*** Broadcasting: Start") << endl;
   uint16_t time = RTT::millis();
-  mesh.broadcast(BEACON_PORT, &msg, sizeof(msg));
+//  mesh.broadcast(BEACON_PORT, &msg, sizeof(msg));
+	size_t ackLen = 5;
+	uint8_t ack[ackLen];
+  uint8_t delivery = Meshwork::L3::Network::DELIVERY_EXHAUSTIVE;
+  mesh.send(delivery, 2, 1, BEACON_PORT, &msg, sizeof(msg), ack, ackLen);
+
   time = RTT::since(time);
 //  MW_LOG_INFO(EX_LOG, "*** Broadcasting: End *** Time spent: %d ms", time);
 MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("*** Broadcasting: End *** Time spent: ") << time << endl;

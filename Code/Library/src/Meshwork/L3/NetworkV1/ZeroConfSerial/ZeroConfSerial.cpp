@@ -274,6 +274,7 @@ bool ZeroConfSerial::processConfigSequence(uint16_t initTimeout, uint16_t deinit
 	uint8_t lastProcessCode;
 	bool connected = false;
 	SerialMessageAdapter::serialmsg_t msg;
+trace << PSTR("processConfigSequence...") << endl;
 	while ( ( !connected && (RTT::since(start)       < initTimeout  ) ) ||
 			(  connected && (RTT::since(lastMessage) < deinitTimeout) ) ) {
 		//the state flow must be 0 -> ZC_SUBCODE_ZCINIT -> ZC_SUBCODE_ZCDEINIT
@@ -289,6 +290,7 @@ bool ZeroConfSerial::processConfigSequence(uint16_t initTimeout, uint16_t deinit
 			lastMessage = RTT::millis();
 		}
 	}
+trace << PSTR("processConfigSequence... state=") << state << endl;
 	return state == ZeroConfSerial::ZC_SUBCODE_ZCDEINIT;
 }
 

@@ -24,6 +24,7 @@
 #include "Cosa/Trace.hh"
 #include "Cosa/Wireless.hh"
 #include "Meshwork/L3/NetworkV1/NetworkV1.h"
+#include "Meshwork/L3/NetworkV1/RouteCache.h"
 
 using namespace Meshwork::L3::NetworkV1;
 
@@ -36,11 +37,14 @@ protected:
 	uint8_t hops[MAX_STATIC_ROUTES][MAX_STATIC_ROUTES_HOPS];
 	
 	void print_route(NetworkV1::route_t* route) {
+		/*
 		trace << PSTR("Route: src=") << route->src << PSTR(", dst=") << route->dst << PSTR(", hopCount=") << route->hopCount;
 		trace << PSTR("\tHops: ");
 		if ( route->hopCount > 0 )
 			trace.print(route->hops, route->hopCount, IOStream::hex, route->hopCount);
 		trace.println();
+		*/
+		RouteCache::printStatic(trace, *route, 1);
 	}
 
 public:
@@ -54,7 +58,7 @@ public:
 		routes[index].dst = dst;
 		routes[index].hopCount = hopCount;
 		memcpy(hops[index], routeHops, hopCount);
-		trace << PSTR("Set route at=") << index << PSTR(", src=") << src << PSTR(", dst=") << dst << PSTR(", hopCount=") << hopCount;
+		trace << PSTR("set_route at=") << index << PSTR(", src=") << src << PSTR(", dst=") << dst << PSTR(", hopCount=") << hopCount;
 		trace << PSTR("\tHops: ");
 		if ( hopCount > 0 )
 			trace.print(hops[index], hopCount, IOStream::hex, hopCount);
@@ -91,7 +95,7 @@ public:
 				result ++;
 			}
 		}
-		trace << PSTR("Get route count: dst=") << dst << PSTR(", result=") << result << PSTR("\n");
+		trace << PSTR("get_routeCount: dst=") << dst << PSTR(", res=") << result << PSTR("\n");
 		return result;
 	}
 	NetworkV1::route_t* get_route(uint8_t dst, uint8_t index) {
@@ -106,7 +110,7 @@ public:
 				current ++;
 			}
 		}
-		trace << PSTR("Get route: dst=") << dst << PSTR(", index=") << index << PSTR(", result=") << result << PSTR("\n");
+		trace << PSTR("get_route: dst=") << dst << PSTR(", index=") << index << PSTR(", res=") << result << PSTR("\n");
 		return result;
 	}
 	void route_found(NetworkV1::route_t* route) {

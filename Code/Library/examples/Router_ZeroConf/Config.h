@@ -66,12 +66,12 @@
 #define EX_LOG_ZEROCONFROUTER	true
 
 //Timeout for arrival of new serial messages
-#define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
+#define EX_SERIAL_NEXT_MSG_TIMEOUT	60000
 
 //Incoming connection timeout for serial autoconfig init
-#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 5000)
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 30000 : 30000)
 
 //Timeout after last incoming serial autoconfig message before autodeinit
-#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 1000)
+#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 60000)
 
 #endif

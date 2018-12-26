@@ -351,14 +351,14 @@ uint8_t Meshwork::L3::NetworkV1::NetworkSerial::processRFSend(SerialMessageAdapt
 
 		size_t maxACKLen = NetworkV1::ACK_PAYLOAD_MAX;
 
-		MW_LOG_DEBUG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Sending data: "), indata, datalen);
+		MW_LOG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Sending data: "), indata, datalen);
 
 		int res = m_network->send(dst, port, indata, datalen, m_lastAckData, maxACKLen);
 
 		if ( res == Meshwork::L3::Network::OK ) {
 			MW_LOG_INFO(MW_LOG_NETWORKSERIAL, "Send done. SERSEQ=%d, Result=%d, ACK Len=%d", msg->seq, res, maxACKLen);
 			//TODO ??? check why m_lastAckData always has zeros
-			MW_LOG_DEBUG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, maxACKLen);
+			MW_LOG_ARRAY(MW_LOG_NETWORKSERIAL, PSTR("Response data: "), m_lastAckData, maxACKLen);
 
 			uint8_t data[] = {(uint8_t) (4 + maxACKLen), (uint8_t) msg->seq, NS_CODE, NS_SUBCODE_RFSENDACK, (uint8_t) maxACKLen};
 			m_adapter->writeMessage(sizeof(data), data, false);

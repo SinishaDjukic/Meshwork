@@ -103,7 +103,10 @@ namespace Meshwork {
 
 				void remove_all(bool notify);
 
-				void printTabs(IOStream& outs, uint8_t tabs);
+        static void printTabs(IOStream& outs, uint8_t tabs) {
+          while ( tabs-- > 0 )
+            outs << PSTR("\t");
+        }
 
 			public:
 				
@@ -141,6 +144,24 @@ namespace Meshwork {
 				int8_t get_QoS(uint8_t dst, int8_t calculate);
 				
 				
+				static void printStatic(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs) {
+				  outs << PSTR("route: { ") << endl;
+				  printTabs(outs, ++tabs);
+				  outs << PSTR(" src: ") << route.src << PSTR(", dst: ") << route.dst
+				     << PSTR(", hopCount: ") << route.hopCount;
+
+				  outs << PSTR(", hops: { ") << endl;
+				  printTabs(outs, ++tabs);
+				  uint8_t count = route.hopCount > NetworkV1::MAX_ROUTING_HOPS ? NetworkV1::MAX_ROUTING_HOPS : route.hopCount;
+				  for ( int i = 0; i < count; i ++ )
+				    outs << route.hops[i] << PSTR(", ");
+				  outs << endl;
+				  printTabs(outs, --tabs);
+				  outs << PSTR(" }") << endl;
+				  printTabs(outs, --tabs);
+				  outs << PSTR(" }") << endl;
+				}
+
 				//Well, for some reason overloading << with RouteCache's structs caused ambiguous declarations
 				void print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs);
 				void print(IOStream& outs, RouteCache::route_entry_t& route_entry, uint8_t tabs);

@@ -239,14 +239,14 @@ namespace Meshwork {
 				/** Message sequence number. */
 				uint8_t seq;
 				
-				//converts errror codes from Cosa to Meshwork
+				//converts error codes from Cosa to Meshwork
 				void convertError(int &error) {
 					if ( error == ETIME ) {
 						error = ERROR_RECV_TIMEOUT;
-						MW_LOG_DEBUG(MW_LOG_NETWORKV1, "Receive timeout", NULL);
+						MW_LOG_INFO(MW_LOG_NETWORKV1, "Receive timeout", NULL);
 					} else if ( error == EMSGSIZE ) {
 						error = ERROR_RECV_TOO_LONG;
-						MW_LOG_ERROR(MW_LOG_NETWORKV1, "Payload too long", NULL);
+						MW_LOG_INFO(MW_LOG_NETWORKV1, "Payload too long", NULL);
 					}
 				}
 

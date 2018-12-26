@@ -292,27 +292,8 @@ RouteCache::route_entry_t* RouteCache::add_route_entry(NetworkV1::route_t* route
 	return result;
 }
 
-void RouteCache::printTabs(IOStream& outs, uint8_t tabs) {
-	while ( tabs-- > 0 )
-		outs << PSTR("\t");
-}
-
 void RouteCache::print(IOStream& outs, NetworkV1::route_t& route, uint8_t tabs) {
-  outs << PSTR("route: { ") << endl;
-  printTabs(outs, ++tabs);
-  outs << PSTR(" src: ") << route.src << PSTR(", dst: ") << route.dst
-	   << PSTR(", hopCount: ") << route.hopCount;
-  
-  outs << PSTR(", hops: { ") << endl;
-  printTabs(outs, ++tabs);
-  uint8_t count = route.hopCount > NetworkV1::MAX_ROUTING_HOPS ? NetworkV1::MAX_ROUTING_HOPS : route.hopCount;
-  for ( int i = 0; i < count; i ++ )
-    outs << route.hops[i] << PSTR(", ");
-  outs << endl;
-  printTabs(outs, --tabs);
-  outs << PSTR(" }") << endl;
-  printTabs(outs, --tabs);
-  outs << PSTR(" }") << endl;
+  printStatic(outs, route, tabs);
 }
 
 void RouteCache::print(IOStream& outs, RouteCache::route_entry_t& route_entry, uint8_t tabs) {

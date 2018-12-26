@@ -57,7 +57,7 @@ using Meshwork::L3::Network;
 int BaseRFApplication::returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK) {
 
 	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << PSTR("[ACK] Src=") << src << PSTR(", Len=") << len << endl;
-	MW_LOG_DEBUG_ARRAY(MW_LOG_BASERF, PSTR("\t...L7 DATA RECV: "), buf, len);
+	MW_LOG_ARRAY(MW_LOG_BASERF, PSTR("\t...L7 DATA RECV: "), buf, len);
 	MW_LOG_DEBUG_TRACE(MW_LOG_BASERF) << endl << endl;
 
 	setLastMessageValid(false);

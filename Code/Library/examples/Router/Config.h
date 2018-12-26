@@ -34,7 +34,7 @@
 	#define EX_NWK_ID				1
 #endif
 #ifndef EX_CHANNEL_ID
-	#define EX_CHANNEL_ID			0
+	#define EX_CHANNEL_ID			64
 #endif
 #ifndef EX_NODE_ID
 	#define EX_NODE_ID					1

@@ -117,7 +117,9 @@ class Ex_MultisensorL7_App: public BaseRFApplication, public Endpoint::EndpointL
 		VoltageBandgapSensor m_voltageBandgapSensor;
 		TemperatureDS18B20Sensor m_temperatureSensor;
 		BinaryPinChangeSensor m_binaryPinChangeSensor;
+#if defined(EX_LED_BOOTUP)
 		OutputPin ledPin;
+#endif
 
 	public:
 		Ex_MultisensorL7_App(Meshwork::L3::Network* network):
@@ -129,7 +131,9 @@ class Ex_MultisensorL7_App: public BaseRFApplication, public Endpoint::EndpointL
 			m_voltageBandgapSensor(this, NULL, Unit::UNIT_24D8_VOLT),
 			m_temperatureSensor((Endpoint::EndpointListener*) this, NULL, &m_DS18B20, &m_DS18B20_CS, false),
 			m_binaryPinChangeSensor(this, NULL, &m_binaryPin),
+#if defined(EX_LED_BOOTUP)
 			ledPin(EX_LED_BOOTUP),
+#endif
 
 			BaseRFApplication(network, &m_deviceinstance)
 			{

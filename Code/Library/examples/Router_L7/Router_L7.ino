@@ -142,7 +142,7 @@ void run_recv() {
 			
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 			
 			if ( port == BASERF_MESSAGE_PORT ) {
@@ -239,7 +239,7 @@ void run_recv() {
 					MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 					MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("\tCluster ID: ") << msg.data[0] << endl;
 					MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("\tEndpoint ID: ") << msg.data[1] << endl;
-					MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\tData: : "), &msg.data[2], msg.msg_header.dataLen - 2);
+					MW_LOG_ARRAY(EX_LOG_ROUTER, PSTR("\tData: : "), &msg.data[2], msg.msg_header.dataLen - 2);
 				}
 				
 				//TODO: print data

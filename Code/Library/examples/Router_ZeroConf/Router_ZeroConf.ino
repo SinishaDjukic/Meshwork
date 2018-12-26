@@ -21,6 +21,9 @@
 #ifndef __EXAMPLES_ZEROCONFROUTER_H__
 #define __EXAMPLES_ZEROCONFROUTER_H__
 
+#define MW_LOG_SERIALMESSAGEADAPTER true
+#define MW_LOG_ALL_ENABLE true
+
 //First, include the configuration constants file
 #include "MeshworkConfiguration.h"
 
@@ -41,6 +44,7 @@
 #include <Cosa/Trace.hh>
 #include <Cosa/Types.h>
 #include <Cosa/IOStream.hh>
+#include <Cosa/CDC.hh>
 #include <Cosa/UART.hh>
 #include <Cosa/Watchdog.hh>
 #include <Cosa/OutputPin.hh>
@@ -104,19 +108,15 @@ NetworkV1 mesh(&rf, routeprovider, NetworkV1::NWKCAPS_NONE);
 
 MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, EX_ZC_CONFIGURATION_EEPROM_OFFSET)
 
-//Setup extra UART on Mega
-#if MW_BOARD_SELECT == MW_BOARD_MEGA
+//Setup extra UART for debugging
+#if MW_BOARD_SELECT == MW_BOARD_MEGA || MW_BOARD_SELECT == MW_BOARD_LEONARDO
 	#include "Cosa/IOBuffer.hh"
-	// Create buffer for HC UART
 	static IOBuffer<UART::RX_BUFFER_MAX> ibuf;
 	static IOBuffer<UART::TX_BUFFER_MAX> obuf;
-	// HC UART will be used for Host-Controller communication
-	UART uartHC(3, &ibuf, &obuf);
-	SerialMessageAdapter serialMessageAdapter(&uartHC);
+	UART uartDebug(1, &ibuf, &obuf);
 #else
-	SerialMessageAdapter serialMessageAdapter(&uart);
-	IOStream::Device null_device;
 #endif
+SerialMessageAdapter serialMessageAdapter(&uart);
 
 //ZeroConf Serial support
 ZeroConfSerial zeroConfSerial(&mesh, &serialMessageAdapter,
@@ -166,6 +166,8 @@ void readConfig() {
 	trace << PSTR("[Config] Done") << endl;
 }
 
+OutputPin gndPin(Board::D9);
+
 //Setup sequence
 void setup()
 {
@@ -173,22 +175,24 @@ void setup()
 	Watchdog::begin();
 	RTT::begin();
 
+	gndPin.off();
+
 	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
 	LED_BLINK(true, 500);
 	LED(true);
 	uart.begin(115200);
 
 	//Trace debugs only supported on Mega, since it has extra UARTs
-#if MW_BOARD_SELECT == MW_BOARD_MEGA
-	trace.begin(&uart, NULL);
+#if MW_BOARD_SELECT == MW_BOARD_MEGA || MW_BOARD_SELECT == MW_BOARD_LEONARDO
+	uartDebug.begin(115200);
+	trace.begin(&uartDebug, NULL);
 	trace << PSTR("ZeroConf Router: started") << endl;
-	uartHC.begin(115200);
 #else
-	trace.begin(&null_device, NULL);
+	trace.begin(NULL, NULL);
 #endif
 //
 //	for ( int i = 0; i < 100 ; i ++ ) {
-//		uartHC.putchar('c');
+//		uartDebug.putchar('c');
 //		uart.putchar('c');
 //		sleep(1);
 //	}
@@ -237,7 +241,7 @@ void run_recv() {
 			msgcounter ++;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(EX_LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_ARRAY(EX_LOG_ZEROCONFROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;
 		}
 		MW_LOG_DEBUG_TRACE(EX_LOG_ZEROCONFROUTER) << endl;

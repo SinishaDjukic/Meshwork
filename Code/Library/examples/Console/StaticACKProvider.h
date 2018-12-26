@@ -34,7 +34,7 @@ public:
 
 	  //fills the buffer for the sender's src and port, and also the len of the previously sent message
 	  int returnACKPayload(uint8_t src, uint8_t port, void* buf, uint8_t len, void* bufACK, size_t lenACK) {
-		  TRACE_LOG("src=%d, port=%d, buf=%d, len=%d, bufACK=%d, lenACK=%d", src, port, buf, len, bufACK, lenACK);
+		  MW_LOG_INFO(true, "STATIC ACK RET: src=%d, port=%d, buf=%d, len=%d, bufACK=%d, lenACK=%d", src, port, buf, len, bufACK, lenACK);
 		  ((uint8_t *)bufACK)[0] = src;
 		  ((uint8_t *)bufACK)[1] = port;
 		  ((uint8_t *)bufACK)[2] = len;

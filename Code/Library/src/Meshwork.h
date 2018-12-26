@@ -21,6 +21,36 @@
 #ifndef __MESHWORK_MESHWORK_H__
 #define __MESHWORK_MESHWORK_H__
 
+//Override Cosa's default logging format to avoid printing full file names (sketches get too big)
+# define TRACE_LOG(msg, ...)						\
+    trace.printf(__PSTR("%s<%d>/" msg "\n"), \
+         __func__, \
+         __LINE__, \
+         __VA_ARGS__)
+
+# define TRACE_LOG2(level, msg, ...)            \
+    trace.printf(__PSTR(level " %s:%d \t" msg "\n"), \
+         __func__, \
+         __LINE__, \
+         __VA_ARGS__)
+
+# define EMERG(msg, ...)            \
+    TRACE_LOG2("EME", msg, __VA_ARGS__)
+# define ALERT(msg, ...)            \
+    TRACE_LOG2("ALE", msg, __VA_ARGS__)
+# define CRIT(msg, ...)             \
+    TRACE_LOG2("CRT", msg, __VA_ARGS__)
+# define ERR(msg, ...)              \
+    TRACE_LOG2("ERR", msg, __VA_ARGS__)
+# define WARNING(msg, ...)            \
+    TRACE_LOG2("WRN", msg, __VA_ARGS__)
+# define NOTICE(msg, ...)           \
+    TRACE_LOG2("NOT", msg, __VA_ARGS__)
+# define INFO(msg, ...)             \
+    TRACE_LOG2("INF", msg, __VA_ARGS__)
+# define DEBUG(msg, ...)            \
+    TRACE_LOG2("DBG", msg, __VA_ARGS__)
+
 #include "MeshworkConfiguration.h"
 #include "Cosa/Types.h"
 #include "Cosa/Memory.h"
@@ -30,11 +60,17 @@
 
 namespace Meshwork {
 
+#ifndef MW_LOG_TIMESTAMP_ENABLE
+  #define MW_LOG_TIMESTAMP_ENABLE  true
+#endif
+
 	//General-purpose debug functions
 	class Debug {
 		public: 
 			static void printTimestamp() {
-				trace << PSTR("[") << RTT::millis() << PSTR("]") << PSTR(" ");
+#if MW_LOG_TIMESTAMP_ENABLE
+				trace.printf(PSTR("[%l] "), RTT::millis());
+#endif
 			}
 			static void printFreeMemory() {
 				trace << PSTR("Free mem: ") << free_memory() << endl;
@@ -84,13 +120,14 @@ namespace Meshwork {
 	#define MW_LOG_ALL_ENABLE 	MW_FULL_DEBUG
 #endif
 
-//Includes DEBUG, DEBUG_TRACE, ARRAY_BYTES, DEBUG_ARRAY and DEBUG_VP_BYTES calls
+//To be used for AND'ing the file_enable flag when calling
+//DEBUG, DEBUG_TRACE, ARRAY_BYTES, DEBUG_ARRAY and DEBUG_VP_BYTES calls
 #ifndef MW_LOG_DEBUG_ENABLE
 	#define MW_LOG_DEBUG_ENABLE	MW_FULL_DEBUG
 #endif
 
 //Convenience log macros
-#define MW_LOG_ASSERT(file_enable, expr) 		if (file_enable && MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); ASSERT(expr); } while (0)
+#define MW_LOG_ASSERT(file_enable, expr) 		if (true) do { Meshwork::Debug::printTimestamp(); ASSERT(expr); } while (0)
 #define MW_LOG_EMERG(file_enable, msg, ...) 		if (file_enable && MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); EMERG(msg, __VA_ARGS__); } while (0)
 #define MW_LOG_ALERT(file_enable, msg, ...) 		if (file_enable && MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); ALERT(msg, __VA_ARGS__); } while (0)
 #define MW_LOG_CRIT(file_enable, msg, ...) 		if (file_enable && MW_LOG_ALL_ENABLE) do { Meshwork::Debug::printTimestamp(); CRIT(msg, __VA_ARGS__); } while (0)
@@ -102,20 +139,20 @@ namespace Meshwork {
 #define MW_LOG_DEBUG_TRACE(file_enable) 			if (file_enable && MW_LOG_DEBUG_ENABLE) trace
 
 #define MW_LOG_ARRAY_BYTES(file_enable, array, len)							\
-  if (file_enable && MW_LOG_DEBUG_ENABLE) do {									\
+  if (file_enable) do {									\
 	trace.print((const void*) array, len, IOStream::hex, len+1); \
 	trace << PSTR(" "); \
   } while (0)
   
-#define MW_LOG_DEBUG_ARRAY(file_enable, msg, array, len)							\
-  if (file_enable && MW_LOG_DEBUG_ENABLE) do {									\
+#define MW_LOG_ARRAY(file_enable, msg, array, len)							\
+  if (file_enable) do {									\
     trace << msg;					\
     MW_LOG_ARRAY_BYTES(file_enable, array, len); \
 	trace << PSTR("\n"); \
   } while (0)
 
-#define	MW_LOG_DEBUG_VP_BYTES(file_enable, msg, msgvp) \
-	if (file_enable && MW_LOG_DEBUG_ENABLE) do { \
+#define	MW_LOG_VP_BYTES(file_enable, msg, msgvp) \
+	if (file_enable) do { \
       trace << msg;					\
 	  for (const iovec_t* vp = msgvp; vp->buf != 0; vp++) \
 		MW_LOG_ARRAY_BYTES(file_enable, (const void*)vp->buf, (uint8_t) vp->size); \

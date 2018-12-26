@@ -149,7 +149,7 @@ void run_recv() {
 			msgcounter ++;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR("[RECV] res=") << result << PSTR(", src=") << src << PSTR(", port=") << port;
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << PSTR(", dataLen=") << dataLenMax << PSTR(", data=\n");
-			MW_LOG_DEBUG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
+			MW_LOG_ARRAY(EX_LOG_ROUTER, PSTR("\t...L3 DATA RECV: "), data, dataLenMax);
 			MW_LOG_DEBUG_TRACE(EX_LOG_ROUTER) << endl;
 			//TODO dataLenMax should be checked instead of result
 			//and verified that it is at least the size of the dt_msg_t structure

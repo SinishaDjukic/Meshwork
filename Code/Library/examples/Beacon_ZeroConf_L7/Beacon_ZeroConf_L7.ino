@@ -113,19 +113,15 @@ NetworkV1 mesh(&rf, routeprovider, NetworkV1::NWKCAPS_NONE);
 
 MW_DECL_ZEROCONF_PERSISTENT(zeroConfPersistent, zeroConfConfiguration, eeprom, EX_ZC_CONFIGURATION_EEPROM_OFFSET)
 
-//Setup extra UART on Mega
-#if MW_BOARD_SELECT == MW_BOARD_MEGA
+//Setup extra UART for debugging
+#if MW_BOARD_SELECT == MW_BOARD_MEGA || MW_BOARD_SELECT == MW_BOARD_LEONARDO
 	#include "Cosa/IOBuffer.hh"
-	// Create buffer for HC UART
 	static IOBuffer<UART::RX_BUFFER_MAX> ibuf;
 	static IOBuffer<UART::TX_BUFFER_MAX> obuf;
-	// HC UART will be used for Host-Controller communication
-	UART uartHC(3, &ibuf, &obuf);
-	SerialMessageAdapter serialMessageAdapter(&uartHC);
+	UART uartDebug(1, &ibuf, &obuf);
 #else
-	SerialMessageAdapter serialMessageAdapter(&uart);
-//	IOStream::Device null_device;//appears not needed with the latest Cosa impl
 #endif
+SerialMessageAdapter serialMessageAdapter(&uart);
 
 //ZeroConf Serial support
 ZeroConfSerial zeroConfSerial(&mesh, &serialMessageAdapter,
@@ -191,24 +187,32 @@ void boardTraceEnable(bool enable) {
 #endif
 }
 
+OutputPin gndPin(Board::D9);
+
 //Setup sequence
 void setup()
 {
 	//Basic setup
 	Watchdog::begin();
 	RTT::begin();
+	
+	gndPin.off();
 
+	//Enable UART for the boot-up config sequence. Blink once and keep lit during config
+	LED_BLINK(true, 500);
+	LED(true);
 	uart.begin(115200);
-	LED_BLINK(true, 1000);
-	boardTraceEnable(EX_BOOT_DEBUG);
-	LED_BLINK(false, 1000);
+
+	
+	//Trace debugs only supported on Mega, since it has extra UARTs
+#if MW_BOARD_SELECT == MW_BOARD_MEGA || MW_BOARD_SELECT == MW_BOARD_LEONARDO
+	uartDebug.begin(115200);
+	trace.begin(&uartDebug, NULL);
 	MW_LOG_DEBUG_TRACE(EX_LOG) << PSTR("ZeroConf Beacon: Started") << endl;
-	
-#if MW_BOARD_SELECT == MW_BOARD_MEGA
-	uartHC.begin(115200);
+#else
+	trace.begin(NULL, NULL);
 #endif
-	
-	
+
 	//Init listeners
 	serialMessageListeners[0] = &zeroConfSerial;
 	serialMessageAdapter.setListeners(serialMessageListeners);

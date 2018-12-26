@@ -52,19 +52,26 @@
 	#endif
 #endif
 
+#ifndef EX_BINARY_PININT
+	#define EX_BINARY_PININT		(MW_BOARD_SELECT == MW_BOARD_LEONARDO ? Board::D19 : Board::D15) // Pin change interrupt only
+#endif
+
 //Beacon message interval (ms)
 #ifndef EX_BEACON_INTERVAL
-	#define EX_BEACON_INTERVAL			60000
+	#define EX_BEACON_INTERVAL			15000
 #endif
 //Beacon watchdog granularity interval (ms)
 #ifndef EX_BEACON_WATCHDOG_INTERVAL
-	#define EX_BEACON_WATCHDOG_INTERVAL		1024*8
+//	#define EX_BEACON_WATCHDOG_INTERVAL		1024*8
+	#define EX_BEACON_WATCHDOG_INTERVAL		128
 #endif
 
 //Select Route Cache table option: MW_ROUTECACHE_NONE, MW_ROUTECACHE_RAM, MW_ROUTECACHE_PERSISTENT
 #ifndef MW_ROUTECACHE_SELECT
 	#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 #endif
+
+//#define EX_LED_BOOTUP		Board::LED
 
 //Enable/disable LED tracing for RF messages
 #define EX_LED_TRACING		false
@@ -73,7 +80,6 @@
 	#define EX_LED_TRACING_SEND	Board::D4
 	#define EX_LED_TRACING_RECV	Board::D5
 	#define EX_LED_TRACING_ACK	Board::D6
-	#define EX_LED_BOOTUP		Board::LED
 
 	//Defines a delay (slowness) factor if LED tracing is enabled
 	//Increase the delay factory multiplier to give more blink time for LEDs
@@ -100,14 +106,19 @@
 #define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
 #define MW_LOG_DEBUG_ENABLE true
 
+//Enables boot-time debug info on non-Mega boards
+#ifndef EX_BOOT_DEBUG
+	#define EX_BOOT_DEBUG	false
+#endif
+
 //Our sketch's own debug
-#define EX_LOG		true
+#define EX_LOG	true
 
 //Timeout for arrival of new serial messages
-#define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
+#define EX_SERIAL_NEXT_MSG_TIMEOUT	60000
 
 //Incoming connection timeout for serial autoconfig init
-#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 10000)
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 30000 : 30000)
 
 //Timeout after last incoming serial autoconfig message before autodeinit
 #define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 60000)

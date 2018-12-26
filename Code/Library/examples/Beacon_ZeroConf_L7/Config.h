@@ -58,7 +58,7 @@
 
 //Beacon message interval (ms)
 #ifndef EX_BEACON_INTERVAL
-	#define EX_BEACON_INTERVAL			60000
+	#define EX_BEACON_INTERVAL			15000
 #endif
 //Beacon watchdog granularity interval (ms)
 #ifndef EX_BEACON_WATCHDOG_INTERVAL
@@ -71,7 +71,7 @@
 	#define MW_ROUTECACHE_SELECT		MW_ROUTECACHE_RAM
 #endif
 
-#define EX_LED_BOOTUP		Board::LED
+//#define EX_LED_BOOTUP		Board::LED
 
 //Enable/disable LED tracing for RF messages
 #define EX_LED_TRACING		false
@@ -106,24 +106,21 @@
 #define MW_FULL_DEBUG	(MW_BOARD_SELECT == MW_BOARD_MEGA)
 #define MW_LOG_DEBUG_ENABLE true
 
-//Our sketch's own debug
-#define EX_LOG		true
-
 //Enables boot-time debug info on non-Mega boards
 #ifndef EX_BOOT_DEBUG
 	#define EX_BOOT_DEBUG	false
 #endif
 
+//Our sketch's own debug
+#define EX_LOG	true
 
 //Timeout for arrival of new serial messages
-#define EX_SERIAL_NEXT_MSG_TIMEOUT	5000
+#define EX_SERIAL_NEXT_MSG_TIMEOUT	60000
 
 //Incoming connection timeout for serial autoconfig init
-#ifndef EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT
-	#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 10000 : 3000)
-#endif
+#define EX_STARTUP_AUTOCONFIG_INIT_TIMEOUT		(MW_FULL_DEBUG ? 30000 : 30000)
 
 //Timeout after last incoming serial autoconfig message before autodeinit
-#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 10000)
+#define EX_STARTUP_AUTOCONFIG_DEINIT_TIMEOUT	(MW_FULL_DEBUG ? 60000 : 60000)
 
 #endif

@@ -75,7 +75,7 @@
 #define MW_LOG_DEBUG_ENABLE true
 
 //No need for rerouting here
-#define MW_SUPPORT_REROUTING	false
+#define MW_SUPPORT_REROUTING	true
 
 //Our sketch's own debug
 #ifndef EX_LOG_ROUTER
